@@ -1,4 +1,6 @@
-module-id: example-docs-quickstart
+moduleId: example-docs-quickstart
+
+buildCommand: npm run build
 
 workers:
   - workerId: mirror
