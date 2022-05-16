@@ -1,0 +1,17 @@
+module-id: example-docs-quickstart
+
+workers:
+  - workerId: mirror
+    scriptPath: dist/mirror.bundle.js
+
+tables:
+  - tableId: mirror-table
+    tableName: mirror
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: original-column
+        columnName: original
+        dataType: string
+      - columnId: duplicate-column
+        columnName: duplicate
+        dataType: string

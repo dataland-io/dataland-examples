@@ -1,41 +1,41 @@
 import * as path from "path";
-import * as webpack from "webpack";
 import * as fs from "fs";
+import type { Configuration } from "webpack";
 
-const entrypointsDir = path.resolve(__dirname, "..", "src", "workers");
+const entrypointsDir = path.resolve(__dirname, "src", "workers");
 
 const findEntrypoints = (): Record<string, string> => {
   const files = fs.readdirSync(entrypointsDir, {
     encoding: "utf8",
     withFileTypes: true,
   });
-  const binaries: Record<string, string> = {};
+  const entrypoints: Record<string, string> = {};
   for (const file of files) {
     if (
       file.isFile() &&
       (file.name.endsWith(".ts") || file.name.endsWith(".js"))
     ) {
       const noExt = path.parse(file.name).name;
-      binaries[noExt] = path.resolve(entrypointsDir, file.name);
+      entrypoints[noExt] = path.resolve(entrypointsDir, file.name);
     }
   }
-  return binaries;
+  return entrypoints;
 };
 
 const entrypoints = findEntrypoints();
 console.log("Found webpack entrypoints:");
 console.log(JSON.stringify(entrypoints, null, 2));
 
-const config: webpack.Configuration = {
+const config: Configuration = {
   mode: "production",
   target: "web",
   entry: entrypoints,
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
+        test: (f) => f.endsWith(".ts"),
         use: "ts-loader",
-        exclude: /node_modules/,
+        exclude: (f) => f.includes("node_modules"),
       },
     ],
   },
@@ -43,8 +43,9 @@ const config: webpack.Configuration = {
     extensions: [".ts", ".js"],
   },
   output: {
-    path: path.resolve(__dirname, "..", "dist"),
+    path: path.resolve(__dirname, "dist"),
     filename: "[name].bundle.js",
+    clean: true,
   },
   performance: {
     maxAssetSize: 10_000_000,
