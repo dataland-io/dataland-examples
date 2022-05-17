@@ -5,22 +5,22 @@ resources:
   - apiVersion: dataland.io/v1alpha1
     kind: Worker
     metadata:
-      name: mirror
+      name: hello
     spec:
-      scriptSha256Hex: f8a3750f2508dfee65234730d3e0e799a9fcba94a28bc22035a3362615d0bc46
+      scriptSha256Hex: 5c33825db4e639575e1a1993bf18c10bbdf183dfa63cd153795ecaffefa2f418
   - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
-      name: mirror-table
+      name: greetings-table
     spec:
-      tableName: mirror
+      tableName: greetings
       columnDescriptors:
-        - columnId: original-column
-          columnName: original
+        - columnId: name-column
+          columnName: name
           dataType: string
           nullable: true
-        - columnId: duplicate-column
-          columnName: duplicate
+        - columnId: greeting-column
+          columnName: greeting
           dataType: string
           nullable: true
       tableAnnotations: {}

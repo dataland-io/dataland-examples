@@ -13,27 +13,29 @@ const handler = async (transaction: Transaction) => {
   const { tableDescriptors } = await getCatalogSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
   });
+  const schema = new Schema(tableDescriptors);
 
   const response = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: "select _dataland_key, original, duplicate from mirror",
+    sqlQuery: "select _dataland_key, name, greeting from greetings",
   });
 
   const rows = unpackRows(response);
 
-  const schema = new Schema(tableDescriptors);
-
   const mutations: Mutation[] = [];
   for (const row of rows) {
-    const key = Number(row["_dataland_key"]);
-    const original = row["original"];
-    const duplicate = row["duplicate"];
-    if (original === duplicate) {
+    const key = row["_dataland_key"] as number;
+    const name = row["name"];
+    const greeting = `Hello, ${name}!`;
+
+    if (name === "" || greeting === row["greeting"]) {
       continue;
     }
-    const update = schema.makeUpdateRows("mirror", key, {
-      duplicate: original,
+
+    const update = schema.makeUpdateRows("greetings", key, {
+      greeting,
     });
+
     mutations.push(update);
   }
 

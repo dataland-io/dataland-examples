@@ -3,17 +3,17 @@ moduleId: example-docs-quickstart
 buildCommand: npm run build
 
 workers:
-  - workerId: mirror
-    scriptPath: dist/mirror.bundle.js
+  - workerId: hello
+    scriptPath: dist/hello.bundle.js
 
 tables:
-  - tableId: mirror-table
-    tableName: mirror
+  - tableId: greetings-table
+    tableName: greetings
     autoMigrate: true
     columnDescriptors:
-      - columnId: original-column
-        columnName: original
+      - columnId: name-column
+        columnName: name
         dataType: string
-      - columnId: duplicate-column
-        columnName: duplicate
+      - columnId: greeting-column
+        columnName: greeting
         dataType: string
