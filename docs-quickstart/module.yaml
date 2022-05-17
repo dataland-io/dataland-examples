@@ -1,0 +1,19 @@
+moduleId: example-docs-quickstart
+
+buildCommand: npm run build
+
+workers:
+  - workerId: hello
+    scriptPath: dist/hello.bundle.js
+
+tables:
+  - tableId: greetings-table
+    tableName: greetings
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: name-column
+        columnName: name
+        dataType: string
+      - columnId: greeting-column
+        columnName: greeting
+        dataType: string
