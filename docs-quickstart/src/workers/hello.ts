@@ -26,6 +26,7 @@ const handler = async (transaction: Transaction) => {
   for (const row of rows) {
     const key = row["_dataland_key"] as number;
     const name = row["name"];
+
     const greeting = `Hello, ${name}!`;
 
     if (name === "" || greeting === row["greeting"]) {
