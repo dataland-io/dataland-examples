@@ -8,7 +8,7 @@ You can learn more about Dataland at <https://docs.dataland.io>.
 Deploying the Quickstart example to your Dataland workspace is as easy as:
 
 ```sh
-cd docs-quickstart
+cd quickstart
 npm install
 dataland deploy
 ```

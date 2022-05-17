@@ -1,4 +1,4 @@
-moduleId: example-docs-quickstart
+moduleId: quickstart
 
 buildCommand: npm run build
 
