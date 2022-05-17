@@ -1,7 +1,7 @@
 # Dataland Examples
 
 This is a collection of example database applications that can be built built on top of the Dataland platform.
-You can learn more about Dataland at <docs.dataland.io>.
+You can learn more about Dataland at <https://docs.dataland.io>.
 
 ## Getting started
 
