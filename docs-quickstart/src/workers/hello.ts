@@ -15,12 +15,11 @@ const handler = async (transaction: Transaction) => {
   });
   const schema = new Schema(tableDescriptors);
 
-  const response = await querySqlSnapshot({
+  const queryResponse = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: "select _dataland_key, name, greeting from greetings",
   });
-
-  const rows = unpackRows(response);
+  const rows = unpackRows(queryResponse);
 
   const mutations: Mutation[] = [];
   for (const row of rows) {
