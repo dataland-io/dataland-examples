@@ -7,7 +7,7 @@ resources:
     metadata:
       name: hello
     spec:
-      scriptSha256Hex: 8ad86e45feea854e3268712242bed786524a2ae7a245dbb8e87104acb0429ceb
+      scriptSha256Hex: 651499b674a27cf068166ca0b741a0264f7731a0dec939e76801f6bac20d9880
   - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
@@ -17,6 +17,10 @@ resources:
       columnDescriptors:
         - columnId: name-column
           columnName: name
+          dataType: string
+          nullable: true
+        - columnId: location-column
+          columnName: location
           dataType: string
           nullable: true
         - columnId: greeting-column
