@@ -26,9 +26,9 @@ const handler = async (transaction: Transaction) => {
     const key = row["_dataland_key"] as number;
     const name = row["name"];
 
-    const greeting = `Hello, ${name}!`;
+    const greeting = name != null && name !== "" ? `Hello, ${name}!` : null;
 
-    if (name === "" || greeting === row["greeting"]) {
+    if (greeting === row["greeting"]) {
       continue;
     }
 
