@@ -36,8 +36,13 @@ const handler = async (transaction: Transaction) => {
 
     const location = row["location"];
     if (message != null && location != null && location !== "") {
+      const start = performance.now();
       const weather = await lookupWeather(location as string);
-      message = message + " " + weather;
+      const end = performance.now();
+      console.log(`weather lookup took ${end - start}ms`);
+      if (weather != null) {
+        message = message + " " + weather;
+      }
     }
 
     // Create an "update row" mutation, using the row key to specify which row is to be updated,
@@ -63,6 +68,13 @@ const lookupWeather = async (location: string): Promise<string | null> => {
     `https://weatherdbi.herokuapp.com/data/weather/${normalizedLocation}`
   );
   if (!response.ok) {
+    const responseText = await response.text();
+    console.error(
+      "weather api call failed",
+      location,
+      response.status,
+      responseText
+    );
     return null;
   }
   const json = await response.json();
@@ -72,8 +84,11 @@ const lookupWeather = async (location: string): Promise<string | null> => {
   const description = json.currentConditions?.comment;
 
   if (region == null || temperature == null || description == null) {
+    console.error("weather api returned unexpected response", json);
     return null;
   }
+
+  console.log("weather api call succeeded", json);
 
   return `The weather in ${region} is ${temperature}°F and ${description.toLowerCase()}.`;
 };
