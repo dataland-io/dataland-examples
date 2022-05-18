@@ -1,0 +1,22 @@
+moduleId: quickstart
+
+buildCommand: npm run build
+
+workers:
+  - workerId: hello
+    scriptPath: dist/hello.bundle.js
+
+tables:
+  - tableId: greetings-table
+    tableName: greetings
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: name-column
+        columnName: name
+        dataType: string
+      - columnId: location-column
+        columnName: location
+        dataType: string
+      - columnId: greeting-column
+        columnName: greeting
+        dataType: string
