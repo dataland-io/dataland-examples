@@ -84,11 +84,11 @@ const lookupWeather = async (location: string): Promise<string | null> => {
   const description = json.currentConditions?.comment;
 
   if (region == null || temperature == null || description == null) {
-    console.error("weather api returned unexpected response", json);
+    console.error("weather api returned unexpected response", location, json);
     return null;
   }
 
-  console.log("weather api call succeeded", json);
+  console.log("weather api call succeeded", location, json);
 
   return `The weather in ${region} is ${temperature}°F and ${description.toLowerCase()}.`;
 };
