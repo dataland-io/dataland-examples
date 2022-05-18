@@ -5,6 +5,9 @@ npm install
 dataland deploy
 ```
 
+The starting state of the quickstart example in the Dataland Docs:
+<https://docs.dataland.io/quickstart.html>
+
 This is the "Hello world" of Dataland. It consists of the following constructs:
 
 - A "greetings" table which has two columns - "name" and "greeting".
