@@ -1,5 +1,5 @@
 ---
-to: <%= h.changeCase.param(name) %>/src/<%= h.changeCase.camel(name) %>.tsx
+to: <%= h.changeCase.param(name) %>/src/<%= h.changeCase.camel(name) %>.ts
 ---
 
 import {
