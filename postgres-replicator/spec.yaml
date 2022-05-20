@@ -1,4 +1,4 @@
-moduleId: postgres-replicator
+moduleId: postgres-replicator-example
 
 buildCommand: npm run build
 

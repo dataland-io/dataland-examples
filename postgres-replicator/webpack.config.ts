@@ -5,7 +5,7 @@ const config: Configuration = {
   mode: "production",
   target: "web",
   entry: {
-    hello: "./src/hello.ts",
+    postgresReplicator: "./src/postgresReplicator.ts",
   },
   module: {
     rules: [

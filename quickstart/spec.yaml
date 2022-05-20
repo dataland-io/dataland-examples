@@ -1,4 +1,4 @@
-moduleId: quickstart
+moduleId: quickstart-example
 
 buildCommand: npm run build
 

@@ -1,4 +1,4 @@
-moduleId: quickstart
+moduleId: quickstart-example # not `quickstart-end-state-example` because we want same module as the starting state
 
 buildCommand: npm run build
 
