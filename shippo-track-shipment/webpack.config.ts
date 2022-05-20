@@ -5,7 +5,7 @@ const config: Configuration = {
   mode: "production",
   target: "web",
   entry: {
-    shippoTrackShipment: "./src/shippoTrackShipment.ts",
+    trackShipment: "./src/trackShipment.ts",
   },
   module: {
     rules: [
