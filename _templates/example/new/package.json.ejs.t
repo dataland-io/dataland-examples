@@ -1,5 +1,9 @@
+---
+to: <%= h.changeCase.param(name) %>/package.json
+---
+
 {
-  "name": "@dataland-examples/quickstart-end-state",
+  "name": "@dataland-examples/<%= h.changeCase.param(name) %>",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",

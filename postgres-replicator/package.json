@@ -1,5 +1,5 @@
 {
-  "name": "@dataland-examples/quickstart-end-state",
+  "name": "@dataland-examples/postgres-replicator",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
@@ -7,9 +7,13 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
-    "@dataland-io/dataland-sdk-worker": "0.13.0"
+    "@dataland-io/dataland-sdk-worker": "0.13.0",
+    "@dataland-io/dataland-state-sync": "0.13.0",
+    "@dataland-workerlibs/postgres": "0.15.0",
+    "lodash-es": "4.17.21"
   },
   "devDependencies": {
+    "@types/lodash-es": "4.17.6",
     "@types/webpack": "5.28.0",
     "ts-loader": "9.2.8",
     "ts-node": "10.7.0",

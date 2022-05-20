@@ -1,0 +1,24 @@
+moduleId: crypto-lookup-example
+
+buildCommand: npm run build
+
+parameters:
+  - coinmarketcap-api-key
+
+workers:
+  - workerId: crypto-lookup
+    scriptPath: dist/cryptoLookup.bundle.js
+    env:
+      COINMARKETCAP_API_KEY: coinmarketcap-api-key
+
+tables:
+  - tableId: crypto-table
+    tableName: crypto
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: symbol-column
+        columnName: symbol
+        dataType: string
+      - columnId: price-column
+        columnName: price
+        dataType: float64
