@@ -7,7 +7,7 @@ resources:
     metadata:
       name: hello
     spec:
-      scriptSha256Hex: 651499b674a27cf068166ca0b741a0264f7731a0dec939e76801f6bac20d9880
+      scriptSha256Hex: 5bb84cc9b3d21ce73ddb447c85c199ff82e4e4ba9cfb7c5f770cbf5e2f6fd838
   - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
