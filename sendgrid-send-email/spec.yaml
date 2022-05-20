@@ -1,0 +1,7 @@
+moduleId: sendgrid-send-email-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: send-email
+    scriptPath: dist/sendEmail.bundle.js
