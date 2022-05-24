@@ -7,7 +7,7 @@ resources:
     metadata:
       name: airtable-sync
     spec:
-      scriptSha256Hex: 190ee81ddd51e34c4e4ecce96f5952cb408794e88ff902e209ad3e858944200b
+      scriptSha256Hex: c84619495eba692a0009bfe60fd3279aaad47f4e14f6d04d354c961c77dddb20
       env:
         - name: AIRTABLE_API_KEY
           value:
