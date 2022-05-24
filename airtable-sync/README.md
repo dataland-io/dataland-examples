@@ -8,7 +8,7 @@ You can import any Airtable table into Dataland with this worker. This example r
 
 Here's how it looks in practice:
 
-![overview gif](https://i.ibb.co/1M0Qg3R/Import-Airtable.gif)
+![overview gif](import-airtable.gif)
 
 To run this example, clone this repo , and from the `airtable-sync/` folder, run:
 
