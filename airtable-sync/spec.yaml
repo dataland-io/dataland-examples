@@ -2,6 +2,48 @@ moduleId: airtable-sync-example
 
 buildCommand: npm run build
 
+parameters:
+  - airtable-api-key
+
+tables:
+  - tableId: airtable
+    tableName: "Records from Airtable"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: record-id
+        columnName: "Record ID"
+        dataType: string
+      - columnId: customer-id
+        columnName: "Customer ID"
+        dataType: string
+      - columnId: email
+        columnName: "Email"
+        dataType: string
+      - columnId: phone
+        columnName: "Phone"
+        dataType: string
+
+  - tableId: trigger-airtable
+    tableName: "Airtable Sync Trigger"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "trigger"
+        columnName: "Trigger sync"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Trigger",
+              "theme": "blue"
+            }
+
+      - columnId: "last-pressed"
+        columnName: "Last pressed"
+        dataType: string
+
 workers:
   - workerId: airtable-sync
     scriptPath: dist/airtableSync.bundle.js
+    env:
+      AIRTABLE_API_KEY: airtable-api-key
