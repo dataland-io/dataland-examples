@@ -1,0 +1,7 @@
+moduleId: airtable-sync-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: airtable-sync
+    scriptPath: dist/airtableSync.bundle.js
