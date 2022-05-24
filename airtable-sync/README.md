@@ -1,9 +1,9 @@
 # Airtable Sync Example
 
-You can import any Airtable table into Dataland with this worker. This example repo consist of:
+You can sync any Airtable table into Dataland with this worker. This example repo consist of:
 
 - A worker that takes an Airtable table (via URL), and imports each record in the table as a row in the imported records table
-- A "trigger" table that has a button column. Clicking this button triggers the worker's import operation.
+- A "trigger" table that has a button column. Clicking this button triggers the worker's import operation. In the future, you can also trigger this sync to occur on a schedule without needing manual input.
 - A table that stores the imported records
 
 Here's how it looks in practice:
