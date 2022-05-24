@@ -51,13 +51,11 @@ const readFromAirtable = async () => {
     if (records) {
       for (const record of records) {
         full_records.push(record);
-        console.log("id: ", record.id);
       }
     }
 
     offset = data.offset;
     url = airtable_url_base + "&offset=" + offset;
-    console.log("offset: ", offset);
   } while (offset);
 
   return full_records;
