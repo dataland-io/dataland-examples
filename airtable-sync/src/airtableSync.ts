@@ -19,6 +19,10 @@ import {
   unpackRows,
 } from "@dataland-io/dataland-sdk-worker";
 
+// By default, these names match with the table names declared in spec.yaml.
+const trigger_table_name = "Airtable Sync Trigger";
+const imported_records_table_name = "Records from Airtable";
+
 // TODO: Make sure to declare your Airtable API Key in the .env file and also declare the parameter in spec.yaml.
 // This template assumes the .env variable is declared as `DL_PARAM_AIRTABLE_API_KEY`.
 // See the tutorial for using environment variables here: {link}
@@ -74,10 +78,10 @@ const handler = async (transaction: Transaction) => {
 
   const schema = new Schema(tableDescriptors);
 
-  // TODO: If you're using a different table name than "Airtable Sync Trigger" and different column name than "Trigger sync",
-  // update the below arguments. Also make sure this is reflected in spec.yaml as well.
   const affectedRows = schema.getAffectedRows(
-    "Airtable Sync Trigger",
+    trigger_table_name,
+    // TODO: If you're using a different column name than "Trigger sync" in the trigger table,
+    // update the below argument. Also make sure this is reflected in spec.yaml as well.
     "Trigger sync",
     transaction
   );
@@ -94,12 +98,11 @@ const handler = async (transaction: Transaction) => {
   }
   const keyList = `(${lookupKeys.join(",")})`;
 
-  // TODO: If trigger table name != "Airtable Sync Trigger", update the table name in the SQL query below.
   const response = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key
-    from "Airtable Sync Trigger"
+    from "${trigger_table_name}"
     where _dataland_key in ${keyList}`,
   });
 
@@ -112,8 +115,7 @@ const handler = async (transaction: Transaction) => {
   for (const trigger_row of trigger_rows) {
     const key = Number(trigger_row["_dataland_key"]);
 
-    // TODO: If trigger table name != "Airtable Sync Trigger", update the table name below.
-    const update = schema.makeUpdateRows("Airtable Sync Trigger", key, {
+    const update = schema.makeUpdateRows(trigger_table_name, key, {
       "Last pressed": new Date().toISOString(),
     });
 
@@ -124,11 +126,10 @@ const handler = async (transaction: Transaction) => {
     mutations.push(update);
   }
 
-  // TODO: If imported records table name != "Records from Airtable", update the table name below.
   const existingTable = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select *
-    from "Records from Airtable"`,
+    from "${imported_records_table_name}"`,
   });
 
   const existing_rows = unpackRows(existingTable);
@@ -152,8 +153,9 @@ const handler = async (transaction: Transaction) => {
   for (const airtable_record of airtable_records) {
     const airtable_record_id = airtable_record.id;
 
-    // TODO: Take each field name in Airtable table to be imported, and create a variable for it.
+    // TODO: Take each field name in Airtable table to be imported, and store the value in a variable.
     // In the below example, there are three fields in the example Airtable table - Customer ID, Email, and Phone.
+    // Change them to match your Airtable schema.
     const airtable_record_customer_id = airtable_record.fields["Customer ID"];
     const airtable_record_email = airtable_record.fields["Email"];
     const airtable_record_phone = airtable_record.fields["Phone"];
@@ -163,13 +165,15 @@ const handler = async (transaction: Transaction) => {
       const existing_key = data_id_key_pairs[airtable_record_id];
 
       const update = schema.makeUpdateRows(
-        "Records from Airtable",
+        imported_records_table_name,
         existing_key,
         {
           _dataland_ordinal: String(existing_key),
           "Record ID": airtable_record_id,
 
-          // TODO: Match the variables to the field names in the Dataland table.
+          // TODO: Update the keys below to correspond to the column names in the imported records table.
+          // Remember to align spec.yaml by declaring the same columnNames in the table schema.
+          // The format is {columnName}: {cell_value}
           "Customer ID": airtable_record_customer_id,
           Email: airtable_record_email,
           Phone: airtable_record_phone,
@@ -184,9 +188,13 @@ const handler = async (transaction: Transaction) => {
       // Otherwise, insert a new record
       const id = await keyGenerator.nextKey();
       const ordinal = await ordinalGenerator.nextOrdinal();
-      const insert = schema.makeInsertRows("Records from Airtable", id, {
+      const insert = schema.makeInsertRows(imported_records_table_name, id, {
         _dataland_ordinal: ordinal,
         "Record ID": airtable_record_id,
+
+        // TODO: Update the keys below to correspond to the column names in the imported records table.
+        // Remember to align spec.yaml by declaring the same columnNames in the table schema.
+        // The format is {columnName}: {cell_value}
         "Customer ID": airtable_record_customer_id,
         Email: airtable_record_email,
         Phone: airtable_record_phone,
