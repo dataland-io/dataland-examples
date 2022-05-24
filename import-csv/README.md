@@ -8,7 +8,7 @@ You can import any CSV into Dataland with this worker. This example repo consist
 
 Here's how it looks in practice:
 
-![overview gif](https://i.ibb.co/S3w3vxZ/csv-import-overview.gif)
+![overview gif](import-csv.gif)
 
 To run this example, clone this repo , and from the `import-csv/` folder, run:
 
