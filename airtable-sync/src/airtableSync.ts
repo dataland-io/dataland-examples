@@ -152,7 +152,8 @@ const handler = async (transaction: Transaction) => {
   for (const airtable_record of airtable_records) {
     const airtable_record_id = airtable_record.id;
 
-    //TODO:
+    // TODO: Take each field name in Airtable table to be imported, and create a variable for it.
+    // In the below example, there are three fields in the example Airtable table - Customer ID, Email, and Phone.
     const airtable_record_customer_id = airtable_record.fields["Customer ID"];
     const airtable_record_email = airtable_record.fields["Email"];
     const airtable_record_phone = airtable_record.fields["Phone"];
@@ -167,6 +168,8 @@ const handler = async (transaction: Transaction) => {
         {
           _dataland_ordinal: String(existing_key),
           "Record ID": airtable_record_id,
+
+          // TODO: Match the variables to the field names in the Dataland table.
           "Customer ID": airtable_record_customer_id,
           Email: airtable_record_email,
           Phone: airtable_record_phone,
