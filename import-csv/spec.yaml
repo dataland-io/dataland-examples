@@ -1,0 +1,7 @@
+moduleId: import-csv-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: import-csv
+    scriptPath: dist/importCsv.bundle.js
