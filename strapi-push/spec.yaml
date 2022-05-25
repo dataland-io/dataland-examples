@@ -1,0 +1,7 @@
+moduleId: strapi-push-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: strapi-push
+    scriptPath: dist/strapiPush.bundle.js
