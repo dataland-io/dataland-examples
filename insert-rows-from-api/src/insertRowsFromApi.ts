@@ -1,6 +1,5 @@
 import {
   getCatalogSnapshot,
-  getEnv,
   Mutation,
   KeyGenerator,
   OrdinalGenerator,
