@@ -5,7 +5,7 @@ resources:
   - apiVersion: dataland.io/v1alpha1
     kind: Worker
     metadata:
-      name: strapi-push
+      name: strapi-push-worker
     spec:
       scriptSha256Hex: 68679b039ecd25dd51512b01d973a6f48a2415f80d7481e95d14ba03459119d5
   - apiVersion: dataland.io/v1alpha1

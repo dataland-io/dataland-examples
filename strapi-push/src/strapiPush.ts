@@ -14,8 +14,6 @@ import { isNumber } from "lodash-es";
 import * as t from "io-ts";
 
 const STRAPI_ENDPOINT = "https://strapi-cms-example.herokuapp.com/api/items";
-const STRAPI_LINK_BASE =
-  "https://tranquil-caverns-46219.herokuapp.com/admin/plugins/content-manager/collectionType/application::offers.offers";
 
 const fetchCmsEntry = async (cms_id: number) => {
   const url = `${STRAPI_ENDPOINT}/${cms_id}`;

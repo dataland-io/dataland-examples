@@ -43,5 +43,5 @@ tables:
         dataType: int32
 
 workers:
-  - workerId: strapi-push
+  - workerId: strapi-push-worker
     scriptPath: dist/strapiPush.bundle.js
