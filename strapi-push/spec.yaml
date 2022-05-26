@@ -7,6 +7,7 @@ tables:
     tableName: Strapi Items
     autoMigrate: true
     columnDescriptors:
+      # Note that product-name, price, category, and product-image-url are the entry attributes in Strapi
       - columnId: "product-name"
         columnName: "Product Name"
         dataType: string
