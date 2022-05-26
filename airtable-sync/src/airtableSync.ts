@@ -190,10 +190,10 @@ const handler = async (transaction: Transaction) => {
       // Otherwise, insert a new record
       const id = await keyGenerator.nextKey();
       const ordinal = await ordinalGenerator.nextOrdinal();
+
       const insert = schema.makeInsertRows(imported_records_table_name, id, {
         _dataland_ordinal: ordinal,
         "Record ID": airtable_record_id,
-
         // TODO: Update the keys below to correspond to the column names in the imported records table.
         // Remember to align spec.yaml by declaring the same columnNames in the table schema.
         // The format is {columnName}: {cell_value}
