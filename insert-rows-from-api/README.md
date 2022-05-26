@@ -1,4 +1,4 @@
-# Insert Rows into Dataland from API Response
+# Insert rows into Dataland from API Response
 
 This example walks through how you can issue a GET request with a Dataland worker, and insert each response item as a new row in Dataland. We'll use the JSON Placeholder API for this example.
 
