@@ -13,8 +13,10 @@ import {
 import { isNumber } from "lodash-es";
 import * as t from "io-ts";
 
+// Define Strapi endpoint
 const STRAPI_ENDPOINT = "https://strapi-cms-example.herokuapp.com/api/items";
 
+// Define functions to retrieve, post, and update entry data in Strapi
 const fetchCmsEntry = async (cms_id: number) => {
   const url = `${STRAPI_ENDPOINT}/${cms_id}`;
 
@@ -93,9 +95,8 @@ const createCmsEntry = async (
   return result;
 };
 
+// The transaction handler gets triggered on every database event.
 const handler = async (transaction: Transaction) => {
-  // only run if Push to CMS button is clicked
-
   const { tableDescriptors } = await getCatalogSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
   });
@@ -113,6 +114,10 @@ const handler = async (transaction: Transaction) => {
       strapiItemKeys.push(key);
     }
   }
+
+  // The rest of the function only runs if the Push to CMS button is clicked
+  // Note that clicking the Push to CMS button will increment the int32 value in the field,
+  // thus triggering the transaction handler. Any other transaction is ignored by the rest of this function.
 
   if (strapiItemKeys.length === 0) {
     return;
