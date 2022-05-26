@@ -7,7 +7,7 @@ tables:
     tableName: Strapi Items
     autoMigrate: true
     columnDescriptors:
-      - columnId: "product_name"
+      - columnId: "product-name"
         columnName: "Product Name"
         dataType: string
 
@@ -40,7 +40,7 @@ tables:
 
       - columnId: strapi-cms-id
         columnName: "Strapi CMS ID"
-        dataType: string
+        dataType: int32
 
 workers:
   - workerId: strapi-push

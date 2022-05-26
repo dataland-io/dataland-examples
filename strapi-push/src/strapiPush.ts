@@ -40,6 +40,13 @@ const updateCmsEntry = async (
   category: string,
   product_image_url: string
 ) => {
+  const item = {
+    product_name: product_name,
+    product_price: price,
+    product_category: category,
+    product_url: product_image_url,
+  };
+
   const url = `${STRAPI_ENDPOINT}/${strapi_cms_id}`;
 
   const options = {
@@ -47,12 +54,7 @@ const updateCmsEntry = async (
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      product_name,
-      price,
-      category,
-      product_image_url,
-    }),
+    body: JSON.stringify({ data: item }),
   };
 
   const response = await fetch(url, options);
@@ -69,20 +71,25 @@ const createCmsEntry = async (
 ) => {
   const url = `${STRAPI_ENDPOINT}`;
 
+  const item = {
+    product_name: product_name,
+    product_price: price,
+    product_category: category,
+    product_url: product_image_url,
+  };
+
+  console.log("CREATE item", item);
+
   const options = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      product_name,
-      price,
-      category,
-      product_image_url,
-    }),
+    body: JSON.stringify({ data: item }),
   };
 
   const response = await fetch(url, options);
+  console.log("POST response", response);
   const result = await response.json();
   console.log("POST result", result);
   return result;
@@ -156,8 +163,11 @@ const handler = async (transaction: Transaction) => {
     }
 
     // If CMS ID exists in the CMS, update the entry
-    if (isNumber(row.strapi_cms_id)) {
+    if (isNumber(row.strapi_cms_id) && row.strapi_cms_id > 0) {
+      console.log("row:", row);
+      console.log("existing_id:", row.strapi_cms_id);
       const strapi_cms_entry = await fetchCmsEntry(row.strapi_cms_id);
+      console.log("existing found:", strapi_cms_entry);
       if (strapi_cms_entry) {
         const update_response = await updateCmsEntry(
           row.strapi_cms_id,
@@ -190,7 +200,7 @@ const handler = async (transaction: Transaction) => {
           "Strapi Items",
           row_core._dataland_key,
           {
-            "Strapi CMS ID": create_response.id,
+            "Strapi CMS ID": create_response.data.id,
             "Sent Timestamp": sentTimestamp,
           }
         );

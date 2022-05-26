@@ -9,7 +9,7 @@ This directory consists of:
 
 Here's how it looks in practice:
 
-// REPLACE
+![Strapi example overview](Strapi.gif)
 
 For this example:
 
