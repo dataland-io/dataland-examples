@@ -65,84 +65,83 @@ const sendEmail = async (
 };
 
 const handler = async (transaction: Transaction) => {
-  const sendgridApiKey = getEnv("SENDGRID_API_KEY");
-  const fromEmail = getEnv("FROM_EMAIL");
-  const fromName = getEnv("FROM_NAME");
+  console.log("transaction", JSON.stringify(transaction, null, 2));
 
   const { tableDescriptors } = await getCatalogSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
   });
   const schema = new Schema(tableDescriptors);
 
-  const affectedRows = schema.getAffectedRows(
-    "emails",
-    "Send Email",
-    transaction
-  );
+  const affectedRows = schema.getAffectedRows("emails", "Footer", transaction);
 
-  const sendEmailKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number" && value > 0) {
-      sendEmailKeys.push(key);
-    }
-  }
+  console.log("affectedRows", affectedRows);
 
-  if (sendEmailKeys.length === 0) {
-    return;
-  }
+  // const sendEmailKeys: number[] = [];
+  // for (const [key, value] of affectedRows) {
+  //   if (typeof value === "number" && value > 0) {
+  //     sendEmailKeys.push(key);
+  //   }
+  // }
 
-  const keyList = `(${sendEmailKeys.join(",")})`;
-  const response = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `
-      select
-        _dataland_key,
-        "Email Address" as email_address,
-        Subject as subject,
-        Body as body
-      from emails
-      where _dataland_key in ${keyList}
-    `,
-  });
+  // if (sendEmailKeys.length === 0) {
+  //   return;
+  // }
 
-  const rows = unpackRows(response);
+  // const keyList = `(${sendEmailKeys.join(",")})`;
+  // const response = await querySqlSnapshot({
+  //   logicalTimestamp: transaction.logicalTimestamp,
+  //   sqlQuery: `
+  //     select
+  //       _dataland_key,
+  //       "Email Address" as email_address,
+  //       Subject as subject,
+  //       Body as body
+  //     from emails
+  //     where _dataland_key in ${keyList}
+  //   `,
+  // });
 
-  const RowT = t.type({
-    _dataland_key: t.number,
-    email_address: t.string,
-    subject: t.string,
-    body: t.string,
-  });
+  // const rows = unpackRows(response);
 
-  const mutations: Mutation[] = [];
-  for (const row of rows) {
-    if (!RowT.is(row)) {
-      continue;
-    }
-    const from: Mailbox = {
-      email: fromEmail,
-      name: fromName,
-    };
-    const to: Mailbox = {
-      email: row.email_address,
-    };
-    try {
-      await sendEmail(sendgridApiKey, from, to, row.subject, row.body);
-      const sentTimestamp = new Date().toISOString();
-      const update = schema.makeUpdateRows("emails", row._dataland_key, {
-        "Sent Timestamp": sentTimestamp,
-      });
-      mutations.push(update);
-    } catch (e) {
-      // continue to next
-    }
-  }
+  // console.log("rows", JSON.stringify(rows, null, 2));
 
-  if (mutations.length === 0) {
-    return;
-  }
+  // const RowT = t.type({
+  //   _dataland_key: t.number,
+  //   email_address: t.string,
+  //   subject: t.string,
+  //   body: t.string,
+  // });
 
-  await runMutations({ mutations });
+  // // const mutations: Mutation[] = [];
+  // for (const row of rows) {
+  //   if (!RowT.is(row)) {
+  //     continue;
+  //   }
+  //   const from: Mailbox = {
+  //     email: fromEmail,
+  //     name: fromName,
+  //   };
+  //   const to: Mailbox = {
+  //     email: row.email_address,
+  //   };
+  //   try {
+  //     await sendEmail(sendgridApiKey, from, to, row.subject, row.body);
+  //     const sentTimestamp = new Date().toISOString();
+  //     const update = schema.makeUpdateRows("emails", row._dataland_key, {
+  //       "Sent Timestamp": sentTimestamp,
+  //     });
+  //     await runMutations({ mutations: [update] });
+  //     // mutations.push(update);
+  //   } catch (e) {
+  //     // continue to next
+  //   }
+  // }
+
+  // if (mutations.length === 0) {
+  //   return;
+  // }
+
+  // await runMutations({ mutations });
 };
 
 registerTransactionHandler(handler);
