@@ -2,6 +2,47 @@ moduleId: sendgrid-send-email-example
 
 buildCommand: npm run build
 
+parameters:
+  - sendgrid-api-key
+  - from-email
+  - from-name
+
 workers:
   - workerId: send-email
     scriptPath: dist/sendEmail.bundle.js
+    env:
+      SENDGRID_API_KEY: sendgrid-api-key
+      FROM_EMAIL: from-email
+      FROM_NAME: from-name
+
+tables:
+  - tableId: emails-table
+    tableName: emails
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: send-email-column
+        columnName: Send Email
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Send Email",
+              "theme": "blue"
+            }
+
+      - columnId: sent-column
+        columnName: Sent Timestamp
+        dataType: string
+
+      - columnId: email-address-column
+        columnName: Email Address
+        dataType: string
+
+      - columnId: subject-column
+        columnName: Subject
+        dataType: string
+
+      - columnId: body-column
+        columnName: Body
+        dataType: string
