@@ -1,19 +1,19 @@
-moduleId: send-email-example
+moduleId: sendgrid-send-email-example
 
 buildCommand: npm run build
 
 parameters:
   - sendgrid-api-key
+  - from-email
+  - from-name
 
 workers:
   - workerId: send-email
     scriptPath: dist/sendEmail.bundle.js
     env:
       SENDGRID_API_KEY: sendgrid-api-key
-      FROM_EMAIL:
-        value: send-email-worker@mail.dataland.io
-      FROM_NAME:
-        value: "Dataland Worker"
+      FROM_EMAIL: from-email
+      FROM_NAME: from-name
 
 tables:
   - tableId: emails-table
@@ -45,8 +45,4 @@ tables:
 
       - columnId: body-column
         columnName: Body
-        dataType: string
-
-      - columnId: footer-column
-        columnName: Footer
         dataType: string
