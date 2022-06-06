@@ -1,0 +1,22 @@
+moduleId: quickstart
+
+buildCommand: npm run build
+
+workers:
+  - workerId: insert-example-worker
+    scriptPath: dist/insertExample.bundle.js
+
+tables:
+  - tableId: practice
+    tableName: practice
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: name
+        columnName: "name"
+        dataType: string
+      - columnId: email
+        columnName: "email"
+        dataType: string
+      - columnId: phone
+        columnName: "phone"
+        dataType: string
