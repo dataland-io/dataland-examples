@@ -75,4 +75,4 @@ tables:
 
 workers:
   - workerId: csv-import
-    scriptPath: dist/csv-import.bundle.js
+    scriptPath: dist/importCsv.bundle.js
