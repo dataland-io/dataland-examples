@@ -1,0 +1,52 @@
+moduleId: stripe-fetch-example
+
+buildCommand: npm run build
+
+parameters:
+  - stripe-api-key
+
+tables:
+  - tableId: trigger
+    tableName: "Import Trigger"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "trigger"
+        columnName: "Import Trigger"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Import Stripe Customers",
+              "theme": "blue"
+            }
+
+      - columnId: "last-pressed"
+        columnName: "Last pressed"
+        dataType: string
+
+  - tableId: stripe-customers
+    tableName: stripe-customers
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: stripe-customer-id
+        columnName: stripe_customer_id
+        dataType: string
+      - columnId: "email"
+        columnName: "email"
+        dataType: string
+      - columnId: "stripe-subscription-id"
+        columnName: "stripe_subscription_id"
+        dataType: string
+      - columnId: "sub-status"
+        columnName: "sub_status"
+        dataType: string
+      - columnId: "latest-invoice-id"
+        columnName: "latest_invoice_id"
+        dataType: string
+
+workers:
+  - workerId: stripe-fetch
+    scriptPath: dist/stripeFetch.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
