@@ -30,47 +30,20 @@ tables:
     tableName: "Records from CSV"
     autoMigrate: true
     columnDescriptors:
-      - columnId: "region"
-        columnName: "Region"
+      - columnId: "ps-partkey"
+        columnName: "ps_partkey"
         dataType: string
-      - columnId: "country"
-        columnName: "Country"
+      - columnId: "ps-suppkey"
+        columnName: "ps_suppkey"
         dataType: string
-      - columnId: "item-type"
-        columnName: "Item Type"
+      - columnId: "ps-availqty"
+        columnName: "ps_availqty"
         dataType: string
-      - columnId: "sales-channel"
-        columnName: "Sales Channel"
+      - columnId: "ps-supplycost"
+        columnName: "ps_supplycost"
         dataType: string
-      - columnId: "order-priority"
-        columnName: "Order Priority"
-        dataType: string
-      - columnId: "order-date"
-        columnName: "Order Date"
-        dataType: string
-      - columnId: "order-id"
-        columnName: "Order ID"
-        dataType: string
-      - columnId: "ship-date"
-        columnName: "Ship Date"
-        dataType: string
-      - columnId: "units-sold"
-        columnName: "Units Sold"
-        dataType: string
-      - columnId: "unit-price"
-        columnName: "Unit Price"
-        dataType: string
-      - columnId: "unit-cost"
-        columnName: "Unit Cost"
-        dataType: string
-      - columnId: "total-revenue"
-        columnName: "Total Revenue"
-        dataType: string
-      - columnId: "total-cost"
-        columnName: "Total Cost"
-        dataType: string
-      - columnId: "total-profit"
-        columnName: "Total Profit"
+      - columnId: "ps-comment"
+        columnName: "ps_comment"
         dataType: string
 
 workers:

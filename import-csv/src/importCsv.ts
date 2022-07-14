@@ -18,8 +18,17 @@ import {
 // One way to do this is using Github Gists.
 // See this video for instructions: https://www.loom.com/share/fb19460ff28344558d8986a362b1293c).
 
+// part 1:
 const CSV_URL =
-  "https://gist.githubusercontent.com/arthurwuhoo/5a32ceb175778f86a8b0353fadb8c50d/raw/d9735007478a587dfbf4c75db3f07a75b2e5a786/sales";
+  "https://gist.githubusercontent.com/arthurwuhoo/c8f7d8bd4f81a852889139e7d7cdf2eb/raw/ac605ff281fbb96f3465af64942357ee8e7652d5/partsupp-pt1-1.csv";
+
+// part 2:
+// const CSV_URL =
+// "https://gist.githubusercontent.com/arthurwuhoo/704e2ea95817b8ca8e2675bc76dbdbd7/raw/cc967742db33b57e38805007b5cb4274a11f0260/partsupp-pt1-2.csv";
+
+// part 3:
+// const CSV_URL =
+// "https://gist.githubusercontent.com/arthurwuhoo/b96509c296826552ee807a3edd480651/raw/34a2637cc613a3d0b75ed842793c0fbbe34bc540/partsupp-pt2.csv";
 
 const fetchCSVfromCurl = async (url: string) => {
   const csv_url = url;
@@ -35,25 +44,16 @@ function csvToRowArray(csv: string) {
   // This assumes that the CSV has column names in its first line, so it skips it (since i = 1 to start)
   for (var i = 1; i < lines.length; i++) {
     // TODO: Change the delimiter here if it's not a comma.
-    let currentline = lines[i].split(",");
+    let currentline = lines[i].split("|");
 
     // TODO: Change the keys of this object to your column names here.
     // For example below, the first column will be stored with object key "region", and there are 14 columns total.
     let row = {
-      region: currentline[0],
-      country: currentline[1],
-      item_type: currentline[2],
-      sales_channel: currentline[3],
-      order_priority: currentline[4],
-      order_date: currentline[5],
-      order_id: currentline[6],
-      ship_date: currentline[7],
-      units_sold: currentline[8],
-      unit_price: currentline[9],
-      unit_cost: currentline[10],
-      total_revenue: currentline[11],
-      total_cost: currentline[12],
-      total_profit: currentline[13],
+      ps_partkey: currentline[0],
+      ps_suppkey: currentline[1],
+      ps_availqty: currentline[2],
+      ps_supplycost: currentline[3],
+      ps_comment: currentline[4],
     };
     result.push(row);
   }
@@ -142,20 +142,11 @@ const handler = async (transaction: Transaction) => {
       }
 
       // TODO: Update the variable definitions below based on how you named the row object keys above.
-      const region = record.region;
-      const country = record.country;
-      const item_type = record.item_type;
-      const sales_channel = record.sales_channel;
-      const order_priority = record.order_priority;
-      const order_date = record.order_date;
-      const order_id = record.order_id;
-      const ship_date = record.ship_date;
-      const units_sold = record.units_sold;
-      const unit_price = record.unit_price;
-      const unit_cost = record.unit_cost;
-      const total_revenue = record.total_revenue;
-      const total_cost = record.total_cost;
-      const total_profit = record.total_profit;
+      const ps_partkey = record.ps_partkey;
+      const ps_suppkey = record.ps_suppkey;
+      const ps_availqty = record.ps_availqty;
+      const ps_supplycost = record.ps_supplycost;
+      const ps_comment = record.ps_comment;
 
       const id = await keyGenerator.nextKey();
       const ordinal = await ordinalGenerator.nextOrdinal();
@@ -167,20 +158,11 @@ const handler = async (transaction: Transaction) => {
         // TODO: Update the keys below to correspond to the column names in the imported rows table.
         // Remember to align spec.yaml by declaring the same columnNames in the table schema.
         // The format is {columnName}: {row_value}
-        Region: region,
-        Country: country,
-        "Item Type": item_type,
-        "Sales Channel": sales_channel,
-        "Order Priority": order_priority,
-        "Order Date": order_date,
-        "Order ID": order_id,
-        "Ship Date": ship_date,
-        "Units Sold": units_sold,
-        "Unit Price": unit_price,
-        "Unit Cost": unit_cost,
-        "Total Revenue": total_revenue,
-        "Total Cost": total_cost,
-        "Total Profit": total_profit,
+        ps_partkey: ps_partkey,
+        ps_suppkey: ps_suppkey,
+        ps_availqty: ps_availqty,
+        ps_supplycost: ps_supplycost,
+        ps_comment: ps_comment,
       });
       if (insert == null) {
         continue;
