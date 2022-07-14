@@ -11,7 +11,7 @@ tables:
     autoMigrate: true
     columnDescriptors:
       - columnId: "trigger"
-        columnName: "Import Trigger"
+        columnName: "Trigger"
         dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |

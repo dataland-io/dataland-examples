@@ -25,6 +25,7 @@ const fetchStripeCustomers = async () => {
   myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
   myHeaders.append("Authorization", `Bearer ${stripe_key}`);
 
+  let total_counter = 0;
   const full_results = [];
 
   let url = "https://api.stripe.com//v1/customers?limit=100";
@@ -44,7 +45,8 @@ const fetchStripeCustomers = async () => {
     if (results) {
       for (const result of results) {
         full_results.push(result);
-        console.log("id: ", result.id);
+        total_counter++;
+        console.log("id: ", result.id, " – total_counter: ", total_counter);
       }
     }
   } while (has_more);
