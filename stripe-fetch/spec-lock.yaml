@@ -39,6 +39,18 @@ resources:
               name: stripe-api-key
               key: parameterValue
   - apiVersion: dataland.io/v1alpha1
+    kind: Worker
+    metadata:
+      name: fetch-stripe-paymentintents
+    spec:
+      scriptSha256Hex: 83496d8ade515884602185bb8e27c40d3915e5adc77e9b78591708c08aabe907
+      env:
+        - name: STRIPE_API_KEY
+          value:
+            secretKeyRef:
+              name: stripe-api-key
+              key: parameterValue
+  - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
       name: trigger
@@ -234,6 +246,112 @@ resources:
           columnName: metadata
           dataType: string
           nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: paymentintents-trigger
+    spec:
+      tableName: stripe-paymentintents-trigger
+      columnDescriptors:
+        - columnId: trigger
+          columnName: Trigger
+          dataType: int32
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Payment Intents\",\n  \"theme\": \"blue\"\n}\n"
+        - columnId: last-pressed
+          columnName: Last pressed
+          dataType: string
+          nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: stripe-paymentintents
+    spec:
+      tableName: stripe-paymentintents
+      columnDescriptors:
+        - columnId: id
+          columnName: id
+          dataType: string
+          nullable: true
+        - columnId: amount
+          columnName: amount
+          dataType: float64
+          nullable: true
+        - columnId: automatic-payment-methods
+          columnName: automatic_payment_methods
+          dataType: string
+          nullable: true
+        - columnId: charges
+          columnName: charges
+          dataType: string
+          nullable: true
+        - columnId: client-secret
+          columnName: client_secret
+          dataType: string
+          nullable: true
+        - columnId: currency
+          columnName: currency
+          dataType: string
+          nullable: true
+        - columnId: customer
+          columnName: customer
+          dataType: string
+          nullable: true
+        - columnId: description
+          columnName: description
+          dataType: string
+          nullable: true
+        - columnId: last-payment-error
+          columnName: last_payment_error
+          dataType: string
+          nullable: true
+        - columnId: metadata
+          columnName: metadata
+          dataType: string
+          nullable: true
+        - columnId: next-action
+          columnName: next_action
+          dataType: string
+          nullable: true
+        - columnId: payment-method
+          columnName: payment_method
+          dataType: string
+          nullable: true
+        - columnId: payment-method-types
+          columnName: payment_method_types
+          dataType: string
+          nullable: true
+        - columnId: receipt-email
+          columnName: receipt_email
+          dataType: string
+          nullable: true
+        - columnId: setup-future-usage
+          columnName: setup_future_usage
+          dataType: string
+          nullable: true
+        - columnId: shipping
+          columnName: shipping
+          dataType: string
+          nullable: true
+        - columnId: statement-descriptor
+          columnName: statement_descriptor
+          dataType: string
+          nullable: true
+        - columnId: statement-descriptor-suffix
+          columnName: statement_descriptor_suffix
+          dataType: string
+          nullable: true
+        - columnId: status
+          columnName: status
+          dataType: string
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"select\",\n  \"options\": [\n    {\n      \"value\": \"requires_payment_method\",\n      \"theme\": \"ruby\"\n    },\n    {\n      \"value\": \"requires_confirmation\",\n      \"theme\": \"ruby\"\n    },                \n    {\n      \"value\": \"requires_action\",\n      \"theme\": \"ruby\"\n    },                                                 \n    {\n      \"value\": \"processing\",\n      \"theme\": \"pink\"\n    },\n    {\n      \"value\": \"requires_capture\",\n      \"theme\": \"yellow\"\n    },                \n    {\n      \"value\": \"succeeded\",\n      \"theme\": \"green\"\n    },\n    {\n      \"value\": \"incomplete\",\n      \"theme\": \"silver\"\n    }               \n  ]\n}\n"
       tableAnnotations: {}
       autoMigrate: true
 parameterizedResources:

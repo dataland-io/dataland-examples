@@ -226,6 +226,141 @@ tables:
         columnName: metadata
         dataType: string
 
+  - tableId: paymentintents-trigger
+    tableName: stripe-paymentintents-trigger
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "trigger"
+        columnName: "Trigger"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Import Stripe Payment Intents",
+              "theme": "blue"
+            }
+      - columnId: "last-pressed"
+        columnName: "Last pressed"
+        dataType: string
+
+  - tableId: stripe-paymentintents
+    tableName: stripe-paymentintents
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "id"
+        columnName: "id"
+        dataType: string
+        # amount: stripePaymentIntent.amount,
+      - columnId: amount
+        columnName: amount
+        dataType: float64
+        # automatic_payment_methods:
+        #   stripePaymentIntent.automatic_payment_methods,
+      - columnId: automatic-payment-methods
+        columnName: automatic_payment_methods
+        dataType: string
+      # charges: stripePaymentIntent.charges,
+      - columnId: charges
+        columnName: charges
+        dataType: string
+      # client_secret: stripePaymentIntent.client_secret,
+      - columnId: client-secret
+        columnName: client_secret
+        dataType: string
+      # currency: stripePaymentIntent.currency,
+      - columnId: currency
+        columnName: currency
+        dataType: string
+      # customer: stripePaymentIntent.customer,
+      - columnId: customer
+        columnName: customer
+        dataType: string
+      # description: stripePaymentIntent.description,
+      - columnId: description
+        columnName: description
+        dataType: string
+      # last_payment_error: stripePaymentIntent.last_payment_error,
+      - columnId: last-payment-error
+        columnName: last_payment_error
+        dataType: string
+      # metadata: stripePaymentIntent.metadata,
+      - columnId: metadata
+        columnName: metadata
+        dataType: string
+      # next_action: stripePaymentIntent.next_action,
+      - columnId: next-action
+        columnName: next_action
+        dataType: string
+      # payment_method: stripePaymentIntent.payment_method,
+      - columnId: payment-method
+        columnName: payment_method
+        dataType: string
+      # payment_method_types: stripePaymentIntent.payment_method_types,
+      - columnId: payment-method-types
+        columnName: payment_method_types
+        dataType: string
+      # receipt_email: stripePaymentIntent.receipt_email,
+      - columnId: receipt-email
+        columnName: receipt_email
+        dataType: string
+      # setup_future_usage: stripePaymentIntent.setup_future_usage,
+      - columnId: setup-future-usage
+        columnName: setup_future_usage
+        dataType: string
+      # shipping: stripePaymentIntent.shipping,
+      - columnId: shipping
+        columnName: shipping
+        dataType: string
+      # statement_descriptor: stripePaymentIntent.statement_descriptor,
+      - columnId: statement-descriptor
+        columnName: statement_descriptor
+        dataType: string
+      # statement_descriptor_suffix:
+      #   stripePaymentIntent.statement_descriptor_suffix,
+      - columnId: statement-descriptor-suffix
+        columnName: statement_descriptor_suffix
+        dataType: string
+      # status: stripePaymentIntent.status,
+      - columnId: status
+        columnName: status
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "requires_payment_method",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "requires_confirmation",
+                  "theme": "ruby"
+                },                
+                {
+                  "value": "requires_action",
+                  "theme": "ruby"
+                },                                                 
+                {
+                  "value": "processing",
+                  "theme": "pink"
+                },
+                {
+                  "value": "requires_capture",
+                  "theme": "yellow"
+                },                
+                {
+                  "value": "succeeded",
+                  "theme": "green"
+                },
+                {
+                  "value": "incomplete",
+                  "theme": "silver"
+                }               
+              ]
+            }
+
 workers:
   - workerId: fetch-stripe-customers-with-sub
     scriptPath: dist/fetchStripeCustomersWithSub.bundle.js
@@ -239,5 +374,10 @@ workers:
 
   - workerId: fetch-stripe-subscriptions
     scriptPath: dist/fetchStripeSubscriptions.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+
+  - workerId: fetch-stripe-paymentintents
+    scriptPath: dist/fetchStripePaymentIntents.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key

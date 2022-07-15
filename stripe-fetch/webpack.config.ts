@@ -7,6 +7,7 @@ const config: Configuration = {
   entry: {
     fetchStripeCustomers: "./src/fetchStripeCustomers.ts",
     fetchStripeSubscriptions: "./src/fetchStripeSubscriptions.ts",
+    fetchStripePaymentIntents: "./src/fetchStripePaymentIntents.ts",
     fetchStripeCustomersWithSub: "./src/fetchStripeCustomersWithSub.ts",
   },
   module: {
