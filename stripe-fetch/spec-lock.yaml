@@ -65,9 +65,9 @@ resources:
   - apiVersion: dataland.io/v1alpha1
     kind: Worker
     metadata:
-      name: fetch-stripe-cards
+      name: fetch-stripe-refunds
     spec:
-      scriptSha256Hex: de5c6ae349d92093da552154538e2f537207e05bf74298957ce4577ff270f709
+      scriptSha256Hex: c137453757cde2d81f9330f407f4131db3ff11f0c436f4d5dc0a3213b08b2254
       env:
         - name: STRIPE_API_KEY
           value:
@@ -477,16 +477,16 @@ resources:
   - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
-      name: cards-trigger
+      name: refunds-trigger
     spec:
-      tableName: stripe-cards-trigger
+      tableName: stripe-refunds-trigger
       columnDescriptors:
         - columnId: trigger
           columnName: Trigger
           dataType: int32
           nullable: true
           columnAnnotations:
-            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Cards\",\n  \"theme\": \"blue\"\n}\n"
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Refunds\",\n  \"theme\": \"blue\"\n}\n"
         - columnId: last-pressed
           columnName: Last pressed
           dataType: string
@@ -496,86 +496,48 @@ resources:
   - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
-      name: stripe-cards
+      name: stripe-refunds
     spec:
-      tableName: stripe-cards
+      tableName: stripe-refunds
       columnDescriptors:
         - columnId: id
           columnName: id
           dataType: string
           nullable: true
-        - columnId: address-city
-          columnName: address_city
+        - columnId: amount
+          columnName: amount
+          dataType: float64
+          nullable: true
+        - columnId: charge
+          columnName: charge
           dataType: string
           nullable: true
-        - columnId: address-country
-          columnName: address_country
+        - columnId: currency
+          columnName: currency
           dataType: string
           nullable: true
-        - columnId: address-line1
-          columnName: address_line1
-          dataType: string
-          nullable: true
-        - columnId: address-line2
-          columnName: address_line2
-          dataType: string
-          nullable: true
-        - columnId: address-state
-          columnName: address_state
-          dataType: string
-          nullable: true
-        - columnId: address-zip
-          columnName: address_zip
-          dataType: string
-          nullable: true
-        - columnId: address-zip-check
-          columnName: address_zip_check
-          dataType: string
-          nullable: true
-        - columnId: brand
-          columnName: brand
-          dataType: string
-          nullable: true
-        - columnId: country
-          columnName: country
-          dataType: string
-          nullable: true
-        - columnId: customer
-          columnName: customer
-          dataType: string
-          nullable: true
-        - columnId: cvc-check
-          columnName: cvc_check
-          dataType: string
-          nullable: true
-        - columnId: exp-month
-          columnName: exp_month
-          dataType: int32
-          nullable: true
-        - columnId: exp-year
-          columnName: exp_year
-          dataType: int32
-          nullable: true
-        - columnId: fingerprint
-          columnName: fingerprint
-          dataType: string
-          nullable: true
-        - columnId: funding
-          columnName: funding
-          dataType: string
-          nullable: true
-        - columnId: last4
-          columnName: last4
+        - columnId: description
+          columnName: description
           dataType: string
           nullable: true
         - columnId: metadata
           columnName: metadata
           dataType: string
           nullable: true
-        - columnId: name
-          columnName: name
+        - columnId: payment-intent
+          columnName: payment_intent
           dataType: string
           nullable: true
+        - columnId: reason
+          columnName: reason
+          dataType: string
+          nullable: true
+        - columnId: status
+          columnName: status
+          dataType: string
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"select\",\n  \"options\": [\n    {\n      \"value\": \"pending\",\n      \"theme\": \"silver\"\n    },\n    {\n      \"value\": \"succeeded\",\n      \"theme\": \"green\"\n    },\n    {\n      \"value\": \"failed\",\n      \"theme\": \"ruby\"\n    }\n  ]\n}\n"
       tableAnnotations: {}
       autoMigrate: true
 parameterizedResources:

@@ -32,6 +32,14 @@ tables:
       - columnId: id
         columnName: id
         dataType: string
+        # phone: stripeCustomer.phone,
+      - columnId: phone
+        columnName: phone
+        dataType: string
+        # email: stripeCustomer.email,
+      - columnId: email
+        columnName: email
+        dataType: string
         # object: stripeCustomer.object,
       - columnId: object
         columnName: object
@@ -72,10 +80,6 @@ tables:
       - columnId: discount
         columnName: discount
         dataType: string
-        # email: stripeCustomer.email,
-      - columnId: email
-        columnName: email
-        dataType: string
         # invoice_prefix: stripeCustomer.invoice_prefix,
       - columnId: invoice-prefix
         columnName: invoice_prefix
@@ -96,10 +100,6 @@ tables:
       - columnId: next-invoice-sequence
         columnName: next_invoice_sequence
         dataType: int64
-        # phone: stripeCustomer.phone,
-      - columnId: phone
-        columnName: phone
-        dataType: string
         # preferred_locales: stripeCustomer.preferred_locales,
       - columnId: preferred-locales
         columnName: preferred_locales
@@ -482,8 +482,8 @@ tables:
         columnName: total
         dataType: float64
 
-  - tableId: cards-trigger
-    tableName: stripe-cards-trigger
+  - tableId: refunds-trigger
+    tableName: stripe-refunds-trigger
     autoMigrate: true
     columnDescriptors:
       - columnId: "trigger"
@@ -493,92 +493,72 @@ tables:
           dataland.io/column-display-config: |
             {
               "type": "button",
-              "label": "Import Stripe Cards",
+              "label": "Import Stripe Refunds",
               "theme": "blue"
             }
       - columnId: "last-pressed"
         columnName: "Last pressed"
         dataType: string
 
-  - tableId: stripe-cards
-    tableName: stripe-cards
+  - tableId: stripe-refunds
+    tableName: stripe-refunds
     autoMigrate: true
     columnDescriptors:
       - columnId: id
-        columnName: "id"
+        columnName: id
         dataType: string
-      # address_city: stripeCard.address_city,
-      - columnId: address-city
-        columnName: address_city
+      # id: stripeRefund.id,
+      # amount: stripeRefund.amount,
+      - columnId: amount
+        columnName: amount
+        dataType: float64
+      # charge: stripeRefund.charge,
+      - columnId: charge
+        columnName: charge
         dataType: string
-      # address_country: stripeCard.address_country,
-      - columnId: address-country
-        columnName: address_country
+      # currency: stripeRefund.currency,
+      - columnId: currency
+        columnName: currency
         dataType: string
-      # address_line1: stripeCard.address_line1,
-      - columnId: address-line1
-        columnName: address_line1
+      # description: stripeRefund.description,
+      - columnId: description
+        columnName: description
         dataType: string
-      # address_line2: stripeCard.address_line2,
-      - columnId: address-line2
-        columnName: address_line2
-        dataType: string
-      # address_state: stripeCard.address_state,
-      - columnId: address-state
-        columnName: address_state
-        dataType: string
-      # address_zip: stripeCard.address_zip,
-      - columnId: address-zip
-        columnName: address_zip
-        dataType: string
-      # address_zip_check: stripeCard.address_zip_check,
-      - columnId: address-zip-check
-        columnName: address_zip_check
-        dataType: string
-      # brand: stripeCard.brand,
-      - columnId: brand
-        columnName: brand
-        dataType: string
-      # country: stripeCard.country,
-      - columnId: country
-        columnName: country
-        dataType: string
-      # customer: stripeCard.customer,
-      - columnId: customer
-        columnName: customer
-        dataType: string
-      # cvc_check: stripeCard.cvc_check,
-      - columnId: cvc-check
-        columnName: cvc_check
-        dataType: string
-      # exp_month: stripeCard.exp_month,
-      - columnId: exp-month
-        columnName: exp_month
-        dataType: int32
-      # exp_year: stripeCard.exp_year,
-      - columnId: exp-year
-        columnName: exp_year
-        dataType: int32
-      # fingerprint: stripeCard.fingerprint,
-      - columnId: fingerprint
-        columnName: fingerprint
-        dataType: string
-      # funding: stripeCard.funding,
-      - columnId: funding
-        columnName: funding
-        dataType: string
-      # last4: stripeCard.last4,
-      - columnId: last4
-        columnName: last4
-        dataType: string
-      # metadata: stripeCard.metadata,
+      # metadata: JSON.stringify(stripeRefund.metadata),
       - columnId: metadata
         columnName: metadata
         dataType: string
-      # name: stripeCard.name,
-      - columnId: name
-        columnName: name
+      # payment_intent: stripeRefund.payment_intent,
+      - columnId: payment-intent
+        columnName: payment_intent
         dataType: string
+      # reason: stripeRefund.reason,
+      - columnId: reason
+        columnName: reason
+        dataType: string
+      # status: stripeRefund.status,
+      - columnId: status
+        columnName: status
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "pending",
+                  "theme": "silver"
+                },
+                {
+                  "value": "succeeded",
+                  "theme": "green"
+                },
+                {
+                  "value": "failed",
+                  "theme": "ruby"
+                }
+              ]
+            }
 
 workers:
   - workerId: fetch-stripe-customers-with-sub
@@ -606,7 +586,7 @@ workers:
     env:
       STRIPE_API_KEY: stripe-api-key
 
-  - workerId: fetch-stripe-cards
-    scriptPath: dist/fetchStripeCards.bundle.js
+  - workerId: fetch-stripe-refunds
+    scriptPath: dist/fetchStripeRefunds.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key

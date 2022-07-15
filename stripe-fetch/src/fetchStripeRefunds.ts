@@ -16,7 +16,7 @@ import { isString, isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const fetchStripecards = async () => {
+const fetchStriperefunds = async () => {
   var myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
   myHeaders.append("Authorization", `Bearer ${stripe_key}`);
@@ -24,7 +24,7 @@ const fetchStripecards = async () => {
   let total_counter = 0;
   const full_results = [];
 
-  let url = "https://api.stripe.com//v1/cards?limit=100";
+  let url = "https://api.stripe.com//v1/refunds?limit=100";
   let has_more = true;
 
   do {
@@ -58,7 +58,7 @@ const handler = async (transaction: Transaction) => {
   const schema = new Schema(tableDescriptors);
 
   const affectedRows = schema.getAffectedRows(
-    "stripe-cards-trigger",
+    "stripe-refunds-trigger",
     "Trigger",
     transaction
   );
@@ -82,7 +82,7 @@ const handler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key
-    from "stripe-cards-trigger"
+    from "stripe-refunds-trigger"
     where _dataland_key in ${keyList}`,
   });
 
@@ -91,19 +91,19 @@ const handler = async (transaction: Transaction) => {
   const keyGenerator = new KeyGenerator();
   const ordinalGenerator = new OrdinalGenerator();
 
-  // fetch Stripe cards from Stripe
-  const stripecards = await fetchStripecards();
+  // fetch Stripe refunds from Stripe
+  const striperefunds = await fetchStriperefunds();
 
-  if (stripecards == null) {
+  if (striperefunds == null) {
     return;
   }
 
-  // fetch existing Stripe cards
+  // fetch existing Stripe refunds
   const existing_stripe_data = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key, id
-    from "stripe-cards"`,
+    from "stripe-refunds"`,
   });
 
   const existing_stripe_rows = unpackRows(existing_stripe_data);
@@ -121,49 +121,39 @@ const handler = async (transaction: Transaction) => {
   let batch_size = 100; // push 100 at a time
   let total_counter = 0;
 
-  for (const stripeCard of stripecards) {
+  for (const stripeRefund of striperefunds) {
     // Generate an ID
     const id = await keyGenerator.nextKey();
     const ordinal = await ordinalGenerator.nextOrdinal();
 
     // grab the object_id for each Shippo Shipment
-    const stripe_card_id = String(stripeCard.id);
+    const stripe_refund_id = String(stripeRefund.id);
 
-    if (stripe_card_id == null) {
+    if (stripe_refund_id == null) {
       continue;
     }
 
-    // check if the Stripe card already exists
-    if (existing_stripe_ids.includes(stripe_card_id)) {
+    // check if the Stripe refund already exists
+    if (existing_stripe_ids.includes(stripe_refund_id)) {
       // get the _dataland_key of the
 
-      const position = existing_stripe_ids.indexOf(stripe_card_id);
+      const position = existing_stripe_ids.indexOf(stripe_refund_id);
       const existing_key = existing_stripe_keys[position];
 
       if (!isNumber(existing_key)) {
         continue;
       }
 
-      const update = schema.makeUpdateRows("stripe-cards", existing_key, {
-        id: stripeCard.id,
-        address_city: stripeCard.address_city,
-        address_country: stripeCard.address_country,
-        address_line1: stripeCard.address_line1,
-        address_line2: stripeCard.address_line2,
-        address_state: stripeCard.address_state,
-        address_zip: stripeCard.address_zip,
-        address_zip_check: stripeCard.address_zip_check,
-        brand: stripeCard.brand,
-        country: stripeCard.country,
-        customer: stripeCard.customer,
-        cvc_check: stripeCard.cvc_check,
-        exp_month: stripeCard.exp_month,
-        exp_year: stripeCard.exp_year,
-        fingerprint: stripeCard.fingerprint,
-        funding: stripeCard.funding,
-        last4: stripeCard.last4,
-        metadata: stripeCard.metadata,
-        name: stripeCard.name,
+      const update = schema.makeUpdateRows("stripe-refunds", existing_key, {
+        id: stripeRefund.id,
+        amount: stripeRefund.amount,
+        charge: stripeRefund.charge,
+        currency: stripeRefund.currency,
+        description: stripeRefund.description,
+        metadata: JSON.stringify(stripeRefund.metadata),
+        payment_intent: stripeRefund.payment_intent,
+        reason: stripeRefund.reason,
+        status: stripeRefund.status,
       });
 
       if (update == null) {
@@ -174,27 +164,17 @@ const handler = async (transaction: Transaction) => {
       batch_counter++;
       total_counter++;
     } else {
-      const insert = schema.makeInsertRows("stripe-cards", id, {
+      const insert = schema.makeInsertRows("stripe-refunds", id, {
         _dataland_ordinal: ordinal,
-        id: stripeCard.id,
-        address_city: stripeCard.address_city,
-        address_country: stripeCard.address_country,
-        address_line1: stripeCard.address_line1,
-        address_line2: stripeCard.address_line2,
-        address_state: stripeCard.address_state,
-        address_zip: stripeCard.address_zip,
-        address_zip_check: stripeCard.address_zip_check,
-        brand: stripeCard.brand,
-        country: stripeCard.country,
-        customer: stripeCard.customer,
-        cvc_check: stripeCard.cvc_check,
-        exp_month: stripeCard.exp_month,
-        exp_year: stripeCard.exp_year,
-        fingerprint: stripeCard.fingerprint,
-        funding: stripeCard.funding,
-        last4: stripeCard.last4,
-        metadata: stripeCard.metadata,
-        name: stripeCard.name,
+        id: stripeRefund.id,
+        amount: stripeRefund.amount,
+        charge: stripeRefund.charge,
+        currency: stripeRefund.currency,
+        description: stripeRefund.description,
+        metadata: JSON.stringify(stripeRefund.metadata),
+        payment_intent: stripeRefund.payment_intent,
+        reason: stripeRefund.reason,
+        status: stripeRefund.status,
       });
 
       if (insert == null) {
@@ -211,7 +191,7 @@ const handler = async (transaction: Transaction) => {
       mutations_batch = [];
       batch_counter = 0;
       console.log("total_counter: ", total_counter);
-    } else if (total_counter + batch_size > stripecards.length) {
+    } else if (total_counter + batch_size > striperefunds.length) {
       await runMutations({ mutations: mutations_batch });
       mutations_batch = [];
       batch_counter = 0;
