@@ -104,6 +104,14 @@ resources:
           columnName: id
           dataType: string
           nullable: true
+        - columnId: phone
+          columnName: phone
+          dataType: string
+          nullable: true
+        - columnId: email
+          columnName: email
+          dataType: string
+          nullable: true
         - columnId: object
           columnName: object
           dataType: string
@@ -144,10 +152,6 @@ resources:
           columnName: discount
           dataType: string
           nullable: true
-        - columnId: email
-          columnName: email
-          dataType: string
-          nullable: true
         - columnId: invoice-prefix
           columnName: invoice_prefix
           dataType: string
@@ -167,10 +171,6 @@ resources:
         - columnId: next-invoice-sequence
           columnName: next_invoice_sequence
           dataType: int64
-          nullable: true
-        - columnId: phone
-          columnName: phone
-          dataType: string
           nullable: true
         - columnId: preferred-locales
           columnName: preferred_locales
