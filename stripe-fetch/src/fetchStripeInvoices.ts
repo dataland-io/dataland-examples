@@ -16,7 +16,7 @@ import { isString, isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const fetchStripeCustomers = async () => {
+const fetchStripeinvoices = async () => {
   var myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
   myHeaders.append("Authorization", `Bearer ${stripe_key}`);
@@ -24,7 +24,7 @@ const fetchStripeCustomers = async () => {
   let total_counter = 0;
   const full_results = [];
 
-  let url = "https://api.stripe.com//v1/customers?limit=100";
+  let url = "https://api.stripe.com//v1/invoices?limit=100";
   let has_more = true;
 
   do {
@@ -58,7 +58,7 @@ const handler = async (transaction: Transaction) => {
   const schema = new Schema(tableDescriptors);
 
   const affectedRows = schema.getAffectedRows(
-    "stripe-customers-trigger",
+    "stripe-invoices-trigger",
     "Trigger",
     transaction
   );
@@ -82,7 +82,7 @@ const handler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key
-    from "stripe-customers-trigger"
+    from "stripe-invoices-trigger"
     where _dataland_key in ${keyList}`,
   });
 
@@ -91,19 +91,19 @@ const handler = async (transaction: Transaction) => {
   const keyGenerator = new KeyGenerator();
   const ordinalGenerator = new OrdinalGenerator();
 
-  // fetch Stripe customers from Stripe
-  const stripeCustomers = await fetchStripeCustomers();
+  // fetch Stripe invoices from Stripe
+  const stripeinvoices = await fetchStripeinvoices();
 
-  if (stripeCustomers == null) {
+  if (stripeinvoices == null) {
     return;
   }
 
-  // fetch existing Stripe customers
+  // fetch existing Stripe invoices
   const existing_stripe_data = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key, id
-    from "stripe-customers"`,
+    from "stripe-invoices"`,
   });
 
   const existing_stripe_rows = unpackRows(existing_stripe_data);
@@ -121,51 +121,46 @@ const handler = async (transaction: Transaction) => {
   let batch_size = 100; // push 100 at a time
   let total_counter = 0;
 
-  for (const stripeCustomer of stripeCustomers) {
+  for (const stripeInvoice of stripeinvoices) {
     // Generate an ID
     const id = await keyGenerator.nextKey();
     const ordinal = await ordinalGenerator.nextOrdinal();
 
     // grab the object_id for each Shippo Shipment
-    const stripe_customer_id = String(stripeCustomer.id);
+    const stripe_invoice_id = String(stripeInvoice.id);
 
-    if (stripe_customer_id == null) {
+    if (stripe_invoice_id == null) {
       continue;
     }
 
-    // check if the Stripe customer already exists
-    if (existing_stripe_ids.includes(stripe_customer_id)) {
+    // check if the Stripe invoice already exists
+    if (existing_stripe_ids.includes(stripe_invoice_id)) {
       // get the _dataland_key of the
 
-      const position = existing_stripe_ids.indexOf(stripe_customer_id);
+      const position = existing_stripe_ids.indexOf(stripe_invoice_id);
       const existing_key = existing_stripe_keys[position];
 
       if (!isNumber(existing_key)) {
         continue;
       }
 
-      const update = schema.makeUpdateRows("stripe-customers", existing_key, {
-        object: stripeCustomer.object,
-        address: stripeCustomer.address,
-        balance: stripeCustomer.balance,
-        created: stripeCustomer.created,
-        currency: stripeCustomer.currency,
-        default_currency: stripeCustomer.default_currency,
-        default_source: stripeCustomer.default_source,
-        delinquent: stripeCustomer.delinquent,
-        description: stripeCustomer.description,
-        discount: stripeCustomer.discount,
-        email: stripeCustomer.email,
-        invoice_prefix: stripeCustomer.invoice_prefix,
-        livemode: stripeCustomer.livemode,
-        metadata: stripeCustomer.metadata,
-        name: stripeCustomer.name,
-        next_invoice_sequence: stripeCustomer.next_invoice_sequence,
-        phone: stripeCustomer.phone,
-        preferred_locales: stripeCustomer.preferred_locales,
-        shipping: stripeCustomer.shipping,
-        tax_exempt: stripeCustomer.tax_exempt,
-        test_clock: stripeCustomer.test_clock,
+      const update = schema.makeUpdateRows("stripe-invoices", existing_key, {
+        id: stripeInvoice.id,
+        auto_advance: stripeInvoice.auto_advance,
+        charge: stripeInvoice.charge,
+        collection_method: stripeInvoice.collection_method,
+        currency: stripeInvoice.currency,
+        customer: stripeInvoice.customer,
+        description: stripeInvoice.description,
+        hosted_invoice_url: stripeInvoice.hosted_invoice_url,
+        lines: stripeInvoice.lines,
+        metadata: JSON.stringify(stripeInvoice.metadata),
+        payment_intent: stripeInvoice.payment_intent,
+        period_end: stripeInvoice.period_end,
+        period_start: stripeInvoice.period_start,
+        status: stripeInvoice.status,
+        subscription: stripeInvoice.subscription,
+        total: stripeInvoice.total,
       });
 
       if (update == null) {
@@ -176,30 +171,24 @@ const handler = async (transaction: Transaction) => {
       batch_counter++;
       total_counter++;
     } else {
-      const insert = schema.makeInsertRows("stripe-customers", id, {
+      const insert = schema.makeInsertRows("stripe-invoices", id, {
         _dataland_ordinal: ordinal,
-        id: stripeCustomer.id,
-        object: stripeCustomer.object,
-        address: stripeCustomer.address,
-        balance: stripeCustomer.balance,
-        created: stripeCustomer.created,
-        currency: stripeCustomer.currency,
-        default_currency: stripeCustomer.default_currency,
-        default_source: stripeCustomer.default_source,
-        delinquent: stripeCustomer.delinquent,
-        description: stripeCustomer.description,
-        discount: stripeCustomer.discount,
-        email: stripeCustomer.email,
-        invoice_prefix: stripeCustomer.invoice_prefix,
-        livemode: stripeCustomer.livemode,
-        metadata: stripeCustomer.metadata,
-        name: stripeCustomer.name,
-        next_invoice_sequence: stripeCustomer.next_invoice_sequence,
-        phone: stripeCustomer.phone,
-        preferred_locales: stripeCustomer.preferred_locales,
-        shipping: stripeCustomer.shipping,
-        tax_exempt: stripeCustomer.tax_exempt,
-        test_clock: stripeCustomer.test_clock,
+        id: stripeInvoice.id,
+        auto_advance: stripeInvoice.auto_advance,
+        charge: stripeInvoice.charge,
+        collection_method: stripeInvoice.collection_method,
+        currency: stripeInvoice.currency,
+        customer: stripeInvoice.customer,
+        description: stripeInvoice.description,
+        hosted_invoice_url: stripeInvoice.hosted_invoice_url,
+        lines: stripeInvoice.lines,
+        metadata: JSON.stringify(stripeInvoice.metadata),
+        payment_intent: stripeInvoice.payment_intent,
+        period_end: stripeInvoice.period_end,
+        period_start: stripeInvoice.period_start,
+        status: stripeInvoice.status,
+        subscription: stripeInvoice.subscription,
+        total: stripeInvoice.total,
       });
 
       if (insert == null) {
@@ -216,7 +205,7 @@ const handler = async (transaction: Transaction) => {
       mutations_batch = [];
       batch_counter = 0;
       console.log("total_counter: ", total_counter);
-    } else if (total_counter + batch_size > stripeCustomers.length) {
+    } else if (total_counter + batch_size > stripeinvoices.length) {
       await runMutations({ mutations: mutations_batch });
       mutations_batch = [];
       batch_counter = 0;

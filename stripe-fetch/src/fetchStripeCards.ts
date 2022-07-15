@@ -16,7 +16,7 @@ import { isString, isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const fetchStripeCustomers = async () => {
+const fetchStripecards = async () => {
   var myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
   myHeaders.append("Authorization", `Bearer ${stripe_key}`);
@@ -24,7 +24,7 @@ const fetchStripeCustomers = async () => {
   let total_counter = 0;
   const full_results = [];
 
-  let url = "https://api.stripe.com//v1/customers?limit=100";
+  let url = "https://api.stripe.com//v1/cards?limit=100";
   let has_more = true;
 
   do {
@@ -58,7 +58,7 @@ const handler = async (transaction: Transaction) => {
   const schema = new Schema(tableDescriptors);
 
   const affectedRows = schema.getAffectedRows(
-    "stripe-customers-trigger",
+    "stripe-cards-trigger",
     "Trigger",
     transaction
   );
@@ -82,7 +82,7 @@ const handler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key
-    from "stripe-customers-trigger"
+    from "stripe-cards-trigger"
     where _dataland_key in ${keyList}`,
   });
 
@@ -91,19 +91,19 @@ const handler = async (transaction: Transaction) => {
   const keyGenerator = new KeyGenerator();
   const ordinalGenerator = new OrdinalGenerator();
 
-  // fetch Stripe customers from Stripe
-  const stripeCustomers = await fetchStripeCustomers();
+  // fetch Stripe cards from Stripe
+  const stripecards = await fetchStripecards();
 
-  if (stripeCustomers == null) {
+  if (stripecards == null) {
     return;
   }
 
-  // fetch existing Stripe customers
+  // fetch existing Stripe cards
   const existing_stripe_data = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key, id
-    from "stripe-customers"`,
+    from "stripe-cards"`,
   });
 
   const existing_stripe_rows = unpackRows(existing_stripe_data);
@@ -121,51 +121,49 @@ const handler = async (transaction: Transaction) => {
   let batch_size = 100; // push 100 at a time
   let total_counter = 0;
 
-  for (const stripeCustomer of stripeCustomers) {
+  for (const stripeCard of stripecards) {
     // Generate an ID
     const id = await keyGenerator.nextKey();
     const ordinal = await ordinalGenerator.nextOrdinal();
 
     // grab the object_id for each Shippo Shipment
-    const stripe_customer_id = String(stripeCustomer.id);
+    const stripe_card_id = String(stripeCard.id);
 
-    if (stripe_customer_id == null) {
+    if (stripe_card_id == null) {
       continue;
     }
 
-    // check if the Stripe customer already exists
-    if (existing_stripe_ids.includes(stripe_customer_id)) {
+    // check if the Stripe card already exists
+    if (existing_stripe_ids.includes(stripe_card_id)) {
       // get the _dataland_key of the
 
-      const position = existing_stripe_ids.indexOf(stripe_customer_id);
+      const position = existing_stripe_ids.indexOf(stripe_card_id);
       const existing_key = existing_stripe_keys[position];
 
       if (!isNumber(existing_key)) {
         continue;
       }
 
-      const update = schema.makeUpdateRows("stripe-customers", existing_key, {
-        object: stripeCustomer.object,
-        address: stripeCustomer.address,
-        balance: stripeCustomer.balance,
-        created: stripeCustomer.created,
-        currency: stripeCustomer.currency,
-        default_currency: stripeCustomer.default_currency,
-        default_source: stripeCustomer.default_source,
-        delinquent: stripeCustomer.delinquent,
-        description: stripeCustomer.description,
-        discount: stripeCustomer.discount,
-        email: stripeCustomer.email,
-        invoice_prefix: stripeCustomer.invoice_prefix,
-        livemode: stripeCustomer.livemode,
-        metadata: stripeCustomer.metadata,
-        name: stripeCustomer.name,
-        next_invoice_sequence: stripeCustomer.next_invoice_sequence,
-        phone: stripeCustomer.phone,
-        preferred_locales: stripeCustomer.preferred_locales,
-        shipping: stripeCustomer.shipping,
-        tax_exempt: stripeCustomer.tax_exempt,
-        test_clock: stripeCustomer.test_clock,
+      const update = schema.makeUpdateRows("stripe-cards", existing_key, {
+        id: stripeCard.id,
+        address_city: stripeCard.address_city,
+        address_country: stripeCard.address_country,
+        address_line1: stripeCard.address_line1,
+        address_line2: stripeCard.address_line2,
+        address_state: stripeCard.address_state,
+        address_zip: stripeCard.address_zip,
+        address_zip_check: stripeCard.address_zip_check,
+        brand: stripeCard.brand,
+        country: stripeCard.country,
+        customer: stripeCard.customer,
+        cvc_check: stripeCard.cvc_check,
+        exp_month: stripeCard.exp_month,
+        exp_year: stripeCard.exp_year,
+        fingerprint: stripeCard.fingerprint,
+        funding: stripeCard.funding,
+        last4: stripeCard.last4,
+        metadata: stripeCard.metadata,
+        name: stripeCard.name,
       });
 
       if (update == null) {
@@ -176,30 +174,27 @@ const handler = async (transaction: Transaction) => {
       batch_counter++;
       total_counter++;
     } else {
-      const insert = schema.makeInsertRows("stripe-customers", id, {
+      const insert = schema.makeInsertRows("stripe-cards", id, {
         _dataland_ordinal: ordinal,
-        id: stripeCustomer.id,
-        object: stripeCustomer.object,
-        address: stripeCustomer.address,
-        balance: stripeCustomer.balance,
-        created: stripeCustomer.created,
-        currency: stripeCustomer.currency,
-        default_currency: stripeCustomer.default_currency,
-        default_source: stripeCustomer.default_source,
-        delinquent: stripeCustomer.delinquent,
-        description: stripeCustomer.description,
-        discount: stripeCustomer.discount,
-        email: stripeCustomer.email,
-        invoice_prefix: stripeCustomer.invoice_prefix,
-        livemode: stripeCustomer.livemode,
-        metadata: stripeCustomer.metadata,
-        name: stripeCustomer.name,
-        next_invoice_sequence: stripeCustomer.next_invoice_sequence,
-        phone: stripeCustomer.phone,
-        preferred_locales: stripeCustomer.preferred_locales,
-        shipping: stripeCustomer.shipping,
-        tax_exempt: stripeCustomer.tax_exempt,
-        test_clock: stripeCustomer.test_clock,
+        id: stripeCard.id,
+        address_city: stripeCard.address_city,
+        address_country: stripeCard.address_country,
+        address_line1: stripeCard.address_line1,
+        address_line2: stripeCard.address_line2,
+        address_state: stripeCard.address_state,
+        address_zip: stripeCard.address_zip,
+        address_zip_check: stripeCard.address_zip_check,
+        brand: stripeCard.brand,
+        country: stripeCard.country,
+        customer: stripeCard.customer,
+        cvc_check: stripeCard.cvc_check,
+        exp_month: stripeCard.exp_month,
+        exp_year: stripeCard.exp_year,
+        fingerprint: stripeCard.fingerprint,
+        funding: stripeCard.funding,
+        last4: stripeCard.last4,
+        metadata: stripeCard.metadata,
+        name: stripeCard.name,
       });
 
       if (insert == null) {
@@ -216,7 +211,7 @@ const handler = async (transaction: Transaction) => {
       mutations_batch = [];
       batch_counter = 0;
       console.log("total_counter: ", total_counter);
-    } else if (total_counter + batch_size > stripeCustomers.length) {
+    } else if (total_counter + batch_size > stripecards.length) {
       await runMutations({ mutations: mutations_batch });
       mutations_batch = [];
       batch_counter = 0;

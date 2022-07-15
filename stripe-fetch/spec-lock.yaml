@@ -19,7 +19,7 @@ resources:
     metadata:
       name: fetch-stripe-customers
     spec:
-      scriptSha256Hex: 845661752bce31d48412686d44c0f460bface76475499360ad3612c4a7448cdc
+      scriptSha256Hex: b3f0b9889c690e0ac1ddf70d28a8652b6c0db7ff4ebef658b950dd96bd085477
       env:
         - name: STRIPE_API_KEY
           value:
@@ -31,7 +31,7 @@ resources:
     metadata:
       name: fetch-stripe-subscriptions
     spec:
-      scriptSha256Hex: d1ace8fd7ba1776aee2624747a06bb190cb08a122551350f562646aec46ad548
+      scriptSha256Hex: d4d5ae610eed29e07c1584235b3fa5d230d0751e5ce7ecec8f28b81c82b3b3a3
       env:
         - name: STRIPE_API_KEY
           value:
@@ -43,7 +43,31 @@ resources:
     metadata:
       name: fetch-stripe-paymentintents
     spec:
-      scriptSha256Hex: 83496d8ade515884602185bb8e27c40d3915e5adc77e9b78591708c08aabe907
+      scriptSha256Hex: 647cfbbfa4213a6777caff86401a6cea792dff2f12c0738d67883b0f7f23d44e
+      env:
+        - name: STRIPE_API_KEY
+          value:
+            secretKeyRef:
+              name: stripe-api-key
+              key: parameterValue
+  - apiVersion: dataland.io/v1alpha1
+    kind: Worker
+    metadata:
+      name: fetch-stripe-invoices
+    spec:
+      scriptSha256Hex: aa7cd5e4e62b1c00a86bdc4c58b54ee12f6c2d300e08fa1fc9e10e3a9b7d9dd0
+      env:
+        - name: STRIPE_API_KEY
+          value:
+            secretKeyRef:
+              name: stripe-api-key
+              key: parameterValue
+  - apiVersion: dataland.io/v1alpha1
+    kind: Worker
+    metadata:
+      name: fetch-stripe-cards
+    spec:
+      scriptSha256Hex: de5c6ae349d92093da552154538e2f537207e05bf74298957ce4577ff270f709
       env:
         - name: STRIPE_API_KEY
           value:
@@ -352,6 +376,206 @@ resources:
           nullable: true
           columnAnnotations:
             dataland.io/column-display-config: "{\n  \"type\": \"select\",\n  \"options\": [\n    {\n      \"value\": \"requires_payment_method\",\n      \"theme\": \"ruby\"\n    },\n    {\n      \"value\": \"requires_confirmation\",\n      \"theme\": \"ruby\"\n    },                \n    {\n      \"value\": \"requires_action\",\n      \"theme\": \"ruby\"\n    },                                                 \n    {\n      \"value\": \"processing\",\n      \"theme\": \"pink\"\n    },\n    {\n      \"value\": \"requires_capture\",\n      \"theme\": \"yellow\"\n    },                \n    {\n      \"value\": \"succeeded\",\n      \"theme\": \"green\"\n    },\n    {\n      \"value\": \"incomplete\",\n      \"theme\": \"silver\"\n    }               \n  ]\n}\n"
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: invoices-trigger
+    spec:
+      tableName: stripe-invoices-trigger
+      columnDescriptors:
+        - columnId: trigger
+          columnName: Trigger
+          dataType: int32
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Invoices\",\n  \"theme\": \"blue\"\n}\n"
+        - columnId: last-pressed
+          columnName: Last pressed
+          dataType: string
+          nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: stripe-invoices
+    spec:
+      tableName: stripe-invoices
+      columnDescriptors:
+        - columnId: id
+          columnName: id
+          dataType: string
+          nullable: true
+        - columnId: auto-advance
+          columnName: auto_advance
+          dataType: string
+          nullable: true
+        - columnId: charge
+          columnName: charge
+          dataType: string
+          nullable: true
+        - columnId: collection-method
+          columnName: collection_method
+          dataType: string
+          nullable: true
+        - columnId: currency
+          columnName: currency
+          dataType: string
+          nullable: true
+        - columnId: customer
+          columnName: customer
+          dataType: string
+          nullable: true
+        - columnId: description
+          columnName: description
+          dataType: string
+          nullable: true
+        - columnId: hosted-invoice-url
+          columnName: hosted_invoice_url
+          dataType: string
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"url\"\n}\n"
+        - columnId: lines
+          columnName: lines
+          dataType: string
+          nullable: true
+        - columnId: metadata
+          columnName: metadata
+          dataType: string
+          nullable: true
+        - columnId: payment-intent
+          columnName: payment_intent
+          dataType: string
+          nullable: true
+        - columnId: period-end
+          columnName: period_end
+          dataType: string
+          nullable: true
+        - columnId: period-start
+          columnName: period_start
+          dataType: string
+          nullable: true
+        - columnId: status
+          columnName: status
+          dataType: string
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"select\",\n  \"options\": [\n    {\n      \"value\": \"draft\",\n      \"theme\": \"silver\"\n    },\n    {\n      \"value\": \"open\",\n      \"theme\": \"ruby\"\n    },\n    {\n      \"value\": \"paid\",\n      \"theme\": \"green\"\n    },\n    {\n      \"value\": \"uncollectible\",\n      \"theme\": \"yellow\"\n    },\n    {\n      \"value\": \"voided\",\n      \"theme\": \"silver\"\n    }\n  ]\n}\n"
+        - columnId: subscription
+          columnName: subscription
+          dataType: string
+          nullable: true
+        - columnId: total
+          columnName: total
+          dataType: float64
+          nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: cards-trigger
+    spec:
+      tableName: stripe-cards-trigger
+      columnDescriptors:
+        - columnId: trigger
+          columnName: Trigger
+          dataType: int32
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Cards\",\n  \"theme\": \"blue\"\n}\n"
+        - columnId: last-pressed
+          columnName: Last pressed
+          dataType: string
+          nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: stripe-cards
+    spec:
+      tableName: stripe-cards
+      columnDescriptors:
+        - columnId: id
+          columnName: id
+          dataType: string
+          nullable: true
+        - columnId: address-city
+          columnName: address_city
+          dataType: string
+          nullable: true
+        - columnId: address-country
+          columnName: address_country
+          dataType: string
+          nullable: true
+        - columnId: address-line1
+          columnName: address_line1
+          dataType: string
+          nullable: true
+        - columnId: address-line2
+          columnName: address_line2
+          dataType: string
+          nullable: true
+        - columnId: address-state
+          columnName: address_state
+          dataType: string
+          nullable: true
+        - columnId: address-zip
+          columnName: address_zip
+          dataType: string
+          nullable: true
+        - columnId: address-zip-check
+          columnName: address_zip_check
+          dataType: string
+          nullable: true
+        - columnId: brand
+          columnName: brand
+          dataType: string
+          nullable: true
+        - columnId: country
+          columnName: country
+          dataType: string
+          nullable: true
+        - columnId: customer
+          columnName: customer
+          dataType: string
+          nullable: true
+        - columnId: cvc-check
+          columnName: cvc_check
+          dataType: string
+          nullable: true
+        - columnId: exp-month
+          columnName: exp_month
+          dataType: int32
+          nullable: true
+        - columnId: exp-year
+          columnName: exp_year
+          dataType: int32
+          nullable: true
+        - columnId: fingerprint
+          columnName: fingerprint
+          dataType: string
+          nullable: true
+        - columnId: funding
+          columnName: funding
+          dataType: string
+          nullable: true
+        - columnId: last4
+          columnName: last4
+          dataType: string
+          nullable: true
+        - columnId: metadata
+          columnName: metadata
+          dataType: string
+          nullable: true
+        - columnId: name
+          columnName: name
+          dataType: string
+          nullable: true
       tableAnnotations: {}
       autoMigrate: true
 parameterizedResources:

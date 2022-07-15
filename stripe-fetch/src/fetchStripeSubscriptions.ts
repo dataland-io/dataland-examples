@@ -201,6 +201,11 @@ const handler = async (transaction: Transaction) => {
       mutations_batch = [];
       batch_counter = 0;
       console.log("total_counter: ", total_counter);
+    } else if (total_counter + batch_size > stripesubscriptions.length) {
+      await runMutations({ mutations: mutations_batch });
+      mutations_batch = [];
+      batch_counter = 0;
+      console.log("total_counter: ", total_counter);
     }
   }
 };
