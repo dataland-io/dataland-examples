@@ -143,6 +143,45 @@ tables:
       - columnId: id
         columnName: id
         dataType: string
+      # status: stripeSubscription.status,
+      - columnId: status
+        columnName: status
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "incomplete_expired",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "incomplete",
+                  "theme": "ruby"
+                },                
+                {
+                  "value": "cancelled",
+                  "theme": "ruby"
+                },     
+                {
+                  "value": "unpaid",
+                  "theme": "ruby"
+                },                                                
+                {
+                  "value": "trialing",
+                  "theme": "pink"
+                },
+                {
+                  "value": "past_due",
+                  "theme": "yellow"
+                },                
+                {
+                  "value": "active",
+                  "theme": "green"
+                }
+              ]
+            }
       - columnId: created
         columnName: created
         dataType: int64
@@ -185,10 +224,6 @@ tables:
       # metadata: stripeSubscription.metadata,
       - columnId: metadata
         columnName: metadata
-        dataType: string
-      # status: stripeSubscription.status,
-      - columnId: status
-        columnName: status
         dataType: string
 
 workers:

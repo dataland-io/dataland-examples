@@ -31,7 +31,7 @@ resources:
     metadata:
       name: fetch-stripe-subscriptions
     spec:
-      scriptSha256Hex: bb69f2b7c4cda12d0b359fb8bd268b41e0fa1cd58330635bb23cfd360a94b997
+      scriptSha256Hex: d1ace8fd7ba1776aee2624747a06bb190cb08a122551350f562646aec46ad548
       env:
         - name: STRIPE_API_KEY
           value:
@@ -184,6 +184,12 @@ resources:
           columnName: id
           dataType: string
           nullable: true
+        - columnId: status
+          columnName: status
+          dataType: string
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"select\",\n  \"options\": [\n    {\n      \"value\": \"incomplete_expired\",\n      \"theme\": \"ruby\"\n    },\n    {\n      \"value\": \"incomplete\",\n      \"theme\": \"ruby\"\n    },                \n    {\n      \"value\": \"cancelled\",\n      \"theme\": \"ruby\"\n    },     \n    {\n      \"value\": \"unpaid\",\n      \"theme\": \"ruby\"\n    },                                                \n    {\n      \"value\": \"trialing\",\n      \"theme\": \"pink\"\n    },\n    {\n      \"value\": \"past_due\",\n      \"theme\": \"yellow\"\n    },                \n    {\n      \"value\": \"active\",\n      \"theme\": \"green\"\n    }\n  ]\n}\n"
         - columnId: created
           columnName: created
           dataType: int64
@@ -226,10 +232,6 @@ resources:
           nullable: true
         - columnId: metadata
           columnName: metadata
-          dataType: string
-          nullable: true
-        - columnId: status
-          columnName: status
           dataType: string
           nullable: true
       tableAnnotations: {}

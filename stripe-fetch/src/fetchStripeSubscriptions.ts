@@ -156,9 +156,9 @@ const handler = async (transaction: Transaction) => {
           customer: stripeSubscription.customer,
           default_payment_method: stripeSubscription.default_payment_method,
           description: stripeSubscription.description,
-          items: stripeSubscription.items,
+          items: JSON.stringify(stripeSubscription.items),
           latest_invoice: stripeSubscription.latest_invoice,
-          metadata: stripeSubscription.metadata,
+          metadata: JSON.stringify(stripeSubscription.metadata),
           status: stripeSubscription.status,
         }
       );
@@ -181,9 +181,9 @@ const handler = async (transaction: Transaction) => {
         customer: stripeSubscription.customer,
         default_payment_method: stripeSubscription.default_payment_method,
         description: stripeSubscription.description,
-        items: stripeSubscription.items,
+        items: JSON.stringify(stripeSubscription.items),
         latest_invoice: stripeSubscription.latest_invoice,
-        metadata: stripeSubscription.metadata,
+        metadata: JSON.stringify(stripeSubscription.metadata),
         status: stripeSubscription.status,
       });
 
