@@ -5,7 +5,9 @@ const config: Configuration = {
   mode: "production",
   target: "web",
   entry: {
-    stripeFetch: "./src/stripeFetch.ts",
+    fetchStripeCustomers: "./src/fetchStripeCustomers.ts",
+    fetchStripeSubscriptions: "./src/fetchStripeSubscriptions.ts",
+    fetchStripeCustomersWithSub: "./src/fetchStripeCustomersWithSub.ts",
   },
   module: {
     rules: [

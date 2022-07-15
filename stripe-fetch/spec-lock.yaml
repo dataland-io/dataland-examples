@@ -5,9 +5,33 @@ resources:
   - apiVersion: dataland.io/v1alpha1
     kind: Worker
     metadata:
-      name: stripe-fetch
+      name: fetch-stripe-customers-with-sub
     spec:
-      scriptSha256Hex: fdc98c2a818dcdfd2a779f36cba99e7a7d849c775f2f6083547e9ce395a5c299
+      scriptSha256Hex: 2adf38a116b1461c7495f5ff0fcbe5ad56be3ffe3b472b3694470d66f3690279
+      env:
+        - name: STRIPE_API_KEY
+          value:
+            secretKeyRef:
+              name: stripe-api-key
+              key: parameterValue
+  - apiVersion: dataland.io/v1alpha1
+    kind: Worker
+    metadata:
+      name: fetch-stripe-customers
+    spec:
+      scriptSha256Hex: 845661752bce31d48412686d44c0f460bface76475499360ad3612c4a7448cdc
+      env:
+        - name: STRIPE_API_KEY
+          value:
+            secretKeyRef:
+              name: stripe-api-key
+              key: parameterValue
+  - apiVersion: dataland.io/v1alpha1
+    kind: Worker
+    metadata:
+      name: fetch-stripe-subscriptions
+    spec:
+      scriptSha256Hex: bb69f2b7c4cda12d0b359fb8bd268b41e0fa1cd58330635bb23cfd360a94b997
       env:
         - name: STRIPE_API_KEY
           value:
@@ -19,7 +43,7 @@ resources:
     metadata:
       name: trigger
     spec:
-      tableName: Import Trigger
+      tableName: stripe-customers-trigger
       columnDescriptors:
         - columnId: trigger
           columnName: Trigger
@@ -40,24 +64,172 @@ resources:
     spec:
       tableName: stripe-customers
       columnDescriptors:
-        - columnId: stripe-customer-id
-          columnName: stripe_customer_id
+        - columnId: id
+          columnName: id
+          dataType: string
+          nullable: true
+        - columnId: object
+          columnName: object
+          dataType: string
+          nullable: true
+        - columnId: address
+          columnName: address
+          dataType: string
+          nullable: true
+        - columnId: balance
+          columnName: balance
+          dataType: float64
+          nullable: true
+        - columnId: created
+          columnName: created
+          dataType: int64
+          nullable: true
+        - columnId: currency
+          columnName: currency
+          dataType: string
+          nullable: true
+        - columnId: default-currency
+          columnName: default_currency
+          dataType: string
+          nullable: true
+        - columnId: default-source
+          columnName: default_source
+          dataType: string
+          nullable: true
+        - columnId: delinquent
+          columnName: delinquent
+          dataType: boolean
+          nullable: true
+        - columnId: description
+          columnName: description
+          dataType: string
+          nullable: true
+        - columnId: discount
+          columnName: discount
           dataType: string
           nullable: true
         - columnId: email
           columnName: email
           dataType: string
           nullable: true
-        - columnId: stripe-subscription-id
-          columnName: stripe_subscription_id
+        - columnId: invoice-prefix
+          columnName: invoice_prefix
           dataType: string
           nullable: true
-        - columnId: sub-status
-          columnName: sub_status
+        - columnId: livemode
+          columnName: livemode
+          dataType: boolean
+          nullable: true
+        - columnId: metadata
+          columnName: metadata
           dataType: string
           nullable: true
-        - columnId: latest-invoice-id
-          columnName: latest_invoice_id
+        - columnId: name
+          columnName: name
+          dataType: string
+          nullable: true
+        - columnId: next-invoice-sequence
+          columnName: next_invoice_sequence
+          dataType: int64
+          nullable: true
+        - columnId: phone
+          columnName: phone
+          dataType: string
+          nullable: true
+        - columnId: preferred-locales
+          columnName: preferred_locales
+          dataType: string
+          nullable: true
+        - columnId: shipping
+          columnName: shipping
+          dataType: string
+          nullable: true
+        - columnId: tax-exempt
+          columnName: tax_exempt
+          dataType: string
+          nullable: true
+        - columnId: test-clock
+          columnName: test_clock
+          dataType: int64
+          nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: subscriptions-trigger
+    spec:
+      tableName: stripe-subscriptions-trigger
+      columnDescriptors:
+        - columnId: trigger
+          columnName: Trigger
+          dataType: int32
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Subscriptions\",\n  \"theme\": \"blue\"\n}\n"
+        - columnId: last-pressed
+          columnName: Last pressed
+          dataType: string
+          nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: stripe-subscriptions
+    spec:
+      tableName: stripe-subscriptions
+      columnDescriptors:
+        - columnId: id
+          columnName: id
+          dataType: string
+          nullable: true
+        - columnId: created
+          columnName: created
+          dataType: int64
+          nullable: true
+        - columnId: cancel-at-period-end
+          columnName: cancel_at_period_end
+          dataType: boolean
+          nullable: true
+        - columnId: canceled-at
+          columnName: canceled_at
+          dataType: int64
+          nullable: true
+        - columnId: current-period-end
+          columnName: current_period_end
+          dataType: int64
+          nullable: true
+        - columnId: current-period-start
+          columnName: current_period_start
+          dataType: int64
+          nullable: true
+        - columnId: customer
+          columnName: customer
+          dataType: string
+          nullable: true
+        - columnId: default-payment-method
+          columnName: default_payment_method
+          dataType: string
+          nullable: true
+        - columnId: description
+          columnName: description
+          dataType: string
+          nullable: true
+        - columnId: items
+          columnName: items
+          dataType: string
+          nullable: true
+        - columnId: latest-invoice
+          columnName: latest_invoice
+          dataType: string
+          nullable: true
+        - columnId: metadata
+          columnName: metadata
+          dataType: string
+          nullable: true
+        - columnId: status
+          columnName: status
           dataType: string
           nullable: true
       tableAnnotations: {}

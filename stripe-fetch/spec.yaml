@@ -7,7 +7,7 @@ parameters:
 
 tables:
   - tableId: trigger
-    tableName: "Import Trigger"
+    tableName: stripe-customers-trigger
     autoMigrate: true
     columnDescriptors:
       - columnId: "trigger"
@@ -20,7 +20,6 @@ tables:
               "label": "Import Stripe Customers",
               "theme": "blue"
             }
-
       - columnId: "last-pressed"
         columnName: "Last pressed"
         dataType: string
@@ -29,24 +28,181 @@ tables:
     tableName: stripe-customers
     autoMigrate: true
     columnDescriptors:
-      - columnId: stripe-customer-id
-        columnName: stripe_customer_id
+      # id: stripeCustomer.id,
+      - columnId: id
+        columnName: id
         dataType: string
-      - columnId: "email"
-        columnName: "email"
+        # object: stripeCustomer.object,
+      - columnId: object
+        columnName: object
         dataType: string
-      - columnId: "stripe-subscription-id"
-        columnName: "stripe_subscription_id"
+        # address: stripeCustomer.address,
+      - columnId: address
+        columnName: address
         dataType: string
-      - columnId: "sub-status"
-        columnName: "sub_status"
+        # balance: stripeCustomer.balance,
+      - columnId: balance
+        columnName: balance
+        dataType: float64
+        # created: stripeCustomer.created,
+      - columnId: created
+        columnName: created
+        dataType: int64
+        # currency: stripeCustomer.currency,
+      - columnId: currency
+        columnName: currency
         dataType: string
-      - columnId: "latest-invoice-id"
-        columnName: "latest_invoice_id"
+        # default_currency: stripeCustomer.default_currency,
+      - columnId: default-currency
+        columnName: default_currency
+        dataType: string
+        # default_source: stripeCustomer.default_source,
+      - columnId: default-source
+        columnName: default_source
+        dataType: string
+        # delinquent: stripeCustomer.delinquent,
+      - columnId: delinquent
+        columnName: delinquent
+        dataType: boolean
+        # description: stripeCustomer.description,
+      - columnId: description
+        columnName: description
+        dataType: string
+        # discount: stripeCustomer.discount,
+      - columnId: discount
+        columnName: discount
+        dataType: string
+        # email: stripeCustomer.email,
+      - columnId: email
+        columnName: email
+        dataType: string
+        # invoice_prefix: stripeCustomer.invoice_prefix,
+      - columnId: invoice-prefix
+        columnName: invoice_prefix
+        dataType: string
+        # livemode: stripeCustomer.livemode,
+      - columnId: livemode
+        columnName: livemode
+        dataType: boolean
+        # metadata: stripeCustomer.metadata,
+      - columnId: metadata
+        columnName: metadata
+        dataType: string
+        # name: stripeCustomer.name,
+      - columnId: name
+        columnName: name
+        dataType: string
+        # next_invoice_sequence: stripeCustomer.next_invoice_sequence,
+      - columnId: next-invoice-sequence
+        columnName: next_invoice_sequence
+        dataType: int64
+        # phone: stripeCustomer.phone,
+      - columnId: phone
+        columnName: phone
+        dataType: string
+        # preferred_locales: stripeCustomer.preferred_locales,
+      - columnId: preferred-locales
+        columnName: preferred_locales
+        dataType: string
+        # shipping: stripeCustomer.shipping,
+      - columnId: shipping
+        columnName: shipping
+        dataType: string
+        # tax_exempt: stripeCustomer.tax_exempt,
+      - columnId: tax-exempt
+        columnName: tax_exempt
+        dataType: string
+        # test_clock: stripeCustomer.test_clock,
+      - columnId: test-clock
+        columnName: test_clock
+        dataType: int64
+
+  - tableId: subscriptions-trigger
+    tableName: stripe-subscriptions-trigger
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "trigger"
+        columnName: "Trigger"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Import Stripe Subscriptions",
+              "theme": "blue"
+            }
+      - columnId: "last-pressed"
+        columnName: "Last pressed"
+        dataType: string
+
+  - tableId: stripe-subscriptions
+    tableName: stripe-subscriptions
+    autoMigrate: true
+    columnDescriptors:
+      # id: stripeCustomer.id,
+      - columnId: id
+        columnName: id
+        dataType: string
+      - columnId: created
+        columnName: created
+        dataType: int64
+      # cancel_at_period_end: stripeSubscription.cancel_at_period_end,
+      - columnId: cancel-at-period-end
+        columnName: cancel_at_period_end
+        dataType: boolean
+        # canceled_at: stripeSubscription.canceled_at,
+      - columnId: canceled-at
+        columnName: canceled_at
+        dataType: int64
+        # current_period_end: stripeSubscription.current_period_end,
+      - columnId: current-period-end
+        columnName: current_period_end
+        dataType: int64
+        # current_period_start: stripeSubscription.current_period_start,
+      - columnId: current-period-start
+        columnName: current_period_start
+        dataType: int64
+        # customer: stripeSubscription.customer,
+      - columnId: customer
+        columnName: customer
+        dataType: string
+      # default_payment_method: stripeSubscription.default_payment_method,
+      - columnId: default-payment-method
+        columnName: default_payment_method
+        dataType: string
+      # description: stripeSubscription.description,
+      - columnId: description
+        columnName: description
+        dataType: string
+      # items: stripeSubscription.items,
+      - columnId: items
+        columnName: items
+        dataType: string
+      # latest_invoice: stripeSubscription.latest_invoice,
+      - columnId: latest-invoice
+        columnName: latest_invoice
+        dataType: string
+      # metadata: stripeSubscription.metadata,
+      - columnId: metadata
+        columnName: metadata
+        dataType: string
+      # status: stripeSubscription.status,
+      - columnId: status
+        columnName: status
         dataType: string
 
 workers:
-  - workerId: stripe-fetch
-    scriptPath: dist/stripeFetch.bundle.js
+  - workerId: fetch-stripe-customers-with-sub
+    scriptPath: dist/fetchStripeCustomersWithSub.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+
+  - workerId: fetch-stripe-customers
+    scriptPath: dist/fetchStripeCustomers.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+
+  - workerId: fetch-stripe-subscriptions
+    scriptPath: dist/fetchStripeSubscriptions.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
