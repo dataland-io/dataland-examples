@@ -16,10 +16,10 @@ import { isString, isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const fetchStripesubscriptions = async () => {
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
-  myHeaders.append("Authorization", `Bearer ${stripe_key}`);
+const fetchStripeSubscriptions = async () => {
+  var headers = new Headers();
+  headers.append("Content-Type", "application/x-www-form-urlencoded");
+  headers.append("Authorization", `Bearer ${stripe_key}`);
 
   let total_counter = 0;
   const full_results = [];
@@ -30,7 +30,7 @@ const fetchStripesubscriptions = async () => {
   do {
     const stripe_response = await fetch(url, {
       method: "GET",
-      headers: myHeaders,
+      headers: headers,
       redirect: "follow",
     });
     const data = await stripe_response.json();
@@ -42,7 +42,12 @@ const fetchStripesubscriptions = async () => {
       for (const result of results) {
         full_results.push(result);
         total_counter++;
-        console.log("id: ", result.id, " – total_counter: ", total_counter);
+        console.log(
+          "Subscription id: ",
+          result.id,
+          " – total_counter: ",
+          total_counter
+        );
       }
     }
   } while (has_more);
@@ -92,9 +97,9 @@ const handler = async (transaction: Transaction) => {
   const ordinalGenerator = new OrdinalGenerator();
 
   // fetch Stripe subscriptions from Stripe
-  const stripesubscriptions = await fetchStripesubscriptions();
+  const stripeSubscriptions = await fetchStripeSubscriptions();
 
-  if (stripesubscriptions == null) {
+  if (stripeSubscriptions == null) {
     return;
   }
 
@@ -118,15 +123,14 @@ const handler = async (transaction: Transaction) => {
 
   let mutations_batch: Mutation[] = [];
   let batch_counter = 0;
-  let batch_size = 100; // push 100 at a time
+  let batch_size = 100; // push 100 updates/inserts at a time
   let total_counter = 0;
 
-  for (const stripeSubscription of stripesubscriptions) {
-    // Generate an ID
+  for (const stripeSubscription of stripeSubscriptions) {
+    // Generate a new _dataland_key and _dataland_ordinal value
     const id = await keyGenerator.nextKey();
     const ordinal = await ordinalGenerator.nextOrdinal();
 
-    // grab the object_id for each Shippo Shipment
     const stripe_subscription_id = String(stripeSubscription.id);
 
     if (stripe_subscription_id == null) {
@@ -135,8 +139,6 @@ const handler = async (transaction: Transaction) => {
 
     // check if the Stripe subscription already exists
     if (existing_stripe_ids.includes(stripe_subscription_id)) {
-      // get the _dataland_key of the
-
       const position = existing_stripe_ids.indexOf(stripe_subscription_id);
       const existing_key = existing_stripe_keys[position];
 
@@ -200,12 +202,12 @@ const handler = async (transaction: Transaction) => {
       await runMutations({ mutations: mutations_batch });
       mutations_batch = [];
       batch_counter = 0;
-      console.log("total_counter: ", total_counter);
-    } else if (total_counter + batch_size > stripesubscriptions.length) {
+      console.log("total processed: ", total_counter);
+    } else if (total_counter + batch_size > stripeSubscriptions.length) {
       await runMutations({ mutations: mutations_batch });
       mutations_batch = [];
       batch_counter = 0;
-      console.log("total_counter: ", total_counter);
+      console.log("total processed: ", total_counter);
     }
   }
 };

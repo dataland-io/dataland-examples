@@ -227,7 +227,7 @@ tables:
         dataType: string
 
   - tableId: paymentintents-trigger
-    tableName: stripe-paymentintents-trigger
+    tableName: stripe-payment-intents-trigger
     autoMigrate: true
     columnDescriptors:
       - columnId: "trigger"
@@ -244,8 +244,8 @@ tables:
         columnName: "Last pressed"
         dataType: string
 
-  - tableId: stripe-paymentintents
-    tableName: stripe-paymentintents
+  - tableId: stripe-payment-intents
+    tableName: stripe-payment-intents
     autoMigrate: true
     columnDescriptors:
       - columnId: "id"
@@ -576,7 +576,7 @@ workers:
     env:
       STRIPE_API_KEY: stripe-api-key
 
-  - workerId: fetch-stripe-paymentintents
+  - workerId: fetch-stripe-payment-intents
     scriptPath: dist/fetchStripePaymentIntents.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key

@@ -17,9 +17,9 @@ import { isString, isNumber } from "lodash-es";
 const stripe_key = getEnv("STRIPE_API_KEY");
 
 const fetchStriperefunds = async () => {
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
-  myHeaders.append("Authorization", `Bearer ${stripe_key}`);
+  var headers = new Headers();
+  headers.append("Content-Type", "application/x-www-form-urlencoded");
+  headers.append("Authorization", `Bearer ${stripe_key}`);
 
   let total_counter = 0;
   const full_results = [];
@@ -30,7 +30,7 @@ const fetchStriperefunds = async () => {
   do {
     const stripe_response = await fetch(url, {
       method: "GET",
-      headers: myHeaders,
+      headers: headers,
       redirect: "follow",
     });
     const data = await stripe_response.json();
@@ -122,11 +122,10 @@ const handler = async (transaction: Transaction) => {
   let total_counter = 0;
 
   for (const stripeRefund of striperefunds) {
-    // Generate an ID
+    // Generate a new _dataland_key and _dataland_ordinal value
     const id = await keyGenerator.nextKey();
     const ordinal = await ordinalGenerator.nextOrdinal();
 
-    // grab the object_id for each Shippo Shipment
     const stripe_refund_id = String(stripeRefund.id);
 
     if (stripe_refund_id == null) {
@@ -135,8 +134,6 @@ const handler = async (transaction: Transaction) => {
 
     // check if the Stripe refund already exists
     if (existing_stripe_ids.includes(stripe_refund_id)) {
-      // get the _dataland_key of the
-
       const position = existing_stripe_ids.indexOf(stripe_refund_id);
       const existing_key = existing_stripe_keys[position];
 

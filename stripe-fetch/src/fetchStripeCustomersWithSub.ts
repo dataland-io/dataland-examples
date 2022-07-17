@@ -21,9 +21,9 @@ const stripe_key = getEnv("STRIPE_API_KEY");
 
 const fetchStripeCustomers = async () => {
   // --------------------------------------------------
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
-  myHeaders.append("Authorization", `Bearer ${stripe_key}`);
+  var headers = new Headers();
+  headers.append("Content-Type", "application/x-www-form-urlencoded");
+  headers.append("Authorization", `Bearer ${stripe_key}`);
 
   let total_counter = 0;
   const full_results = [];
@@ -34,7 +34,7 @@ const fetchStripeCustomers = async () => {
   do {
     const stripe_response = await fetch(url, {
       method: "GET",
-      headers: myHeaders,
+      headers: headers,
       redirect: "follow",
     });
     const data = await stripe_response.json();
@@ -57,15 +57,15 @@ const fetchStripeCustomers = async () => {
 // --------------------------------------------------
 
 const fetchFirstSubscription = async (customer_id: string) => {
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
-  myHeaders.append("Authorization", `Bearer ${stripe_key}`);
+  var headers = new Headers();
+  headers.append("Content-Type", "application/x-www-form-urlencoded");
+  headers.append("Authorization", `Bearer ${stripe_key}`);
 
   const response = await fetch(
     "https://api.stripe.com//v1/subscriptions?customer=" + customer_id,
     {
       method: "GET",
-      headers: myHeaders,
+      headers: headers,
       redirect: "follow",
     }
   );
@@ -132,11 +132,10 @@ const handler = async (transaction: Transaction) => {
   let total_counter = 0;
 
   for (const stripeCustomer of stripeCustomers) {
-    // Generate an ID
+    // Generate a new _dataland_key and _dataland_ordinal value
     const id = await keyGenerator.nextKey();
     const ordinal = await ordinalGenerator.nextOrdinal();
 
-    // grab the object_id for each Shippo Shipment
     const stripe_customer_id = String(stripeCustomer.id);
 
     if (stripe_customer_id == null) {

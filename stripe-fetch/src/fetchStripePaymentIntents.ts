@@ -16,10 +16,10 @@ import { isString, isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const fetchStripepaymentintents = async () => {
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
-  myHeaders.append("Authorization", `Bearer ${stripe_key}`);
+const fetchstripePaymentIntents = async () => {
+  var headers = new Headers();
+  headers.append("Content-Type", "application/x-www-form-urlencoded");
+  headers.append("Authorization", `Bearer ${stripe_key}`);
 
   let total_counter = 0;
   const full_results = [];
@@ -30,7 +30,7 @@ const fetchStripepaymentintents = async () => {
   do {
     const stripe_response = await fetch(url, {
       method: "GET",
-      headers: myHeaders,
+      headers: headers,
       redirect: "follow",
     });
     const data = await stripe_response.json();
@@ -58,7 +58,7 @@ const handler = async (transaction: Transaction) => {
   const schema = new Schema(tableDescriptors);
 
   const affectedRows = schema.getAffectedRows(
-    "stripe-paymentintents-trigger",
+    "stripe-payment-intents-trigger",
     "Trigger",
     transaction
   );
@@ -82,7 +82,7 @@ const handler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key
-    from "stripe-paymentintents-trigger"
+    from "stripe-payment-intents-trigger"
     where _dataland_key in ${keyList}`,
   });
 
@@ -91,19 +91,19 @@ const handler = async (transaction: Transaction) => {
   const keyGenerator = new KeyGenerator();
   const ordinalGenerator = new OrdinalGenerator();
 
-  // fetch Stripe paymentintents from Stripe
-  const stripepaymentintents = await fetchStripepaymentintents();
+  // fetch Stripe paymentIntents from Stripe
+  const stripePaymentIntents = await fetchstripePaymentIntents();
 
-  if (stripepaymentintents == null) {
+  if (stripePaymentIntents == null) {
     return;
   }
 
-  // fetch existing Stripe paymentintents
+  // fetch existing Stripe paymentIntents
   const existing_stripe_data = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key, id
-    from "stripe-paymentintents"`,
+    from "stripe-payment-intents"`,
   });
 
   const existing_stripe_rows = unpackRows(existing_stripe_data);
@@ -121,23 +121,20 @@ const handler = async (transaction: Transaction) => {
   let batch_size = 100; // push 100 at a time
   let total_counter = 0;
 
-  for (const stripePaymentIntent of stripepaymentintents) {
-    // Generate an ID
+  for (const stripePaymentIntent of stripePaymentIntents) {
+    // Generate a new _dataland_key and _dataland_ordinal value
     const id = await keyGenerator.nextKey();
     const ordinal = await ordinalGenerator.nextOrdinal();
 
-    // grab the object_id for each Shippo Shipment
-    const stripe_paymentintent_id = String(stripePaymentIntent.id);
+    const stripe_paymentIntent_id = String(stripePaymentIntent.id);
 
-    if (stripe_paymentintent_id == null) {
+    if (stripe_paymentIntent_id == null) {
       continue;
     }
 
-    // check if the Stripe paymentintent already exists
-    if (existing_stripe_ids.includes(stripe_paymentintent_id)) {
-      // get the _dataland_key of the
-
-      const position = existing_stripe_ids.indexOf(stripe_paymentintent_id);
+    // check if the Stripe paymentIntent already exists
+    if (existing_stripe_ids.includes(stripe_paymentIntent_id)) {
+      const position = existing_stripe_ids.indexOf(stripe_paymentIntent_id);
       const existing_key = existing_stripe_keys[position];
 
       if (!isNumber(existing_key)) {
@@ -145,7 +142,7 @@ const handler = async (transaction: Transaction) => {
       }
 
       const update = schema.makeUpdateRows(
-        "stripe-paymentintents",
+        "stripe-payment-intents",
         existing_key,
         {
           id: stripePaymentIntent.id,
@@ -180,7 +177,7 @@ const handler = async (transaction: Transaction) => {
       batch_counter++;
       total_counter++;
     } else {
-      const insert = schema.makeInsertRows("stripe-paymentintents", id, {
+      const insert = schema.makeInsertRows("stripe-payment-intents", id, {
         _dataland_ordinal: ordinal,
         id: stripePaymentIntent.id,
         amount: stripePaymentIntent.amount,
@@ -219,7 +216,7 @@ const handler = async (transaction: Transaction) => {
       mutations_batch = [];
       batch_counter = 0;
       console.log("total_counter: ", total_counter);
-    } else if (total_counter + batch_size > stripepaymentintents.length) {
+    } else if (total_counter + batch_size > stripePaymentIntents.length) {
       await runMutations({ mutations: mutations_batch });
       mutations_batch = [];
       batch_counter = 0;
