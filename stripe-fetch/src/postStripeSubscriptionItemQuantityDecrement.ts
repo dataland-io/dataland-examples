@@ -37,13 +37,17 @@ const decrementStripeSubscriptionItemQuantity = async (
   console.log("xx - get response: " + JSON.stringify(subscriptionItem));
 
   const new_quantity = quantity - 1;
+  const subscription_item_url_with_qty =
+    subscription_item_url + "?quantity=" + new_quantity;
   const post_options = {
     method: "POST",
     headers: headers,
-    body: JSON.stringify({ quantity: new_quantity }),
   };
 
-  const post_response = await fetch(subscription_item_url, post_options);
+  const post_response = await fetch(
+    subscription_item_url_with_qty,
+    post_options
+  );
   const post_response_json = await post_response.json();
   console.log("xx - post response: " + JSON.stringify(post_response_json));
 
