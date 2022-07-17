@@ -34,7 +34,6 @@ const incrementStripeSubscriptionItemQuantity = async (
   const get_response = await fetch(subscription_item_url, get_options);
   const subscriptionItem = await get_response.json();
   const quantity = subscriptionItem.quantity;
-  console.log("xx - get response: " + JSON.stringify(subscriptionItem));
 
   const new_quantity = quantity + 1;
   const subscription_item_url_with_qty =
@@ -49,12 +48,9 @@ const incrementStripeSubscriptionItemQuantity = async (
     post_options
   );
   const post_response_json = await post_response.json();
-  console.log("xx - post response: " + JSON.stringify(post_response_json));
 
   return post_response_json;
 };
-
-// TODO: function is defined, now need to call it from a button
 
 const handler = async (transaction: Transaction) => {
   const { tableDescriptors } = await getCatalogSnapshot({
@@ -115,8 +111,6 @@ const handler = async (transaction: Transaction) => {
     const stripe_response = await incrementStripeSubscriptionItemQuantity(
       subscription_item_id
     );
-
-    console.log("xx - stripe response: " + JSON.stringify(stripe_response));
 
     if (stripe_response.id == null) {
       continue;

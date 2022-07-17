@@ -79,7 +79,7 @@ resources:
     metadata:
       name: post-stripe-subscription-item-quantity-increment
     spec:
-      scriptSha256Hex: e07c2d4097800e569ccb186530ea492949f8bbdfb09786c803a34780489367ef
+      scriptSha256Hex: a5bfaad09f9eac1d489b3313c28f3c3d325ac94607516039b5d1155e80f10f7c
       env:
         - name: STRIPE_API_KEY
           value:
@@ -91,7 +91,7 @@ resources:
     metadata:
       name: post-stripe-subscription-item-quantity-decrement
     spec:
-      scriptSha256Hex: 0cd3b49a11e222752f800e20350761bc20c13b04f7e50c53e9d4faa467b0aa53
+      scriptSha256Hex: 0e95e29e1e84c6e2eccbc3aab04ea1f5a39a7d16c96467b2186c9829ee4bfe5b
       env:
         - name: STRIPE_API_KEY
           value:
