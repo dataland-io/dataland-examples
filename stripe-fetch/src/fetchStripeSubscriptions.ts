@@ -55,6 +55,47 @@ const fetchStripeSubscriptions = async () => {
   return full_results;
 };
 
+const fetchStripeSubscriptionItems = async (subscription_id: string) => {
+  var headers = new Headers();
+
+  headers.append("Content-Type", "application/x-www-form-urlencoded");
+  headers.append("Authorization", `Bearer ${stripe_key}`);
+
+  let total_counter = 0;
+  const full_results = [];
+
+  let url = `https://api.stripe.com//v1/subscription_items?subscription=${subscription_id}&limit=100`;
+  let has_more = true;
+
+  do {
+    const stripe_response = await fetch(url, {
+      method: "GET",
+      headers: headers,
+      redirect: "follow",
+    });
+    const data = await stripe_response.json();
+    has_more = data.has_more;
+
+    url = url + "&starting_after=" + data.data[data.data.length - 1].id;
+    const results = data.data;
+
+    if (results) {
+      for (const result of results) {
+        full_results.push(result);
+        total_counter++;
+        console.log(
+          "Subscription item id: ",
+          result.id,
+          " – total_counter: ",
+          total_counter
+        );
+      }
+    }
+  } while (has_more);
+
+  return full_results;
+};
+
 const handler = async (transaction: Transaction) => {
   const { tableDescriptors } = await getCatalogSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
@@ -83,18 +124,11 @@ const handler = async (transaction: Transaction) => {
   const keyList = `(${lookupKeys.join(",")})`;
   console.log("keyList: ", keyList);
 
-  const trigger_response = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `select
-      _dataland_key
-    from "stripe-subscriptions-trigger"
-    where _dataland_key in ${keyList}`,
-  });
+  const keyGeneratorSubscriptions = new KeyGenerator();
+  const ordinalGeneratorSubscriptions = new OrdinalGenerator();
 
-  const trigger_rows = unpackRows(trigger_response);
-
-  const keyGenerator = new KeyGenerator();
-  const ordinalGenerator = new OrdinalGenerator();
+  const keyGeneratorSubscriptionItems = new KeyGenerator();
+  const ordinalGeneratorSubscriptionItems = new OrdinalGenerator();
 
   // fetch Stripe subscriptions from Stripe
   const stripeSubscriptions = await fetchStripeSubscriptions();
@@ -104,21 +138,51 @@ const handler = async (transaction: Transaction) => {
   }
 
   // fetch existing Stripe subscriptions
-  const existing_stripe_data = await querySqlSnapshot({
+  const existing_stripe_subscriptions = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key, id
     from "stripe-subscriptions"`,
   });
 
-  const existing_stripe_rows = unpackRows(existing_stripe_data);
+  const existing_stripe_subscriptions_rows = unpackRows(
+    existing_stripe_subscriptions
+  );
 
-  const existing_stripe_ids = [];
-  const existing_stripe_keys = [];
+  const existing_stripe_subscriptions_ids = [];
+  const existing_stripe_subscriptions_keys = [];
 
-  for (const existing_stripe_row of existing_stripe_rows) {
-    existing_stripe_keys.push(existing_stripe_row._dataland_key);
-    existing_stripe_ids.push(existing_stripe_row.id);
+  for (const existing_stripe_subscriptions_row of existing_stripe_subscriptions_rows) {
+    existing_stripe_subscriptions_keys.push(
+      existing_stripe_subscriptions_row._dataland_key
+    );
+    existing_stripe_subscriptions_ids.push(
+      existing_stripe_subscriptions_row.id
+    );
+  }
+
+  // fetch existing Stripe subscriptions items
+  const existing_stripe_subscriptions_item = await querySqlSnapshot({
+    logicalTimestamp: transaction.logicalTimestamp,
+    sqlQuery: `select
+        _dataland_key, id
+      from "stripe-subscription-items"`,
+  });
+
+  const existing_stripe_subscriptions_item_rows = unpackRows(
+    existing_stripe_subscriptions
+  );
+
+  const existing_stripe_subscriptions_item_ids = [];
+  const existing_stripe_subscriptions_item_keys = [];
+
+  for (const existing_stripe_subscriptions_item_row of existing_stripe_subscriptions_item_rows) {
+    existing_stripe_subscriptions_item_keys.push(
+      existing_stripe_subscriptions_item_row._dataland_key
+    );
+    existing_stripe_subscriptions_item_ids.push(
+      existing_stripe_subscriptions_item_row.id
+    );
   }
 
   let mutations_batch: Mutation[] = [];
@@ -128,8 +192,8 @@ const handler = async (transaction: Transaction) => {
 
   for (const stripeSubscription of stripeSubscriptions) {
     // Generate a new _dataland_key and _dataland_ordinal value
-    const id = await keyGenerator.nextKey();
-    const ordinal = await ordinalGenerator.nextOrdinal();
+    const id = await keyGeneratorSubscriptions.nextKey();
+    const ordinal = await ordinalGeneratorSubscriptions.nextOrdinal();
 
     const stripe_subscription_id = String(stripeSubscription.id);
 
@@ -138,9 +202,11 @@ const handler = async (transaction: Transaction) => {
     }
 
     // check if the Stripe subscription already exists
-    if (existing_stripe_ids.includes(stripe_subscription_id)) {
-      const position = existing_stripe_ids.indexOf(stripe_subscription_id);
-      const existing_key = existing_stripe_keys[position];
+    if (existing_stripe_subscriptions_ids.includes(stripe_subscription_id)) {
+      const position = existing_stripe_subscriptions_ids.indexOf(
+        stripe_subscription_id
+      );
+      const existing_key = existing_stripe_subscriptions_keys[position];
 
       if (!isNumber(existing_key)) {
         continue;
@@ -192,10 +258,80 @@ const handler = async (transaction: Transaction) => {
       if (insert == null) {
         continue;
       }
+
       mutations_batch.push(insert);
 
       batch_counter++;
       total_counter++;
+    }
+
+    // fetch and loop through each subscription item
+    const stripeSubscriptionItems = await fetchStripeSubscriptionItems(
+      stripe_subscription_id
+    );
+
+    for (const stripeSubscriptionItem of stripeSubscriptionItems) {
+      const stripe_subscription_item_id = String(stripeSubscriptionItem.id);
+      const generated_subscription_item_key =
+        await keyGeneratorSubscriptionItems.nextKey();
+      const generated_subscription_item_ordinal =
+        await ordinalGeneratorSubscriptionItems.nextOrdinal();
+
+      if (stripe_subscription_item_id == null) {
+        continue;
+      }
+
+      // check if id already exists
+      if (
+        existing_stripe_subscriptions_item_ids.includes(
+          stripe_subscription_item_id
+        )
+      ) {
+        const position = existing_stripe_subscriptions_item_ids.indexOf(
+          stripe_subscription_item_id
+        );
+        const existing_item_key =
+          existing_stripe_subscriptions_item_keys[position];
+
+        if (!isNumber(existing_item_key)) {
+          continue;
+        }
+
+        const update = schema.makeUpdateRows(
+          "stripe-subscription-items",
+          existing_item_key,
+          {
+            id: stripeSubscriptionItem.id,
+            metadata: JSON.stringify(stripeSubscriptionItem.metadata),
+            price: JSON.stringify(stripeSubscriptionItem.price),
+            quantity: stripeSubscriptionItem.quantity,
+            subscription: stripeSubscriptionItem.subscription,
+          }
+        );
+
+        if (update == null) {
+          continue;
+        }
+        mutations_batch.push(update);
+      } else {
+        const insert = schema.makeInsertRows(
+          "stripe-subscription-items",
+          generated_subscription_item_key,
+          {
+            _dataland_ordinal: generated_subscription_item_ordinal,
+            id: stripeSubscriptionItem.id,
+            metadata: JSON.stringify(stripeSubscriptionItem.metadata),
+            price: JSON.stringify(stripeSubscriptionItem.price),
+            quantity: stripeSubscriptionItem.quantity,
+            subscription: stripeSubscriptionItem.subscription,
+          }
+        );
+
+        if (insert == null) {
+          continue;
+        }
+        mutations_batch.push(insert);
+      }
     }
 
     if (batch_counter >= batch_size) {

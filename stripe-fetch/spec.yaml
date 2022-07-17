@@ -1,9 +1,9 @@
 moduleId: stripe
 
-info:
-  title: Stripe
-  description: See all customers, subscriptions, and invoices
-  author: Dataland Devs <devs@dataland.io>
+# info:
+#   title: Stripe
+#   description: See all customers, subscriptions, and invoices
+#   author: Dataland Devs <devs@dataland.io>
 
 buildCommand: npm run build
 
@@ -564,6 +564,31 @@ tables:
                 }
               ]
             }
+
+  - tableId: stripe-subscription-items
+    tableName: stripe-subscription-items
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: id
+        columnName: "id"
+        dataType: string
+      # id: stripeSubscriptionItem.id,
+      # metadata: JSON.stringify(stripeSubscriptionItem.metadata),
+      - columnId: metadata
+        columnName: metadata
+        dataType: string
+      # price: JSON.stringify(stripeSubscriptionItem.price),
+      - columnId: price
+        columnName: price
+        dataType: string
+      # quantity: stripeSubscriptionItem.quantity,
+      - columnId: quantity
+        columnName: quantity
+        dataType: int32
+      # subscription: stripeSubscriptionItem.subscription,
+      - columnId: subscription
+        columnName: subscription
+        dataType: string
 
 workers:
   - workerId: fetch-stripe-customers-with-sub
