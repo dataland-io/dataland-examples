@@ -31,7 +31,7 @@ resources:
     metadata:
       name: fetch-stripe-subscriptions
     spec:
-      scriptSha256Hex: 0cd7139b2cb787c553e2884dd84ddc2ca4d54a867503f154fc2cf5835e8b110e
+      scriptSha256Hex: ef205090bd045c008ceeba93b97b405cd0b4d063c2a3beb1681b24d31b62a731
       env:
         - name: STRIPE_API_KEY
           value:
@@ -543,25 +543,6 @@ resources:
   - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
-      name: subscription-items-trigger
-    spec:
-      tableName: stripe-subscription-items-trigger
-      columnDescriptors:
-        - columnId: trigger
-          columnName: Trigger
-          dataType: int32
-          nullable: true
-          columnAnnotations:
-            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Subscription Items\",\n  \"theme\": \"blue\"\n}\n"
-        - columnId: last-pressed
-          columnName: Last pressed
-          dataType: string
-          nullable: true
-      tableAnnotations: {}
-      autoMigrate: true
-  - apiVersion: dataland.io/v1alpha1
-    kind: Table
-    metadata:
       name: stripe-subscription-items
     spec:
       tableName: stripe-subscription-items
@@ -584,6 +565,10 @@ resources:
           nullable: true
         - columnId: subscription
           columnName: subscription
+          dataType: string
+          nullable: true
+        - columnId: customer
+          columnName: customer
           dataType: string
           nullable: true
       tableAnnotations: {}

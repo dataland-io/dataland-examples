@@ -78,16 +78,6 @@ const handler = async (transaction: Transaction) => {
   const keyList = `(${lookupKeys.join(",")})`;
   console.log("keyList: ", keyList);
 
-  const trigger_response = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `select
-      _dataland_key
-    from "stripe-refunds-trigger"
-    where _dataland_key in ${keyList}`,
-  });
-
-  const trigger_rows = unpackRows(trigger_response);
-
   const keyGenerator = new KeyGenerator();
   const ordinalGenerator = new OrdinalGenerator();
 

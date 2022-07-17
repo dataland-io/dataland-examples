@@ -25,9 +25,6 @@ tables:
               "label": "Import Stripe Customers",
               "theme": "blue"
             }
-      - columnId: "last-pressed"
-        columnName: "Last pressed"
-        dataType: string
 
   - tableId: stripe-customers
     tableName: stripe-customers
@@ -136,9 +133,6 @@ tables:
               "label": "Import Stripe Subscriptions",
               "theme": "blue"
             }
-      - columnId: "last-pressed"
-        columnName: "Last pressed"
-        dataType: string
 
   - tableId: stripe-subscriptions
     tableName: stripe-subscriptions
@@ -245,9 +239,6 @@ tables:
               "label": "Import Stripe Payment Intents",
               "theme": "blue"
             }
-      - columnId: "last-pressed"
-        columnName: "Last pressed"
-        dataType: string
 
   - tableId: stripe-payment-intents
     tableName: stripe-payment-intents
@@ -380,9 +371,6 @@ tables:
               "label": "Import Stripe Invoices",
               "theme": "blue"
             }
-      - columnId: "last-pressed"
-        columnName: "Last pressed"
-        dataType: string
 
   - tableId: stripe-invoices
     tableName: stripe-invoices
@@ -501,9 +489,6 @@ tables:
               "label": "Import Stripe Refunds",
               "theme": "blue"
             }
-      - columnId: "last-pressed"
-        columnName: "Last pressed"
-        dataType: string
 
   - tableId: stripe-refunds
     tableName: stripe-refunds
@@ -588,6 +573,10 @@ tables:
       # subscription: stripeSubscriptionItem.subscription,
       - columnId: subscription
         columnName: subscription
+        dataType: string
+        # customer: stripeSubscription.customer,
+      - columnId: customer
+        columnName: customer
         dataType: string
 
 workers:

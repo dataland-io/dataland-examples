@@ -306,6 +306,7 @@ const handler = async (transaction: Transaction) => {
             price: JSON.stringify(stripeSubscriptionItem.price),
             quantity: stripeSubscriptionItem.quantity,
             subscription: stripeSubscriptionItem.subscription,
+            customer: stripeSubscription.customer,
           }
         );
 
@@ -324,6 +325,7 @@ const handler = async (transaction: Transaction) => {
             price: JSON.stringify(stripeSubscriptionItem.price),
             quantity: stripeSubscriptionItem.quantity,
             subscription: stripeSubscriptionItem.subscription,
+            customer: stripeSubscription.customer,
           }
         );
 
