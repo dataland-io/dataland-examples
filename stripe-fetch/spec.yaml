@@ -1,4 +1,9 @@
-moduleId: stripe-fetch-example
+moduleId: stripe
+
+info:
+  title: Stripe
+  description: See all customers, subscriptions, and invoices
+  author: Dataland Devs <devs@dataland.io>
 
 buildCommand: npm run build
 
