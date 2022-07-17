@@ -63,7 +63,7 @@ const handler = async (transaction: Transaction) => {
 
   const affectedRows = schema.getAffectedRows(
     "stripe-subscription-items",
-    "Increment quantity",
+    "Decrement quantity",
     transaction
   );
 
