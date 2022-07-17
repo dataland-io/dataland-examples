@@ -11,6 +11,10 @@ const config: Configuration = {
     fetchStripeRefunds: "./src/fetchStripeRefunds.ts",
     fetchStripePaymentIntents: "./src/fetchStripePaymentIntents.ts",
     fetchStripeCustomersWithSub: "./src/fetchStripeCustomersWithSub.ts",
+    postStripeSubscriptionItemQuantityDecrement:
+      "./src/postStripeSubscriptionItemQuantityDecrement.ts",
+    postStripeSubscriptionItemQuantityIncrement:
+      "./src/postStripeSubscriptionItemQuantityIncrement.ts",
   },
   module: {
     rules: [

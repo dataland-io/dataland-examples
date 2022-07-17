@@ -578,6 +578,29 @@ tables:
       - columnId: customer
         columnName: customer
         dataType: string
+      - columnId: increment
+        columnName: "Increment quantity"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Increment",
+              "theme": "blue"
+            }
+      - columnId: decrement
+        columnName: "Decrement quantity"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Decrement",
+              "theme": "red"
+            }
+      - columnId: "processed-at"
+        columnName: "Processed at"
+        dataType: string
 
 workers:
   - workerId: fetch-stripe-customers-with-sub
@@ -607,5 +630,15 @@ workers:
 
   - workerId: fetch-stripe-refunds
     scriptPath: dist/fetchStripeRefunds.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+
+  - workerId: post-stripe-subscription-item-quantity-increment
+    scriptPath: dist/postStripeSubscriptionItemQuantityIncrement.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+
+  - workerId: post-stripe-subscription-item-quantity-decrement
+    scriptPath: dist/postStripeSubscriptionItemQuantityDecrement.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key

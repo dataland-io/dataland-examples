@@ -7,7 +7,7 @@ resources:
     metadata:
       name: fetch-stripe-customers-with-sub
     spec:
-      scriptSha256Hex: 16412469db1fcbb6f5aed5d1b20dcfd024c7d18447f1d9cfdb16b19bab3b1369
+      scriptSha256Hex: 7c06ccbc0b1051b2be6f5f4c8477b0e61d2f5bb22ad37800d63b10db5294a694
       env:
         - name: STRIPE_API_KEY
           value:
@@ -19,7 +19,7 @@ resources:
     metadata:
       name: fetch-stripe-customers
     spec:
-      scriptSha256Hex: 014d67831d6f7565cc055e516330226b2150f91aeae63a8d8ead5d44f66edc05
+      scriptSha256Hex: 9b37d29ae2029d05c62137964981111534b8de55f63c1eb7b42498a1d8859bb1
       env:
         - name: STRIPE_API_KEY
           value:
@@ -43,7 +43,7 @@ resources:
     metadata:
       name: fetch-stripe-payment-intents
     spec:
-      scriptSha256Hex: 06b9458ad29f8a4be998a3af799c2d6f29939f9a62445ce51e9e39198bd60a39
+      scriptSha256Hex: e479605bf2d63b2f17fe760b97d08c4e3cb8a0d94dba3f8a265bb9bc434e89c0
       env:
         - name: STRIPE_API_KEY
           value:
@@ -55,7 +55,7 @@ resources:
     metadata:
       name: fetch-stripe-invoices
     spec:
-      scriptSha256Hex: 487147cbaa7f2cd8fc9f2248fc4a5f891a996c8955e8d7e7f135a7ad0b922be6
+      scriptSha256Hex: 3a635240a216865143f283f63058215840c704ce6cbde78d12cd5817d42e564f
       env:
         - name: STRIPE_API_KEY
           value:
@@ -67,7 +67,31 @@ resources:
     metadata:
       name: fetch-stripe-refunds
     spec:
-      scriptSha256Hex: b41ffdd87714ba7cb00b679e6e754ff777541e100d3b639fec986971aa169b20
+      scriptSha256Hex: d20447b539b4ffbea09b546389eef372702a031d5686e1c6529b2272cbf32aa4
+      env:
+        - name: STRIPE_API_KEY
+          value:
+            secretKeyRef:
+              name: stripe-api-key
+              key: parameterValue
+  - apiVersion: dataland.io/v1alpha1
+    kind: Worker
+    metadata:
+      name: post-stripe-subscription-item-quantity-increment
+    spec:
+      scriptSha256Hex: e07c2d4097800e569ccb186530ea492949f8bbdfb09786c803a34780489367ef
+      env:
+        - name: STRIPE_API_KEY
+          value:
+            secretKeyRef:
+              name: stripe-api-key
+              key: parameterValue
+  - apiVersion: dataland.io/v1alpha1
+    kind: Worker
+    metadata:
+      name: post-stripe-subscription-item-quantity-decrement
+    spec:
+      scriptSha256Hex: 0cd3b49a11e222752f800e20350761bc20c13b04f7e50c53e9d4faa467b0aa53
       env:
         - name: STRIPE_API_KEY
           value:
@@ -87,10 +111,6 @@ resources:
           nullable: true
           columnAnnotations:
             dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Customers\",\n  \"theme\": \"blue\"\n}\n"
-        - columnId: last-pressed
-          columnName: Last pressed
-          dataType: string
-          nullable: true
       tableAnnotations: {}
       autoMigrate: true
   - apiVersion: dataland.io/v1alpha1
@@ -203,10 +223,6 @@ resources:
           nullable: true
           columnAnnotations:
             dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Subscriptions\",\n  \"theme\": \"blue\"\n}\n"
-        - columnId: last-pressed
-          columnName: Last pressed
-          dataType: string
-          nullable: true
       tableAnnotations: {}
       autoMigrate: true
   - apiVersion: dataland.io/v1alpha1
@@ -285,10 +301,6 @@ resources:
           nullable: true
           columnAnnotations:
             dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Payment Intents\",\n  \"theme\": \"blue\"\n}\n"
-        - columnId: last-pressed
-          columnName: Last pressed
-          dataType: string
-          nullable: true
       tableAnnotations: {}
       autoMigrate: true
   - apiVersion: dataland.io/v1alpha1
@@ -391,10 +403,6 @@ resources:
           nullable: true
           columnAnnotations:
             dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Invoices\",\n  \"theme\": \"blue\"\n}\n"
-        - columnId: last-pressed
-          columnName: Last pressed
-          dataType: string
-          nullable: true
       tableAnnotations: {}
       autoMigrate: true
   - apiVersion: dataland.io/v1alpha1
@@ -487,10 +495,6 @@ resources:
           nullable: true
           columnAnnotations:
             dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Import Stripe Refunds\",\n  \"theme\": \"blue\"\n}\n"
-        - columnId: last-pressed
-          columnName: Last pressed
-          dataType: string
-          nullable: true
       tableAnnotations: {}
       autoMigrate: true
   - apiVersion: dataland.io/v1alpha1
@@ -569,6 +573,22 @@ resources:
           nullable: true
         - columnId: customer
           columnName: customer
+          dataType: string
+          nullable: true
+        - columnId: increment
+          columnName: Increment quantity
+          dataType: int32
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Increment\",\n  \"theme\": \"blue\"\n}\n"
+        - columnId: decrement
+          columnName: Decrement quantity
+          dataType: int32
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Decrement\",\n  \"theme\": \"red\"\n}\n"
+        - columnId: processed-at
+          columnName: Processed at
           dataType: string
           nullable: true
       tableAnnotations: {}
