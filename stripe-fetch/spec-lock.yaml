@@ -19,7 +19,7 @@ resources:
     metadata:
       name: fetch-stripe-customers
     spec:
-      scriptSha256Hex: 9b37d29ae2029d05c62137964981111534b8de55f63c1eb7b42498a1d8859bb1
+      scriptSha256Hex: 0362b7d3f45e2e171edacb2b2d3d138b965a5466adb2b4f1877b203ad63be700
       env:
         - name: STRIPE_API_KEY
           value:
