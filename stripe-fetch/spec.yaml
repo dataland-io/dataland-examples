@@ -356,6 +356,51 @@ tables:
                 }               
               ]
             }
+      - columnId: "issue-refund"
+        columnName: "Issue refund"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Issue refund",
+              "theme": "blue"
+            }
+
+      - columnId: refund-status
+        columnName: refund_status
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "canceled",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "failed",
+                  "theme": "ruby"
+                },                
+                {
+                  "value": "requires_action",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "pending",
+                  "theme": "yellow"
+                },                
+                {
+                  "value": "succeeded",
+                  "theme": "green"
+                }
+              ]
+            }
+
+      - columnId: "processed-at"
+        columnName: "Processed at"
+        dataType: string
 
   - tableId: invoices-trigger
     tableName: stripe-invoices-trigger
@@ -640,5 +685,10 @@ workers:
 
   - workerId: post-stripe-subscription-item-quantity-decrement
     scriptPath: dist/postStripeSubscriptionItemQuantityDecrement.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+
+  - workerId: post-stripe-payment-intent-refund
+    scriptPath: dist/postStripePaymentIntentRefund.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key

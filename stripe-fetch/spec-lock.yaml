@@ -99,6 +99,18 @@ resources:
               name: stripe-api-key
               key: parameterValue
   - apiVersion: dataland.io/v1alpha1
+    kind: Worker
+    metadata:
+      name: post-stripe-payment-intent-refund
+    spec:
+      scriptSha256Hex: 01c00232a2b55f2dacd3df6ee5a6828b309cf80c5e7948f2091163dd360f5230
+      env:
+        - name: STRIPE_API_KEY
+          value:
+            secretKeyRef:
+              name: stripe-api-key
+              key: parameterValue
+  - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
       name: trigger
@@ -388,6 +400,22 @@ resources:
           nullable: true
           columnAnnotations:
             dataland.io/column-display-config: "{\n  \"type\": \"select\",\n  \"options\": [\n    {\n      \"value\": \"requires_payment_method\",\n      \"theme\": \"ruby\"\n    },\n    {\n      \"value\": \"requires_confirmation\",\n      \"theme\": \"ruby\"\n    },                \n    {\n      \"value\": \"requires_action\",\n      \"theme\": \"ruby\"\n    },                                                 \n    {\n      \"value\": \"processing\",\n      \"theme\": \"pink\"\n    },\n    {\n      \"value\": \"requires_capture\",\n      \"theme\": \"yellow\"\n    },                \n    {\n      \"value\": \"succeeded\",\n      \"theme\": \"green\"\n    },\n    {\n      \"value\": \"incomplete\",\n      \"theme\": \"silver\"\n    }               \n  ]\n}\n"
+        - columnId: issue-refund
+          columnName: Issue refund
+          dataType: int32
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Issue refund\",\n  \"theme\": \"blue\"\n}\n"
+        - columnId: refund-status
+          columnName: refund_status
+          dataType: string
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"select\",\n  \"options\": [\n    {\n      \"value\": \"canceled\",\n      \"theme\": \"ruby\"\n    },\n    {\n      \"value\": \"failed\",\n      \"theme\": \"ruby\"\n    },                \n    {\n      \"value\": \"requires_action\",\n      \"theme\": \"yellow\"\n    },\n    {\n      \"value\": \"pending\",\n      \"theme\": \"yellow\"\n    },                \n    {\n      \"value\": \"succeeded\",\n      \"theme\": \"green\"\n    }\n  ]\n}\n"
+        - columnId: processed-at
+          columnName: Processed at
+          dataType: string
+          nullable: true
       tableAnnotations: {}
       autoMigrate: true
   - apiVersion: dataland.io/v1alpha1
