@@ -3,6 +3,7 @@ import {
   Mutation,
   KeyGenerator,
   OrdinalGenerator,
+  getArrowTable,
   querySqlSnapshot,
   registerTransactionHandler,
   runMutations,
@@ -39,22 +40,6 @@ const handler = async (transaction: Transaction) => {
   const keyList = `(${lookupKeys.join(",")})`;
   console.log("keyList: ", keyList);
 
-  const response = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `select
-      _dataland_key, Region
-    from "Records from CSV"`,
-  });
-
-  console.log(
-    "response.arrowRecordBatches.length: ",
-    response.arrowRecordBatches.length
-  );
-
-  const rows = unpackRows(response);
-
-  console.log("rows length: ", rows.length);
-
   const count_response = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
@@ -63,7 +48,20 @@ const handler = async (transaction: Transaction) => {
   });
 
   const count_row = unpackRows(count_response);
-  console.log("count_row: ", count_row);
+  console.log("count(*) query shows actual table size ", count_row);
+
+  const response = await querySqlSnapshot({
+    logicalTimestamp: transaction.logicalTimestamp,
+    sqlQuery: `select
+      _dataland_key, Region
+    from "Records from CSV"`,
+  });
+
+  const rows = unpackRows(response);
+  console.log("but rows length shows 1024 rows max: ", rows.length);
+
+  const rows_arrow_table = getArrowTable(response.arrowRecordBatches);
+  console.log("rows_arrow_table.numRows too: ", rows_arrow_table.numRows);
 };
 
 registerTransactionHandler(handler);

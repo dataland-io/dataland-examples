@@ -13,7 +13,7 @@ resources:
     metadata:
       name: repro-function
     spec:
-      scriptSha256Hex: a6c499a9e13648cd1552878e280056ee1545d76e007f3c37330be9a253cd1a51
+      scriptSha256Hex: e286066e140f42bc419bd99ecafb6cc76b0668eb50029e99bd3bf2c0d40ed377
   - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
