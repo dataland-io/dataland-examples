@@ -6,6 +6,7 @@ const config: Configuration = {
   target: "web",
   entry: {
     importCsv: "./src/importCsv.ts",
+    reproFunction: "./src/reproFunction.ts",
   },
   module: {
     rules: [

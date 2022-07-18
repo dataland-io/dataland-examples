@@ -24,6 +24,25 @@ tables:
         columnName: "Last pressed"
         dataType: string
 
+  - tableId: trigger
+    tableName: "Repro Trigger"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "trigger"
+        columnName: "Trigger"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Trigger",
+              "theme": "blue"
+            }
+
+      - columnId: "last-pressed"
+        columnName: "Last pressed"
+        dataType: string
+
   # Defines the imported records table, which will contain the data from the CSV file
   # TODO: Add / delete / update columns below such that the columnNames are the same as what you are updating in the importCsv.ts function
   - tableId: imported-records-from-csv-table
@@ -76,3 +95,6 @@ tables:
 workers:
   - workerId: csv-import
     scriptPath: dist/importCsv.bundle.js
+
+  - workerId: repro-function
+    scriptPath: dist/reproFunction.bundle.js
