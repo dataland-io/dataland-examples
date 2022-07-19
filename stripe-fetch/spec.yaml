@@ -1,9 +1,12 @@
 moduleId: stripe
 
-# info:
-#   title: Stripe
-#   description: See all customers, subscriptions, and invoices
-#   author: Dataland Devs <devs@dataland.io>
+info:
+  title: Stripe
+  description: See all customers, subscriptions, and invoices
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: icon.png
 
 buildCommand: npm run build
 
