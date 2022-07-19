@@ -17,7 +17,7 @@ tables:
           dataland.io/column-display-config: |
             {
               "type": "button",
-              "label": "ACTION",
+              "label": "Trigger contacts sync",
               "theme": "blue"
             }
 
@@ -35,31 +35,24 @@ tables:
       - columnId: "email"
         columnName: "email"
         dataType: string
-      # firstname: hubspotContact.firstname,
       - columnId: "firstname"
         columnName: "firstname"
         dataType: string
-      # lastname: hubspotContact.lastname,
       - columnId: "lastname"
         columnName: "lastname"
         dataType: string
-      # createdate: hubspotContact.createdate,
       - columnId: "createdate"
         columnName: "createdate"
         dataType: string
-      # lastmodifieddate: hubspotContact.lastmodifieddate,
       - columnId: "lastmodifieddate"
         columnName: "lastmodifieddate"
-        dataType: string
-      # createdAt: hubspotContact.createdAt,
+        dataType: stringotContact.createdAt,
       - columnId: "created-at"
         columnName: "createdAt"
-        dataType: string
-      # updatedAt: hubspotContact.updatedAt,
+        dataType: stringotContact.updatedAt,
       - columnId: "updated-at"
         columnName: "updatedAt"
-        dataType: string
-      # archived: hubspotContact.archived,
+        dataType: stringtContact.archived,
       - columnId: "archived"
         columnName: "archived"
         dataType: boolean
@@ -75,7 +68,7 @@ tables:
           dataland.io/column-display-config: |
             {
               "type": "button",
-              "label": "ACTION",
+              "label": "Trigger companies sync",
               "theme": "blue"
             }
 
@@ -90,31 +83,81 @@ tables:
       - columnId: id
         columnName: id
         dataType: int64
-      # firstname: hubspotContact.name,
       - columnId: "name"
         columnName: "name"
         dataType: string
-      # createdate: hubspotContact.domain,
       - columnId: "domain"
         columnName: "domain"
         dataType: string
-      # lastmodifieddate: hubspotContact.lastmodifieddate,
       - columnId: "hs-lastmodifieddate"
         columnName: "hs_lastmodifieddate"
-        dataType: string
-      # createdAt: hubspotContact.createdate,
+        dataType: stringotContact.createdate,
       - columnId: "createdate"
         columnName: "createdate"
         dataType: string
-      # createdAt: hubspotContact.createdAt,
       - columnId: "created-at"
         columnName: "createdAt"
         dataType: string
-      # updatedAt: hubspotContact.updatedAt,
       - columnId: "updated-at"
         columnName: "updatedAt"
         dataType: string
-      # archived: hubspotContact.archived,
+      - columnId: "archived"
+        columnName: "archived"
+        dataType: boolean
+
+  - tableId: hubspot-deals-trigger
+    tableName: "hubspot-deals-trigger"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "trigger"
+        columnName: "Trigger"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Trigger deals sync",
+              "theme": "blue"
+            }
+
+      - columnId: "last-pressed"
+        columnName: "Last pressed"
+        dataType: string
+
+  - tableId: hubspot-deals
+    tableName: hubspot-deals
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: id
+        columnName: id
+        dataType: int64
+      - columnId: "dealname"
+        columnName: "dealname"
+        dataType: string
+      - columnId: "pipeline"
+        columnName: "pipeline"
+        dataType: string
+      - columnId: "dealstage"
+        columnName: "dealstage"
+        dataType: string
+      - columnId: "amount"
+        columnName: "amount"
+        dataType: float64
+      - columnId: "closedate"
+        columnName: "closedate"
+        dataType: string
+      - columnId: "hs-lastmodifieddate"
+        columnName: "hs_lastmodifieddate"
+        dataType: string
+      - columnId: "createdate"
+        columnName: "createdate"
+        dataType: string
+      - columnId: "created-at"
+        columnName: "createdAt"
+        dataType: string
+      - columnId: "updated-at"
+        columnName: "updatedAt"
+        dataType: string
       - columnId: "archived"
         columnName: "archived"
         dataType: boolean
@@ -127,5 +170,10 @@ workers:
 
   - workerId: hubspot-companies-worker
     scriptPath: dist/fetchHubspotCompanies.bundle.js
+    env:
+      HUBSPOT_ACCESS_TOKEN: hubspot-access-token
+
+  - workerId: hubspot-deals-worker
+    scriptPath: dist/fetchHubspotDeals.bundle.js
     env:
       HUBSPOT_ACCESS_TOKEN: hubspot-access-token

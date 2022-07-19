@@ -152,9 +152,6 @@ const handler = async (transaction: Transaction) => {
     existing_hubspot_ids.push(Number(existing_hubspot_row.id));
   }
 
-  console.log("xx - length of ids: ", existing_hubspot_ids.length);
-  console.log("xx - length of keys: ", existing_hubspot_keys.length);
-
   let mutations_batch: Mutation[] = [];
   let batch_counter = 0;
   let batch_size = 100; // push 100 at a time

@@ -27,6 +27,18 @@ resources:
               name: hubspot-access-token
               key: parameterValue
   - apiVersion: dataland.io/v1alpha1
+    kind: Worker
+    metadata:
+      name: hubspot-deals-worker
+    spec:
+      scriptSha256Hex: 809e872348ddf8dea1693642c2ecd3c750f60095764396a4a55d6e6a39d879c5
+      env:
+        - name: HUBSPOT_ACCESS_TOKEN
+          value:
+            secretKeyRef:
+              name: hubspot-access-token
+              key: parameterValue
+  - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
       name: hubspot-contacts-trigger
@@ -38,7 +50,7 @@ resources:
           dataType: int32
           nullable: true
           columnAnnotations:
-            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"ACTION\",\n  \"theme\": \"blue\"\n}\n"
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Trigger contacts sync\",\n  \"theme\": \"blue\"\n}\n"
         - columnId: last-pressed
           columnName: Last pressed
           dataType: string
@@ -102,7 +114,7 @@ resources:
           dataType: int32
           nullable: true
           columnAnnotations:
-            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"ACTION\",\n  \"theme\": \"blue\"\n}\n"
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Trigger companies sync\",\n  \"theme\": \"blue\"\n}\n"
         - columnId: last-pressed
           columnName: Last pressed
           dataType: string
@@ -126,6 +138,78 @@ resources:
           nullable: true
         - columnId: domain
           columnName: domain
+          dataType: string
+          nullable: true
+        - columnId: hs-lastmodifieddate
+          columnName: hs_lastmodifieddate
+          dataType: string
+          nullable: true
+        - columnId: createdate
+          columnName: createdate
+          dataType: string
+          nullable: true
+        - columnId: created-at
+          columnName: createdAt
+          dataType: string
+          nullable: true
+        - columnId: updated-at
+          columnName: updatedAt
+          dataType: string
+          nullable: true
+        - columnId: archived
+          columnName: archived
+          dataType: boolean
+          nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: hubspot-deals-trigger
+    spec:
+      tableName: hubspot-deals-trigger
+      columnDescriptors:
+        - columnId: trigger
+          columnName: Trigger
+          dataType: int32
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"Trigger deals sync\",\n  \"theme\": \"blue\"\n}\n"
+        - columnId: last-pressed
+          columnName: Last pressed
+          dataType: string
+          nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: hubspot-deals
+    spec:
+      tableName: hubspot-deals
+      columnDescriptors:
+        - columnId: id
+          columnName: id
+          dataType: int64
+          nullable: true
+        - columnId: dealname
+          columnName: dealname
+          dataType: string
+          nullable: true
+        - columnId: pipeline
+          columnName: pipeline
+          dataType: string
+          nullable: true
+        - columnId: dealstage
+          columnName: dealstage
+          dataType: string
+          nullable: true
+        - columnId: amount
+          columnName: amount
+          dataType: float64
+          nullable: true
+        - columnId: closedate
+          columnName: closedate
           dataType: string
           nullable: true
         - columnId: hs-lastmodifieddate
