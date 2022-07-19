@@ -6,6 +6,7 @@ const config: Configuration = {
   target: "web",
   entry: {
     fetchHubspotContacts: "./src/fetchHubspotContacts.ts",
+    fetchHubspotCompanies: "./src/fetchHubspotCompanies.ts",
   },
   module: {
     rules: [

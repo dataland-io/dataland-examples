@@ -6,7 +6,7 @@ parameters:
   - hubspot-access-token
 
 tables:
-  - tableId: trigger
+  - tableId: hubspot-contacts-trigger
     tableName: "hubspot-contacts-trigger"
     autoMigrate: true
     columnDescriptors:
@@ -64,8 +64,68 @@ tables:
         columnName: "archived"
         dataType: boolean
 
+  - tableId: hubspot-companies-trigger
+    tableName: "hubspot-companies-trigger"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "trigger"
+        columnName: "Trigger"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "ACTION",
+              "theme": "blue"
+            }
+
+      - columnId: "last-pressed"
+        columnName: "Last pressed"
+        dataType: string
+
+  - tableId: hubspot-companies
+    tableName: hubspot-companies
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: id
+        columnName: id
+        dataType: int64
+      # firstname: hubspotContact.name,
+      - columnId: "name"
+        columnName: "name"
+        dataType: string
+      # createdate: hubspotContact.domain,
+      - columnId: "domain"
+        columnName: "domain"
+        dataType: string
+      # lastmodifieddate: hubspotContact.lastmodifieddate,
+      - columnId: "hs-lastmodifieddate"
+        columnName: "hs_lastmodifieddate"
+        dataType: string
+      # createdAt: hubspotContact.createdate,
+      - columnId: "createdate"
+        columnName: "createdate"
+        dataType: string
+      # createdAt: hubspotContact.createdAt,
+      - columnId: "created-at"
+        columnName: "createdAt"
+        dataType: string
+      # updatedAt: hubspotContact.updatedAt,
+      - columnId: "updated-at"
+        columnName: "updatedAt"
+        dataType: string
+      # archived: hubspotContact.archived,
+      - columnId: "archived"
+        columnName: "archived"
+        dataType: boolean
+
 workers:
   - workerId: hubspot-contacts-worker
     scriptPath: dist/fetchHubspotContacts.bundle.js
+    env:
+      HUBSPOT_ACCESS_TOKEN: hubspot-access-token
+
+  - workerId: hubspot-companies-worker
+    scriptPath: dist/fetchHubspotCompanies.bundle.js
     env:
       HUBSPOT_ACCESS_TOKEN: hubspot-access-token

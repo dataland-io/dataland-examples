@@ -15,9 +15,21 @@ resources:
               name: hubspot-access-token
               key: parameterValue
   - apiVersion: dataland.io/v1alpha1
+    kind: Worker
+    metadata:
+      name: hubspot-companies-worker
+    spec:
+      scriptSha256Hex: d6fa7a04f68f4ebd37838c980d319f27b8cfb50d77e5391942b8d8272f75b435
+      env:
+        - name: HUBSPOT_ACCESS_TOKEN
+          value:
+            secretKeyRef:
+              name: hubspot-access-token
+              key: parameterValue
+  - apiVersion: dataland.io/v1alpha1
     kind: Table
     metadata:
-      name: trigger
+      name: hubspot-contacts-trigger
     spec:
       tableName: hubspot-contacts-trigger
       columnDescriptors:
@@ -62,6 +74,66 @@ resources:
           nullable: true
         - columnId: lastmodifieddate
           columnName: lastmodifieddate
+          dataType: string
+          nullable: true
+        - columnId: created-at
+          columnName: createdAt
+          dataType: string
+          nullable: true
+        - columnId: updated-at
+          columnName: updatedAt
+          dataType: string
+          nullable: true
+        - columnId: archived
+          columnName: archived
+          dataType: boolean
+          nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: hubspot-companies-trigger
+    spec:
+      tableName: hubspot-companies-trigger
+      columnDescriptors:
+        - columnId: trigger
+          columnName: Trigger
+          dataType: int32
+          nullable: true
+          columnAnnotations:
+            dataland.io/column-display-config: "{\n  \"type\": \"button\",\n  \"label\": \"ACTION\",\n  \"theme\": \"blue\"\n}\n"
+        - columnId: last-pressed
+          columnName: Last pressed
+          dataType: string
+          nullable: true
+      tableAnnotations: {}
+      autoMigrate: true
+  - apiVersion: dataland.io/v1alpha1
+    kind: Table
+    metadata:
+      name: hubspot-companies
+    spec:
+      tableName: hubspot-companies
+      columnDescriptors:
+        - columnId: id
+          columnName: id
+          dataType: int64
+          nullable: true
+        - columnId: name
+          columnName: name
+          dataType: string
+          nullable: true
+        - columnId: domain
+          columnName: domain
+          dataType: string
+          nullable: true
+        - columnId: hs-lastmodifieddate
+          columnName: hs_lastmodifieddate
+          dataType: string
+          nullable: true
+        - columnId: createdate
+          columnName: createdate
           dataType: string
           nullable: true
         - columnId: created-at
