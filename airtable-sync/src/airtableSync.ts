@@ -39,9 +39,9 @@ const airtable_url_base =
   "https://api.airtable.com/v0/appN1FQpWEfIWXvZP/Example";
 
 const readFromAirtable = async () => {
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
-  myHeaders.append("Authorization", "Bearer " + airtable_api_key);
+  var headers = new Headers();
+  headers.append("Content-Type", "application/x-www-form-urlencoded");
+  headers.append("Authorization", "Bearer " + airtable_api_key);
 
   const full_records = [];
 
@@ -51,7 +51,7 @@ const readFromAirtable = async () => {
   do {
     const airtable_response = await fetch(url, {
       method: "GET",
-      headers: myHeaders,
+      headers: headers,
       redirect: "follow",
     });
     const data = await airtable_response.json();
