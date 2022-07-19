@@ -1,0 +1,12 @@
+node_modules/
+target/
+build/
+dist/
+tmp/
+*.iml
+.idea
+.DS_Store
+
+.env
+.env.*
+!.env.template
