@@ -12,7 +12,7 @@ import {
   unpackRows,
 } from "@dataland-io/dataland-sdk-worker";
 
-import { isString, isNumber } from "lodash-es";
+import { isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
@@ -141,7 +141,7 @@ const handler = async (transaction: Transaction) => {
       batch_counter++;
       total_counter++;
     } else {
-      // otherwise, insert
+      // otherwise, make an insert
       const insert = schema.makeInsertRows(
         "view-stripe-subscriptions-with-customers",
         id,
