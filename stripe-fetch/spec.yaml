@@ -650,6 +650,112 @@ tables:
         columnName: "Processed at"
         dataType: string
 
+  - tableId: view-stripe-subscriptions-with-customers-trigger
+    tableName: "view-stripe-subscriptions-with-customers-trigger"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "trigger"
+        columnName: "Trigger"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Generate view",
+              "theme": "blue"
+            }
+
+      - columnId: "last-pressed"
+        columnName: "Last pressed"
+        dataType: string
+
+  - tableId: view-stripe-subscriptions-with-customers
+    tableName: view-stripe-subscriptions-with-customers
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: subscription-id
+        columnName: subscription_id
+        dataType: string
+
+      - columnId: status
+        columnName: status
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "incomplete_expired",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "incomplete",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "cancelled",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "unpaid",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "trialing",
+                  "theme": "pink"
+                },
+                {
+                  "value": "past_due",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "active",
+                  "theme": "green"
+                }
+              ]
+            }
+
+      # items: joined_query_row.items,
+      - columnId: items
+        columnName: items
+        dataType: string
+
+      # created: joined_query_row.created,
+      - columnId: created
+        columnName: created
+        dataType: int32
+
+      # customer_id: joined_query_row.customer_id,
+      - columnId: customer-id
+        columnName: customer_id
+        dataType: string
+
+      # email: joined_query_row.email,
+      - columnId: email
+        columnName: email
+        dataType: string
+
+      # name: joined_query_row.name,
+      - columnId: name
+        columnName: name
+        dataType: string
+
+      # phone: joined_query_row.phone,
+      - columnId: phone
+        columnName: phone
+        dataType: string
+
+      # delinquent: joined_query_row.delinquent,
+      - columnId: delinquent
+        columnName: delinquent
+        dataType: boolean
+
+      # invoice_prefix: joined_query_row.invoice_prefix,
+      - columnId: invoice-prefix
+        columnName: invoice_prefix
+        dataType: string
+
 workers:
   - workerId: fetch-stripe-customers-with-sub
     scriptPath: dist/fetchStripeCustomersWithSub.bundle.js
@@ -693,5 +799,10 @@ workers:
 
   - workerId: post-stripe-payment-intent-refund
     scriptPath: dist/postStripePaymentIntentRefund.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+
+  - workerId: view-stripe-customers-and-active-subscriptions
+    scriptPath: dist/viewStripeSubscriptionsWithCustomers.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
