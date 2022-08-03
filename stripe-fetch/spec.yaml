@@ -606,13 +606,25 @@ tables:
         columnName: "id"
         dataType: string
       # id: stripeSubscriptionItem.id,
+      # price_id: stripe_subscription_item_price_id,
+      - columnId: price-id
+        columnName: price_id
+        dataType: string
+      # price_currency: stripe_subscription_item_price_currency,
+      - columnId: price-currency
+        columnName: price_currency
+        dataType: string
+      # price_unit_amount: stripe_subscription_item_price_unit_amount,
+      - columnId: price-unit-amount
+        columnName: price_unit_amount
+        dataType: float64
+      # product_id: stripe_subscription_item_product_id,
+      - columnId: product-id
+        columnName: product_id
+        dataType: string
       # metadata: JSON.stringify(stripeSubscriptionItem.metadata),
       - columnId: metadata
         columnName: metadata
-        dataType: string
-      # price: JSON.stringify(stripeSubscriptionItem.price),
-      - columnId: price
-        columnName: price
         dataType: string
       # quantity: stripeSubscriptionItem.quantity,
       - columnId: quantity
@@ -650,6 +662,10 @@ tables:
         columnName: "Processed at"
         dataType: string
 
+      - columnId: price-obj
+        columnName: price_obj
+        dataType: string
+
   - tableId: view-stripe-subscriptions-with-customers-trigger
     tableName: "view-stripe-subscriptions-with-customers-trigger"
     autoMigrate: true
@@ -673,6 +689,18 @@ tables:
     tableName: view-stripe-subscriptions-with-customers
     autoMigrate: true
     columnDescriptors:
+      - columnId: subscription-item-id
+        columnName: subscription_item_id
+        dataType: string
+
+      - columnId: price-unit-amount
+        columnName: price_unit_amount
+        dataType: float64
+
+      - columnId: quantity
+        columnName: quantity
+        dataType: int32
+
       - columnId: subscription-id
         columnName: subscription_id
         dataType: string
@@ -716,42 +744,34 @@ tables:
               ]
             }
 
-      # items: joined_query_row.items,
       - columnId: items
         columnName: items
         dataType: string
 
-      # created: joined_query_row.created,
       - columnId: created
         columnName: created
         dataType: int32
 
-      # customer_id: joined_query_row.customer_id,
       - columnId: customer-id
         columnName: customer_id
         dataType: string
 
-      # email: joined_query_row.email,
       - columnId: email
         columnName: email
         dataType: string
 
-      # name: joined_query_row.name,
       - columnId: name
         columnName: name
         dataType: string
 
-      # phone: joined_query_row.phone,
       - columnId: phone
         columnName: phone
         dataType: string
 
-      # delinquent: joined_query_row.delinquent,
       - columnId: delinquent
         columnName: delinquent
         dataType: boolean
 
-      # invoice_prefix: joined_query_row.invoice_prefix,
       - columnId: invoice-prefix
         columnName: invoice_prefix
         dataType: string

@@ -73,18 +73,23 @@ const handler = async (transaction: Transaction) => {
   const joined_query = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `SELECT
-      ss.id as subscription_id,
-      ss.status,
-      ss.items,
-      ss.created,
-      sc.id as customer_id,
-      sc.email, 
-      sc.name,
-      sc.phone, 
-      sc.delinquent,
-      sc.invoice_prefix
-    FROM "stripe-subscriptions" ss LEFT JOIN "stripe-customers" sc
-    ON ss.customer = sc.id;`,
+    si.id as subscription_item_id,
+    si.price_unit_amount,
+    si.quantity,
+    ss.id as subscription_id,
+    ss.status,
+    ss.items,
+    ss.created,
+    sc.id as customer_id,
+    sc.email,
+    sc.name,
+    sc.phone,
+    sc.delinquent,
+    sc.invoice_prefix
+    FROM "stripe-subscription-items" si 
+    LEFT JOIN "stripe-subscriptions" ss ON si.subscription = ss.id
+    LEFT JOIN "stripe-customers" sc ON ss.customer = sc.id;
+`,
   });
 
   if (joined_query == null) {
@@ -119,6 +124,9 @@ const handler = async (transaction: Transaction) => {
         "view-stripe-subscriptions-with-customers",
         existing_key,
         {
+          subscription_item_id: joined_query_row.subscription_item_id,
+          price_unit_amount: joined_query_row.price_unit_amount,
+          quantity: joined_query_row.quantity,
           subscription_id: joined_query_row.subscription_id,
           status: joined_query_row.status,
           items: joined_query_row.items,
@@ -147,6 +155,9 @@ const handler = async (transaction: Transaction) => {
         id,
         {
           _dataland_ordinal: ordinal,
+          subscription_item_id: joined_query_row.subscription_item_id,
+          price_unit_amount: joined_query_row.price_unit_amount,
+          quantity: joined_query_row.quantity,
           subscription_id: joined_query_row.subscription_id,
           status: joined_query_row.status,
           items: joined_query_row.items,

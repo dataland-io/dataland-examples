@@ -272,6 +272,28 @@ const handler = async (transaction: Transaction) => {
 
     for (const stripeSubscriptionItem of stripeSubscriptionItems) {
       const stripe_subscription_item_id = String(stripeSubscriptionItem.id);
+      const stripe_subscription_item_price_obj = stripeSubscriptionItem.price;
+      const stripe_subscription_item_price_id =
+        stripe_subscription_item_price_obj.id;
+      console.log(
+        "stripe_subscription_item_price_id: ",
+        stripe_subscription_item_price_id
+      );
+      const stripe_subscription_item_price_currency =
+        stripe_subscription_item_price_obj.currency;
+      console.log(
+        "stripe_subscription_item_price_currency: ",
+        stripe_subscription_item_price_currency
+      );
+      const stripe_subscription_item_price_unit_amount =
+        stripe_subscription_item_price_obj.unit_amount;
+      console.log(
+        "stripe_subscription_item_price_unit_amount: ",
+        stripe_subscription_item_price_unit_amount
+      );
+      const stripe_subscription_item_product_id =
+        stripe_subscription_item_price_obj.product;
+
       const generated_subscription_item_key =
         await keyGeneratorSubscriptionItems.nextKey();
       const generated_subscription_item_ordinal =
@@ -303,10 +325,14 @@ const handler = async (transaction: Transaction) => {
           {
             id: stripeSubscriptionItem.id,
             metadata: JSON.stringify(stripeSubscriptionItem.metadata),
-            price: JSON.stringify(stripeSubscriptionItem.price),
+            price_obj: JSON.stringify(stripeSubscriptionItem.price),
             quantity: stripeSubscriptionItem.quantity,
             subscription: stripeSubscriptionItem.subscription,
             customer: stripeSubscription.customer,
+            price_id: stripe_subscription_item_price_id,
+            price_currency: stripe_subscription_item_price_currency,
+            price_unit_amount: stripe_subscription_item_price_unit_amount,
+            product_id: stripe_subscription_item_product_id,
           }
         );
 
@@ -322,10 +348,14 @@ const handler = async (transaction: Transaction) => {
             _dataland_ordinal: generated_subscription_item_ordinal,
             id: stripeSubscriptionItem.id,
             metadata: JSON.stringify(stripeSubscriptionItem.metadata),
-            price: JSON.stringify(stripeSubscriptionItem.price),
+            price_obj: JSON.stringify(stripeSubscriptionItem.price),
             quantity: stripeSubscriptionItem.quantity,
             subscription: stripeSubscriptionItem.subscription,
             customer: stripeSubscription.customer,
+            price_id: stripe_subscription_item_price_id,
+            price_currency: stripe_subscription_item_price_currency,
+            price_unit_amount: stripe_subscription_item_price_unit_amount,
+            product_id: stripe_subscription_item_product_id,
           }
         );
 
