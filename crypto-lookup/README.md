@@ -45,6 +45,6 @@
 
 9. Verify that the example was successfully deployed.
 
-   Go to the Dataland UI, open the newly created "crypto" table, and add a row with an example coin ticker like `ETH`. You should see a price respond back in the second column:
+   Go to the Dataland UI, open the newly created `crypto` table, and add a row with an example coin ticker like `ETH`. You should see a price respond back in the second column:
 
    ![Crypto lookup end state](../assets/crypto-lookup-end-state-2022-08-05.gif)
