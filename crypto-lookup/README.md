@@ -1,5 +1,7 @@
 # Crypto Lookup Example
 
+This example uses the CoinMarketCap API to look up the current prices for any crypto ticker symbol, and write them back to a Dataland table.
+
 ## Setup
 
 1. Install the Dataland CLI:
