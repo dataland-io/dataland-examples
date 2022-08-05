@@ -7,7 +7,7 @@ resources:
     metadata:
       name: crypto-lookup
     spec:
-      scriptSha256Hex: 28df398aa7da5855925092d197653474449cf95641447fecc459b89c58bb8123
+      scriptSha256Hex: e8e0f8015f6b03b94eb65a41d7d82df3841fd10e383dbcba99f674cfe3614273
       env:
         - name: COINMARKETCAP_API_KEY
           value:
