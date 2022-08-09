@@ -1,0 +1,34 @@
+moduleId: postgres-sync-example
+
+info:
+  title: Postgres
+  description: Sync a Postgres database to Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: icon.png
+
+buildCommand: npm run build
+
+parameters:
+  - pghost
+  - pgport
+  - pgdatabase
+  - pguser
+  - pgpassword
+  - pgschema
+
+workers:
+  - workerId: postgres-sync
+    scriptPath: dist/postgresSync.bundle.js
+    env:
+      PGHOST: pghost
+      PGPORT: pgport
+      PGDATABASE: pgdatabase
+      PGUSER: pguser
+      PGPASSWORD: pgpassword
+      PGSCHEMA: pgschema
+    triggers:
+      cron:
+        cronExpression: "0 */15 * * * * *"
+      transaction: {}
