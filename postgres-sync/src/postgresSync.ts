@@ -126,6 +126,8 @@ const cronHandler = async (cronEvent: CronEvent) => {
     console.log("completed table sync", tableName);
   }
 
+  await client.end();
+
   console.log("completed cron sync", cronEvent);
 };
 
