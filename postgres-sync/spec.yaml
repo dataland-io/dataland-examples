@@ -1,0 +1,7 @@
+moduleId: postgres-sync-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: postgres-sync
+    scriptPath: dist/postgresSync.bundle.js

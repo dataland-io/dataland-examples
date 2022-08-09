@@ -1,0 +1,26 @@
+{
+  "name": "@dataland-examples/postgres-sync",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "webpack --config webpack.config.ts"
+  },
+  "dependencies": {
+    "@dataland-io/dataland-sdk-worker": "0.15.0",
+    "@apache-arrow/es2015-esm": "9.0.0",
+    "@dataland-io/dataland-state-sync": "0.15.0",
+    "@dataland-workerlibs/postgres": "0.15.0",
+    "common-tags": "1.8.2",
+    "io-ts": "2.2.16",
+    "lodash-es": "4.17.21"
+  },
+  "devDependencies": {
+    "@types/webpack": "5.28.0",
+    "ts-loader": "9.2.8",
+    "ts-node": "10.7.0",
+    "typescript": "4.6.3",
+    "webpack": "5.70.0",
+    "webpack-cli": "4.9.2"
+  }
+}
