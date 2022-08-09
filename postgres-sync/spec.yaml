@@ -30,5 +30,5 @@ workers:
       PGSCHEMA: pgschema
     triggers:
       cron:
-        cronExpression: "0 */15 * * * * *"
+        cronExpression: "*/30 * * * * * *"
       transaction: {}
