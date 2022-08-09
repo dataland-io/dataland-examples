@@ -16,6 +16,8 @@
     "lodash-es": "4.17.21"
   },
   "devDependencies": {
+    "@types/common-tags": "1.8.1",
+    "@types/lodash-es": "4.17.6",
     "@types/webpack": "5.28.0",
     "ts-loader": "9.2.8",
     "ts-node": "10.7.0",
