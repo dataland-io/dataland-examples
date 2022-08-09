@@ -1,18 +1,17 @@
 import {
-  getCatalogSnapshot,
+  getCatalogMirror,
   getEnv,
   Mutation,
-  querySqlSnapshot,
+  querySqlMirror,
   KeyGenerator,
   OrdinalGenerator,
-  registerTransactionHandler,
+  registerCronHandler,
   runMutations,
   Schema,
-  Transaction,
   unpackRows,
 } from "@dataland-io/dataland-sdk-worker";
 
-import { isString, isNumber } from "lodash-es";
+import { isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
@@ -50,33 +49,10 @@ const fetchStripeCustomers = async () => {
   return full_results;
 };
 
-const handler = async (transaction: Transaction) => {
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
+const handler = async () => {
+  const { tableDescriptors } = await getCatalogMirror();
 
   const schema = new Schema(tableDescriptors);
-
-  const affectedRows = schema.getAffectedRows(
-    "stripe-customers-trigger",
-    "Trigger",
-    transaction
-  );
-
-  const lookupKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number") {
-      lookupKeys.push(key);
-      console.log("key noticed: ", key);
-    }
-  }
-
-  if (lookupKeys.length === 0) {
-    console.log("No lookup keys found");
-    return;
-  }
-  const keyList = `(${lookupKeys.join(",")})`;
-  console.log("keyList: ", keyList);
 
   const keyGenerator = new KeyGenerator();
   const ordinalGenerator = new OrdinalGenerator();
@@ -89,8 +65,7 @@ const handler = async (transaction: Transaction) => {
   }
 
   // fetch existing Stripe customers
-  const existing_stripe_data = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
+  const existing_stripe_data = await querySqlMirror({
     sqlQuery: `select
       _dataland_key, id
     from "stripe-customers"`,
@@ -212,4 +187,4 @@ const handler = async (transaction: Transaction) => {
   }
 };
 
-registerTransactionHandler(handler);
+registerCronHandler(handler);

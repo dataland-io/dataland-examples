@@ -1,22 +1,21 @@
 import {
-  getCatalogSnapshot,
+  getCatalogMirror,
   getEnv,
   Mutation,
-  querySqlSnapshot,
+  querySqlMirror,
   KeyGenerator,
   OrdinalGenerator,
-  registerTransactionHandler,
+  registerCronHandler,
   runMutations,
   Schema,
-  Transaction,
   unpackRows,
 } from "@dataland-io/dataland-sdk-worker";
 
-import { isString, isNumber } from "lodash-es";
+import { isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const fetchStriperefunds = async () => {
+const fetchStripeRefunds = async () => {
   var headers = new Headers();
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
@@ -50,47 +49,23 @@ const fetchStriperefunds = async () => {
   return full_results;
 };
 
-const handler = async (transaction: Transaction) => {
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
+const handler = async () => {
+  const { tableDescriptors } = await getCatalogMirror();
 
   const schema = new Schema(tableDescriptors);
-
-  const affectedRows = schema.getAffectedRows(
-    "stripe-refunds-trigger",
-    "Trigger",
-    transaction
-  );
-
-  const lookupKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number") {
-      lookupKeys.push(key);
-      console.log("key noticed: ", key);
-    }
-  }
-
-  if (lookupKeys.length === 0) {
-    console.log("No lookup keys found");
-    return;
-  }
-  const keyList = `(${lookupKeys.join(",")})`;
-  console.log("keyList: ", keyList);
 
   const keyGenerator = new KeyGenerator();
   const ordinalGenerator = new OrdinalGenerator();
 
   // fetch Stripe refunds from Stripe
-  const striperefunds = await fetchStriperefunds();
+  const stripeRefunds = await fetchStripeRefunds();
 
-  if (striperefunds == null) {
+  if (stripeRefunds == null) {
     return;
   }
 
   // fetch existing Stripe refunds
-  const existing_stripe_data = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
+  const existing_stripe_data = await querySqlMirror({
     sqlQuery: `select
       _dataland_key, id
     from "stripe-refunds"`,
@@ -111,7 +86,7 @@ const handler = async (transaction: Transaction) => {
   let batch_size = 100; // push 100 at a time
   let total_counter = 0;
 
-  for (const stripeRefund of striperefunds) {
+  for (const stripeRefund of stripeRefunds) {
     // Generate a new _dataland_key and _dataland_ordinal value
     const id = await keyGenerator.nextKey();
     const ordinal = await ordinalGenerator.nextOrdinal();
@@ -178,7 +153,7 @@ const handler = async (transaction: Transaction) => {
       mutations_batch = [];
       batch_counter = 0;
       console.log("total_counter: ", total_counter);
-    } else if (total_counter + batch_size > striperefunds.length) {
+    } else if (total_counter + batch_size > stripeRefunds.length) {
       await runMutations({ mutations: mutations_batch });
       mutations_batch = [];
       batch_counter = 0;
@@ -187,4 +162,4 @@ const handler = async (transaction: Transaction) => {
   }
 };
 
-registerTransactionHandler(handler);
+registerCronHandler(handler);

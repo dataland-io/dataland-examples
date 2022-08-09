@@ -1,18 +1,17 @@
 import {
-  getCatalogSnapshot,
+  getCatalogMirror,
   getEnv,
   Mutation,
-  querySqlSnapshot,
+  querySqlMirror,
   KeyGenerator,
   OrdinalGenerator,
-  registerTransactionHandler,
+  registerCronHandler,
   runMutations,
   Schema,
-  Transaction,
   unpackRows,
 } from "@dataland-io/dataland-sdk-worker";
 
-import { isString, isNumber } from "lodash-es";
+import { isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
@@ -96,33 +95,10 @@ const fetchStripeSubscriptionItems = async (subscription_id: string) => {
   return full_results;
 };
 
-const handler = async (transaction: Transaction) => {
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
+const handler = async () => {
+  const { tableDescriptors } = await getCatalogMirror();
 
   const schema = new Schema(tableDescriptors);
-
-  const affectedRows = schema.getAffectedRows(
-    "stripe-subscriptions-trigger",
-    "Trigger",
-    transaction
-  );
-
-  const lookupKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number") {
-      lookupKeys.push(key);
-      console.log("key noticed: ", key);
-    }
-  }
-
-  if (lookupKeys.length === 0) {
-    console.log("No lookup keys found");
-    return;
-  }
-  const keyList = `(${lookupKeys.join(",")})`;
-  console.log("keyList: ", keyList);
 
   const keyGeneratorSubscriptions = new KeyGenerator();
   const ordinalGeneratorSubscriptions = new OrdinalGenerator();
@@ -138,8 +114,7 @@ const handler = async (transaction: Transaction) => {
   }
 
   // fetch existing Stripe subscriptions
-  const existing_stripe_subscriptions = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
+  const existing_stripe_subscriptions = await querySqlMirror({
     sqlQuery: `select
       _dataland_key, id
     from "stripe-subscriptions"`,
@@ -162,15 +137,14 @@ const handler = async (transaction: Transaction) => {
   }
 
   // fetch existing Stripe subscriptions items
-  const existing_stripe_subscriptions_item = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
+  const existing_stripe_subscriptions_items = await querySqlMirror({
     sqlQuery: `select
         _dataland_key, id
       from "stripe-subscription-items"`,
   });
 
   const existing_stripe_subscriptions_item_rows = unpackRows(
-    existing_stripe_subscriptions
+    existing_stripe_subscriptions_items
   );
 
   const existing_stripe_subscriptions_item_ids = [];
@@ -275,22 +249,13 @@ const handler = async (transaction: Transaction) => {
       const stripe_subscription_item_price_obj = stripeSubscriptionItem.price;
       const stripe_subscription_item_price_id =
         stripe_subscription_item_price_obj.id;
-      console.log(
-        "stripe_subscription_item_price_id: ",
-        stripe_subscription_item_price_id
-      );
+
       const stripe_subscription_item_price_currency =
         stripe_subscription_item_price_obj.currency;
-      console.log(
-        "stripe_subscription_item_price_currency: ",
-        stripe_subscription_item_price_currency
-      );
+
       const stripe_subscription_item_price_unit_amount =
         stripe_subscription_item_price_obj.unit_amount;
-      console.log(
-        "stripe_subscription_item_price_unit_amount: ",
-        stripe_subscription_item_price_unit_amount
-      );
+
       const stripe_subscription_item_product_id =
         stripe_subscription_item_price_obj.product;
 
@@ -380,4 +345,4 @@ const handler = async (transaction: Transaction) => {
   }
 };
 
-registerTransactionHandler(handler);
+registerCronHandler(handler);

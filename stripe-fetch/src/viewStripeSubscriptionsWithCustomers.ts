@@ -1,14 +1,13 @@
 import {
-  getCatalogSnapshot,
+  getCatalogMirror,
   getEnv,
   Mutation,
-  querySqlSnapshot,
+  querySqlMirror,
   KeyGenerator,
   OrdinalGenerator,
-  registerTransactionHandler,
+  registerCronHandler,
   runMutations,
   Schema,
-  Transaction,
   unpackRows,
 } from "@dataland-io/dataland-sdk-worker";
 
@@ -16,40 +15,16 @@ import { isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const handler = async (transaction: Transaction) => {
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
+const handler = async () => {
+  const { tableDescriptors } = await getCatalogMirror();
 
   const schema = new Schema(tableDescriptors);
-
-  const affectedRows = schema.getAffectedRows(
-    "view-stripe-subscriptions-with-customers-trigger",
-    "Trigger",
-    transaction
-  );
-
-  const lookupKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number") {
-      lookupKeys.push(key);
-      console.log("key noticed: ", key);
-    }
-  }
-
-  if (lookupKeys.length === 0) {
-    console.log("No lookup keys found");
-    return;
-  }
-  const keyList = `(${lookupKeys.join(",")})`;
-  console.log("keyList: ", keyList);
 
   const keyGenerator = new KeyGenerator();
   const ordinalGenerator = new OrdinalGenerator();
 
   // Check for existing subscription_ids in the database
-  const existing_subscriptions = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
+  const existing_subscriptions = await querySqlMirror({
     sqlQuery: `select
       _dataland_key, subscription_id
     from "view-stripe-subscriptions-with-customers"`,
@@ -70,8 +45,7 @@ const handler = async (transaction: Transaction) => {
   }
 
   // Construct the new join query
-  const joined_query = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
+  const joined_query = await querySqlMirror({
     sqlQuery: `SELECT
     si.id as subscription_item_id,
     si.price_unit_amount,
@@ -195,4 +169,4 @@ const handler = async (transaction: Transaction) => {
   }
 };
 
-registerTransactionHandler(handler);
+registerCronHandler(handler);

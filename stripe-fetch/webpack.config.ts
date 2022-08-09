@@ -10,7 +10,6 @@ const config: Configuration = {
     fetchStripeInvoices: "./src/fetchStripeInvoices.ts",
     fetchStripeRefunds: "./src/fetchStripeRefunds.ts",
     fetchStripePaymentIntents: "./src/fetchStripePaymentIntents.ts",
-    fetchStripeCustomersWithSub: "./src/fetchStripeCustomersWithSub.ts",
     postStripePaymentIntentRefund: "./src/postStripePaymentIntentRefund.ts",
     postStripeSubscriptionItemQuantityDecrement:
       "./src/postStripeSubscriptionItemQuantityDecrement.ts",
@@ -18,6 +17,7 @@ const config: Configuration = {
       "./src/postStripeSubscriptionItemQuantityIncrement.ts",
     viewStripeSubscriptionsWithCustomers:
       "./src/viewStripeSubscriptionsWithCustomers.ts",
+    cronLogger: "./src/cronLogger.ts",
   },
   module: {
     rules: [

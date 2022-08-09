@@ -14,21 +14,6 @@ parameters:
   - stripe-api-key
 
 tables:
-  - tableId: trigger
-    tableName: stripe-customers-trigger
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: "trigger"
-        columnName: "Trigger"
-        dataType: int32
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "button",
-              "label": "Import Stripe Customers",
-              "theme": "blue"
-            }
-
   - tableId: stripe-customers
     tableName: stripe-customers
     autoMigrate: true
@@ -122,21 +107,6 @@ tables:
         columnName: test_clock
         dataType: int64
 
-  - tableId: subscriptions-trigger
-    tableName: stripe-subscriptions-trigger
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: "trigger"
-        columnName: "Trigger"
-        dataType: int32
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "button",
-              "label": "Import Stripe Subscriptions",
-              "theme": "blue"
-            }
-
   - tableId: stripe-subscriptions
     tableName: stripe-subscriptions
     autoMigrate: true
@@ -227,21 +197,6 @@ tables:
       - columnId: metadata
         columnName: metadata
         dataType: string
-
-  - tableId: paymentintents-trigger
-    tableName: stripe-payment-intents-trigger
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: "trigger"
-        columnName: "Trigger"
-        dataType: int32
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "button",
-              "label": "Import Stripe Payment Intents",
-              "theme": "blue"
-            }
 
   - tableId: stripe-payment-intents
     tableName: stripe-payment-intents
@@ -405,21 +360,6 @@ tables:
         columnName: "Processed at"
         dataType: string
 
-  - tableId: invoices-trigger
-    tableName: stripe-invoices-trigger
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: "trigger"
-        columnName: "Trigger"
-        dataType: int32
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "button",
-              "label": "Import Stripe Invoices",
-              "theme": "blue"
-            }
-
   - tableId: stripe-invoices
     tableName: stripe-invoices
     autoMigrate: true
@@ -522,21 +462,6 @@ tables:
       - columnId: total
         columnName: total
         dataType: float64
-
-  - tableId: refunds-trigger
-    tableName: stripe-refunds-trigger
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: "trigger"
-        columnName: "Trigger"
-        dataType: int32
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "button",
-              "label": "Import Stripe Refunds",
-              "theme": "blue"
-            }
 
   - tableId: stripe-refunds
     tableName: stripe-refunds
@@ -666,25 +591,6 @@ tables:
         columnName: price_obj
         dataType: string
 
-  - tableId: view-stripe-subscriptions-with-customers-trigger
-    tableName: "view-stripe-subscriptions-with-customers-trigger"
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: "trigger"
-        columnName: "Trigger"
-        dataType: int32
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "button",
-              "label": "Generate view",
-              "theme": "blue"
-            }
-
-      - columnId: "last-pressed"
-        columnName: "Last pressed"
-        dataType: string
-
   - tableId: view-stripe-subscriptions-with-customers
     tableName: view-stripe-subscriptions-with-customers
     autoMigrate: true
@@ -777,35 +683,51 @@ tables:
         dataType: string
 
 workers:
-  - workerId: fetch-stripe-customers-with-sub
-    scriptPath: dist/fetchStripeCustomersWithSub.bundle.js
-    env:
-      STRIPE_API_KEY: stripe-api-key
+  - workerId: cron-logger
+    scriptPath: dist/cronLogger.bundle.js
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
 
   - workerId: fetch-stripe-customers
     scriptPath: dist/fetchStripeCustomers.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
-
-  - workerId: fetch-stripe-subscriptions
-    scriptPath: dist/fetchStripeSubscriptions.bundle.js
-    env:
-      STRIPE_API_KEY: stripe-api-key
-
-  - workerId: fetch-stripe-payment-intents
-    scriptPath: dist/fetchStripePaymentIntents.bundle.js
-    env:
-      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */15 * * * * *"
 
   - workerId: fetch-stripe-invoices
     scriptPath: dist/fetchStripeInvoices.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */15 * * * * *"
+
+  - workerId: fetch-stripe-subscriptions
+    scriptPath: dist/fetchStripeSubscriptions.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */15 * * * * *"
+
+  - workerId: fetch-stripe-payment-intents
+    scriptPath: dist/fetchStripePaymentIntents.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */15 * * * * *"
 
   - workerId: fetch-stripe-refunds
     scriptPath: dist/fetchStripeRefunds.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */15 * * * * *"
 
   - workerId: post-stripe-subscription-item-quantity-increment
     scriptPath: dist/postStripeSubscriptionItemQuantityIncrement.bundle.js
@@ -826,3 +748,6 @@ workers:
     scriptPath: dist/viewStripeSubscriptionsWithCustomers.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */5 * * * * *"
