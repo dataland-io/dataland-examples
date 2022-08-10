@@ -32,3 +32,66 @@ workers:
       cron:
         cronExpression: "*/30 * * * * * *"
       transaction: {}
+# tables:
+#   - tableId: "postgres-orders"
+#     tableName: "postgres-orders"
+#     autoMigrate: true
+#     columnDescriptors:
+#       - columnId: id
+#         columnName: "id"
+#         dataType: string
+
+#       - columnId: customer-id
+#         columnName: "customer_id"
+#         dataType: string
+
+#       - columnId: "delivery-status"
+#         columnName: "delivery_status"
+#         dataType: string
+#         columnAnnotations:
+#           dataland.io/column-display-config: |
+#             {
+#               "type": "select",
+#               "options": [
+#                 {
+#                   "value": "Unable to get delivered",
+#                   "theme": "ruby"
+#                 },
+#                 {
+#                   "value": "In warehouse",
+#                   "theme": "orange"
+#                 },
+#                 {
+#                   "value": "In transit",
+#                   "theme": "yellow"
+#                 },
+#                 {
+#                   "value": "Delivered",
+#                   "theme": "green"
+#                 }
+#               ]
+#             }
+
+#       - columnId: "order-placed-at"
+#         columnName: "order_placed_at"
+#         dataType: string
+
+#       - columnId: "order-delivered-at"
+#         columnName: "order_delivered_at"
+#         dataType: string
+
+#       - columnId: "delivery-time"
+#         columnName: "delivery_time"
+#         dataType: int32
+
+#       - columnId: "rating"
+#         columnName: "rating"
+#         dataType: int32
+
+#       - columnId: "user-rating-comment"
+#         columnName: "user_rating_comment"
+#         dataType: string
+
+#       - columnId: "order-value"
+#         columnName: "order_value"
+#         dataType: int32
