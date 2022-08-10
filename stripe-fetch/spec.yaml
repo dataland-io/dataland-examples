@@ -695,7 +695,7 @@ workers:
       STRIPE_API_KEY: stripe-api-key
     triggers:
       cron:
-        cronExpression: "0 */15 * * * * *"
+        cronExpression: "0 */30 * * * * *"
 
   - workerId: fetch-stripe-invoices
     scriptPath: dist/fetchStripeInvoices.bundle.js
@@ -703,7 +703,7 @@ workers:
       STRIPE_API_KEY: stripe-api-key
     triggers:
       cron:
-        cronExpression: "0 */15 * * * * *"
+        cronExpression: "0 */30 * * * * *"
 
   - workerId: fetch-stripe-subscriptions
     scriptPath: dist/fetchStripeSubscriptions.bundle.js
@@ -711,7 +711,7 @@ workers:
       STRIPE_API_KEY: stripe-api-key
     triggers:
       cron:
-        cronExpression: "0 */15 * * * * *"
+        cronExpression: "0 */30 * * * * *"
 
   - workerId: fetch-stripe-payment-intents
     scriptPath: dist/fetchStripePaymentIntents.bundle.js
@@ -719,7 +719,7 @@ workers:
       STRIPE_API_KEY: stripe-api-key
     triggers:
       cron:
-        cronExpression: "0 */15 * * * * *"
+        cronExpression: "0 */30 * * * * *"
 
   - workerId: fetch-stripe-refunds
     scriptPath: dist/fetchStripeRefunds.bundle.js
@@ -727,7 +727,7 @@ workers:
       STRIPE_API_KEY: stripe-api-key
     triggers:
       cron:
-        cronExpression: "0 */15 * * * * *"
+        cronExpression: "0 */30 * * * * *"
 
   - workerId: post-stripe-subscription-item-quantity-increment
     scriptPath: dist/postStripeSubscriptionItemQuantityIncrement.bundle.js

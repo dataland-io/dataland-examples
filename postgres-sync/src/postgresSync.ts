@@ -495,11 +495,13 @@ export const mutationToSqlStatements = (
       return [`create table ${tableName} (${columnInfos.join(",")})`];
     }
     case "drop_table": {
-      const dropTable: DropTable = mutation.value;
-      const tableDescriptor = databaseSchema[dropTable.tableUuid];
-      invariant(tableDescriptor != null);
-      const tableName = quoteIdentifier(tableDescriptor.tableName);
-      return [`drop table ${tableName}`];
+      // TODO(awu): Don't want to drop table by accident in source postgres
+      // const dropTable: DropTable = mutation.value;
+      // const tableDescriptor = databaseSchema[dropTable.tableUuid];
+      // invariant(tableDescriptor != null);
+      // const tableName = quoteIdentifier(tableDescriptor.tableName);
+      // return [`drop table ${tableName}`];
+      return [];
     }
     case "rename_table": {
       const renameTable: RenameTable = mutation.value;

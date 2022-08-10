@@ -12,7 +12,7 @@ workers:
 tables:
   - tableId: alerts-on-orders
     tableName: "Alerts on Orders"
-    autoMigrate: false
+    autoMigrate: true
     columnDescriptors:
       # id
       - columnId: "id"
@@ -107,7 +107,7 @@ tables:
               "type": "url"
             }
 
-      - columnId: "stripe-url"
+      - columnId: "stripe-customer-id"
         columnName: "Stripe Customer ID"
         dataType: string
         columnAnnotations:

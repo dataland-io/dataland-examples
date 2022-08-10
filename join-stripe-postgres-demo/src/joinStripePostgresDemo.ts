@@ -24,7 +24,7 @@ const handler = async () => {
   // Check for existing subscription_ids in the database
   const existing_rows_response = await querySqlMirror({
     sqlQuery: `select
-      _dataland_key, id,
+      _dataland_key, "Order ID"
     from "Alerts on Orders"`,
   });
 
@@ -38,7 +38,7 @@ const handler = async () => {
   const existing_stripe_keys = [];
 
   for (const existing_row of existing_rows) {
-    existing_stripe_ids.push(existing_row.id);
+    existing_stripe_ids.push(existing_row["Order ID"]);
     existing_stripe_keys.push(existing_row._dataland_key);
   }
 
@@ -56,14 +56,14 @@ const handler = async () => {
       pu.phone,
       pu.email,
       pu.name,
-      tovbc.total_order_value,
-      sc.id as "stripe_customer_id",
+      tovbc.totaql_order_value,
+      sc.id as "stripe_customer_id"
     FROM 
       "postgres-orders" po 
     LEFT JOIN 
       "postgres-users" pu ON po.customer_id = pu.id
     LEFT JOIN
-        "total_order_value_by_customer" tovbc ON tovbc.customer_id = pu.id;
+        "total_order_value_by_customer" tovbc ON tovbc.customer_id = pu.id
     LEFT JOIN
         "stripe-customers" sc ON po.customer_id = sc.id;
 `,
