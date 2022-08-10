@@ -78,12 +78,6 @@ const fetchStripeSubscriptionItems = async (subscription_id: string) => {
       for (const result of results) {
         full_results.push(result);
         total_counter++;
-        console.log(
-          "Subscription item id: ",
-          result.id,
-          " – total_counter: ",
-          total_counter
-        );
       }
     }
   } while (has_more);
@@ -339,6 +333,7 @@ const handler = async () => {
       console.log("total processed: ", total_counter);
     }
   }
+  console.log("Done");
 };
 
 registerCronHandler(handler);

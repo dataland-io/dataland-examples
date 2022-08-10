@@ -186,6 +186,8 @@ const handler = async () => {
       console.log("total_counter: ", total_counter);
     }
   }
+
+  console.log("Done");
 };
 
 registerCronHandler(handler);
