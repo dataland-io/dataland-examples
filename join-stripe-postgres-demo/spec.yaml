@@ -5,21 +5,82 @@ buildCommand: npm run build
 workers:
   - workerId: join-stripe-postgres-demo
     scriptPath: dist/joinStripePostgresDemo.bundle.js
+    triggers:
+      cron:
+        cronExpression: "0 */5 * * * * *"
 
 tables:
   - tableId: alerts-on-orders
     tableName: "Alerts on Orders"
-    autoMigrate: true
+    autoMigrate: false
     columnDescriptors:
       # id
+      - columnId: "id"
+        columnName: "Order ID"
+        dataType: string
+
       # customer_id
-      # delivery_status
+      - columnId: "customer-id"
+        columnName: "Customer ID"
+        dataType: string
+
+      # delivery-status
+      - columnId: "delivery-status"
+        columnName: "Delivery Status"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "Unable to get delivered",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "In warehouse",
+                  "theme": "orange"
+                },
+                {
+                  "value": "In transit",
+                  "theme": "yellow"
+                },                
+                {
+                  "value": "Delivered",
+                  "theme": "green"
+                }
+              ]
+            }
+
       # order_placed_at
+      - columnId: "order-placed-at"
+        columnName: "Order Placed At"
+        dataType: string
+
       # order_delivered_at
+      - columnId: "order-delivered-at"
+        columnName: "Order Delivered At"
+        dataType: string
+
       # delivery_time
+      - columnId: "delivery-time"
+        columnName: "Delivery Time (mins)"
+        dataType: int64
+
       # rating
+      - columnId: rating
+        columnName: "User Rating"
+        dataType: int32
+
       # user_rating_comment
+      - columnId: "user-rating-comment"
+        columnName: "User Rating Comment"
+        dataType: string
+
       # order_value
+      - columnId: "order-value"
+        columnName: "Order Value"
+        dataType: float64
 
       - columnId: phone
         columnName: "Phone"

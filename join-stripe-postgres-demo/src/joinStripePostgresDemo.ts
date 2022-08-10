@@ -13,8 +13,6 @@ import {
 
 import { isNumber } from "lodash-es";
 
-const stripe_key = getEnv("STRIPE_API_KEY");
-
 const handler = async () => {
   const { tableDescriptors } = await getCatalogMirror();
 
@@ -97,19 +95,19 @@ const handler = async () => {
       }
 
       const update = schema.makeUpdateRows("Alerts on Orders", existing_key, {
-        subscription_item_id: joined_query_row.subscription_item_id,
-        price_unit_amount: joined_query_row.price_unit_amount,
-        quantity: joined_query_row.quantity,
-        subscription_id: joined_query_row.subscription_id,
-        status: joined_query_row.status,
-        items: joined_query_row.items,
-        created: joined_query_row.created,
-        customer_id: joined_query_row.customer_id,
-        email: joined_query_row.email,
-        name: joined_query_row.name,
-        phone: joined_query_row.phone,
-        delinquent: joined_query_row.delinquent,
-        invoice_prefix: joined_query_row.invoice_prefix,
+        "Order ID": joined_query_row.id,
+        "Customer ID": joined_query_row.customer_id,
+        "Delivery Status": joined_query_row.delivery_status,
+        "Order Placed At": joined_query_row.order_placed_at,
+        "Order Delivered At": joined_query_row.order_delivered_at,
+        "Delivery Time (mins)": joined_query_row.delivery_time,
+        "User Rating": joined_query_row.rating,
+        "User Rating Comment": joined_query_row.rating_comment,
+        "Order Value": joined_query_row.order_value,
+        Phone: joined_query_row.phone,
+        Email: joined_query_row.email,
+        Name: joined_query_row.name,
+        "Lifetime Order Value": joined_query_row.total_order_value,
       });
 
       if (update == null) {
@@ -124,19 +122,19 @@ const handler = async () => {
       // otherwise, make an insert
       const insert = schema.makeInsertRows("Alerts on Orders", id, {
         _dataland_ordinal: ordinal,
-        subscription_item_id: joined_query_row.subscription_item_id,
-        price_unit_amount: joined_query_row.price_unit_amount,
-        quantity: joined_query_row.quantity,
-        subscription_id: joined_query_row.subscription_id,
-        status: joined_query_row.status,
-        items: joined_query_row.items,
-        created: joined_query_row.created,
-        customer_id: joined_query_row.customer_id,
-        email: joined_query_row.email,
-        name: joined_query_row.name,
-        phone: joined_query_row.phone,
-        delinquent: joined_query_row.delinquent,
-        invoice_prefix: joined_query_row.invoice_prefix,
+        "Order ID": joined_query_row.id,
+        "Customer ID": joined_query_row.customer_id,
+        "Delivery Status": joined_query_row.delivery_status,
+        "Order Placed At": joined_query_row.order_placed_at,
+        "Order Delivered At": joined_query_row.order_delivered_at,
+        "Delivery Time (mins)": joined_query_row.delivery_time,
+        "User Rating": joined_query_row.rating,
+        "User Rating Comment": joined_query_row.rating_comment,
+        "Order Value": joined_query_row.order_value,
+        Phone: joined_query_row.phone,
+        Email: joined_query_row.email,
+        Name: joined_query_row.name,
+        "Lifetime Order Value": joined_query_row.total_order_value,
       });
 
       if (insert == null) {
