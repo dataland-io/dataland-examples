@@ -735,7 +735,7 @@ workers:
       STRIPE_API_KEY: stripe-api-key
 
   - workerId: post-stripe-subscription-item-quantity-decrement
-    scriptPath: dist/postStripeSubscriptionItemQuantityDecrement.bundle.jsi
+    scriptPath: dist/postStripeSubscriptionItemQuantityDecrement.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
 
