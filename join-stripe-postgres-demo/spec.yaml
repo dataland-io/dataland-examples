@@ -1,0 +1,7 @@
+moduleId: join-stripe-postgres-demo-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: join-stripe-postgres-demo
+    scriptPath: dist/joinStripePostgresDemo.bundle.js
