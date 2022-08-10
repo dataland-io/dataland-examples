@@ -3,8 +3,10 @@ import {
   registerCronHandler,
   syncTables,
   SyncTable,
+  unpackRows,
 } from "@dataland-io/dataland-sdk-worker";
 
+import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
 const handler = async () => {
   // Construct the new join query
   const joined_query = await querySqlMirror({
@@ -43,14 +45,14 @@ const handler = async () => {
     return;
   }
 
-  // const joined_query_rows = unpackRows(joined_query);
+  const joined_query_rows = unpackRows(joined_query);
+  const arrowTable = tableFromJSON(joined_query_rows);
   // batch the mutations
-
-  const arrowRecordBatch = joined_query.arrowRecordBatches;
+  const arrowRecordBatch = tableToIPC(arrowTable);
   const syncTable: SyncTable = {
-    tableName: "Alerts on Orders",
-    arrowRecordBatches: arrowRecordBatch,
-    identityColumnNames: ["Order ID"],
+    tableName: "humans",
+    arrowRecordBatches: [arrowRecordBatch],
+    identityColumnNames: ["id"],
   };
   try {
     await syncTables({

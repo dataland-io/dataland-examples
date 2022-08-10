@@ -15,8 +15,8 @@ const config: Configuration = {
       "./src/postStripeSubscriptionItemQuantityDecrement.ts",
     postStripeSubscriptionItemQuantityIncrement:
       "./src/postStripeSubscriptionItemQuantityIncrement.ts",
-    joinStripeSubscriptionsWithCustomers:
-      "./src/joinStripeSubscriptionsWithCustomers.ts",
+    // joinStripeSubscriptionsWithCustomers:
+    //   "./src/joinStripeSubscriptionsWithCustomers.ts",
     cronLogger: "./src/cronLogger.ts",
   },
   module: {
