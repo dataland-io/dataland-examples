@@ -27,7 +27,7 @@ const handler = async () => {
   const existing_subscriptions = await querySqlMirror({
     sqlQuery: `select
       _dataland_key, subscription_id
-    from "view-stripe-subscriptions-with-customers"`,
+    from "join-stripe-subscriptions-with-customers"`,
   });
 
   if (existing_subscriptions == null) {
@@ -95,7 +95,7 @@ const handler = async () => {
       }
 
       const update = schema.makeUpdateRows(
-        "view-stripe-subscriptions-with-customers",
+        "join-stripe-subscriptions-with-customers",
         existing_key,
         {
           subscription_item_id: joined_query_row.subscription_item_id,
@@ -125,7 +125,7 @@ const handler = async () => {
     } else {
       // otherwise, make an insert
       const insert = schema.makeInsertRows(
-        "view-stripe-subscriptions-with-customers",
+        "join-stripe-subscriptions-with-customers",
         id,
         {
           _dataland_ordinal: ordinal,

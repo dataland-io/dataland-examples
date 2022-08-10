@@ -591,8 +591,8 @@ tables:
         columnName: price_obj
         dataType: string
 
-  - tableId: view-stripe-subscriptions-with-customers
-    tableName: view-stripe-subscriptions-with-customers
+  - tableId: join-stripe-subscriptions-with-customers
+    tableName: join-stripe-subscriptions-with-customers
     autoMigrate: true
     columnDescriptors:
       - columnId: subscription-item-id
@@ -744,8 +744,8 @@ workers:
     env:
       STRIPE_API_KEY: stripe-api-key
 
-  - workerId: view-stripe-customers-and-active-subscriptions
-    scriptPath: dist/viewStripeSubscriptionsWithCustomers.bundle.js
+  - workerId: join-stripe-customers-and-active-subscriptions
+    scriptPath: dist/joinStripeSubscriptionsWithCustomers.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
     triggers:
