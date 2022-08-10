@@ -103,8 +103,6 @@ const handler = async () => {
     return;
   }
 
-  console.log("FINISHED ALL API CALLS - SUBSCRIPTIONS");
-
   // fetch existing Stripe subscriptions
   const existing_stripe_subscriptions = await querySqlMirror({
     sqlQuery: `select
@@ -235,8 +233,6 @@ const handler = async () => {
     const stripeSubscriptionItems = await fetchStripeSubscriptionItems(
       stripe_subscription_id
     );
-
-    console.log("FINISHED ALL API CALLS - SUBSCRIPTION ITEMS");
 
     for (const stripeSubscriptionItem of stripeSubscriptionItems) {
       const stripe_subscription_item_id = String(stripeSubscriptionItem.id);

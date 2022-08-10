@@ -2,12 +2,20 @@ moduleId: join-stripe-postgres-demo-example
 
 buildCommand: npm run build
 
+parameters:
+  - stripe-api-key
+
 workers:
   - workerId: join-stripe-postgres-demo
     scriptPath: dist/joinStripePostgresDemo.bundle.js
     triggers:
       cron:
-        cronExpression: "0 */5 * * * * *"
+        cronExpression: "*/15 * * * * * *"
+
+  - workerId: post-stripe-credit
+    scriptPath: dist/postStripeCredit.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
 
 tables:
   - tableId: alerts-on-orders

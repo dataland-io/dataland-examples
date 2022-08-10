@@ -1,6 +1,5 @@
 import {
   getCatalogMirror,
-  getEnv,
   Mutation,
   querySqlMirror,
   KeyGenerator,
@@ -45,28 +44,36 @@ const handler = async () => {
   // Construct the new join query
   const joined_query = await querySqlMirror({
     sqlQuery: `WITH total_order_value_by_customer AS (
-      SELECT 
-        po.customer_id, 
-        SUM(po."order_value") as "total_order_value"
-      FROM "postgres-orders" po
-      GROUP BY ("customer_id")
-    )
-    SELECT
-      po.*,
-      pu.phone,
-      pu.email,
-      pu.name,
-      tovbc.total_order_value,
-      sc.id as "stripe_customer_id"
-    FROM 
-      "postgres-orders" po 
-    LEFT JOIN 
-      "postgres-users" pu ON po.customer_id = pu.id
-    LEFT JOIN
-        "total_order_value_by_customer" tovbc ON tovbc.customer_id = pu.id
-    LEFT JOIN
-        "stripe-customers" sc ON po.customer_id = sc.id;
-`,
+          SELECT
+            po.customer_id,
+            SUM(po."order_value") as "total_order_value"
+          FROM "postgres-orders" po
+          GROUP BY ("customer_id")
+        )
+        SELECT
+          po.id,
+          po.customer_id,
+          po.delivery_status,
+          po.order_placed_at,
+          po.order_delivered_at,
+          po.delivery_time,
+          po.rating,
+          po.user_rating_comment,
+          po.order_value,
+          pu.phone,
+          pu.email,
+          pu.name,
+          tovbc.total_order_value,
+          sc.id as "stripe_customer_id"
+        FROM
+          "postgres-orders" po
+        LEFT JOIN
+          "postgres-users" pu ON po.customer_id = pu.id
+        LEFT JOIN
+            "total_order_value_by_customer" tovbc ON tovbc.customer_id = pu.id
+        LEFT JOIN
+            "stripe-customers" sc ON po.customer_id = sc.id;
+    `,
   });
 
   if (joined_query == null) {
@@ -74,7 +81,6 @@ const handler = async () => {
   }
 
   const joined_query_rows = unpackRows(joined_query);
-
   // batch the mutations
   let mutations_batch: Mutation[] = [];
   let batch_counter = 0;
@@ -92,6 +98,15 @@ const handler = async () => {
     const stripe_url =
       "https://dashboard.stripe.com/test/customers/" + stripe_customer_id;
 
+    let rating = joined_query_row.rating;
+    if (Number.isNaN(joined_query_row.rating)) {
+      rating = null;
+    }
+
+    let delivery_time = joined_query_row.delivery_time;
+    if (Number.isNaN(joined_query_row.delivery_time)) {
+      delivery_time = null;
+    }
     // Check if the subscription already exists in the table. if so, update the existing row.
     if (existing_stripe_ids.includes(subscription_id)) {
       console.log("subscription_id already exists: ", subscription_id);
@@ -102,14 +117,15 @@ const handler = async () => {
         continue;
       }
 
+      console.log("joined_query_row: ", joined_query_row);
       const update = schema.makeUpdateRows("Alerts on Orders", existing_key, {
         "Order ID": joined_query_row.id,
         "Customer ID": joined_query_row.customer_id,
         "Delivery Status": joined_query_row.delivery_status,
         "Order Placed At": joined_query_row.order_placed_at,
         "Order Delivered At": joined_query_row.order_delivered_at,
-        "Delivery Time (mins)": joined_query_row.delivery_time,
-        "User Rating": joined_query_row.rating,
+        "Delivery Time (mins)": delivery_time,
+        "User Rating": rating,
         "User Rating Comment": joined_query_row.rating_comment,
         "Order Value": joined_query_row.order_value,
         Phone: joined_query_row.phone,
@@ -130,6 +146,15 @@ const handler = async () => {
       total_counter++;
     } else {
       // otherwise, make an insert
+      console.log("joined_query_row: ", joined_query_row);
+      console.log("rating: ", rating, ", delivery_time: ", delivery_time);
+      console.log(
+        "rating: ",
+        Number.isNaN(joined_query_row.rating),
+        ", delivery_time: ",
+        Number.isNaN(joined_query_row.delivery_time)
+      );
+
       const insert = schema.makeInsertRows("Alerts on Orders", id, {
         _dataland_ordinal: ordinal,
         "Order ID": joined_query_row.id,
@@ -137,8 +162,8 @@ const handler = async () => {
         "Delivery Status": joined_query_row.delivery_status,
         "Order Placed At": joined_query_row.order_placed_at,
         "Order Delivered At": joined_query_row.order_delivered_at,
-        "Delivery Time (mins)": joined_query_row.delivery_time,
-        "User Rating": joined_query_row.rating,
+        "Delivery Time (mins)": delivery_time,
+        "User Rating": rating,
         "User Rating Comment": joined_query_row.rating_comment,
         "Order Value": joined_query_row.order_value,
         Phone: joined_query_row.phone,

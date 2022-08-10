@@ -22,7 +22,7 @@ const postStripeRefund = async (stripe_customer_id: string) => {
   const url =
     "https://api.stripe.com/v1/customers/" +
     stripe_customer_id +
-    "/balance_transactions/amount=2500&currency=usd";
+    "/balance_transactions?amount=2500&currency=usd";
 
   const options = {
     method: "POST",

@@ -6,6 +6,7 @@ const config: Configuration = {
   target: "web",
   entry: {
     joinStripePostgresDemo: "./src/joinStripePostgresDemo.ts",
+    postStripeCredit: "./src/postStripeCredit.ts",
   },
   module: {
     rules: [
