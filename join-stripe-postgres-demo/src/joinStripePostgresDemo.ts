@@ -56,7 +56,7 @@ const handler = async () => {
       pu.phone,
       pu.email,
       pu.name,
-      tovbc.totaql_order_value,
+      tovbc.total_order_value,
       sc.id as "stripe_customer_id"
     FROM 
       "postgres-orders" po 

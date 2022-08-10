@@ -80,7 +80,7 @@ tables:
       # order_value
       - columnId: "order-value"
         columnName: "Order Value"
-        dataType: float64
+        dataType: int64
 
       - columnId: phone
         columnName: "Phone"
@@ -96,7 +96,7 @@ tables:
 
       - columnId: total-order-value
         columnName: "Lifetime Order Value"
-        dataType: string
+        dataType: int64
 
       - columnId: "stripe-url"
         columnName: "Stripe URL"
