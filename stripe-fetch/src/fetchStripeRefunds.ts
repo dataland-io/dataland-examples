@@ -65,6 +65,8 @@ const handler = async () => {
     return;
   }
 
+  console.log("FINISHED ALL API CALLS");
+
   // fetch existing Stripe refunds
   const existing_stripe_data = await querySqlMirror({
     sqlQuery: `select
