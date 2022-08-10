@@ -65,12 +65,15 @@ const handler = async () => {
     return;
   }
 
+  console.log("FINISHED ALL API CALLS");
   // fetch existing Stripe customers
   const existing_stripe_data = await querySqlMirror({
     sqlQuery: `select
       _dataland_key, id
     from "stripe-customers"`,
   });
+
+  console.log("existing_stripe_data");
 
   const existing_stripe_rows = unpackRows(existing_stripe_data);
 
@@ -82,6 +85,7 @@ const handler = async () => {
     existing_stripe_ids.push(existing_stripe_row.id);
   }
 
+  console.log("finished making existing map");
   let mutations_batch: Mutation[] = [];
   let batch_counter = 0;
   let batch_size = 100; // push 100 at a time
@@ -107,6 +111,7 @@ const handler = async () => {
         continue;
       }
 
+      console.log("before update");
       const update = schema.makeUpdateRows("stripe-customers", existing_key, {
         object: stripeCustomer.object,
         address: stripeCustomer.address,
@@ -139,6 +144,7 @@ const handler = async () => {
       batch_counter++;
       total_counter++;
     } else {
+      console.log("before insert");
       const insert = schema.makeInsertRows("stripe-customers", id, {
         _dataland_ordinal: ordinal,
         id: stripeCustomer.id,
@@ -175,11 +181,13 @@ const handler = async () => {
     }
 
     if (batch_counter >= batch_size) {
+      console.log("before mutations batch - 100");
       await runMutations({ mutations: mutations_batch });
       mutations_batch = [];
       batch_counter = 0;
       console.log("total_counter: ", total_counter);
     } else if (total_counter + batch_size > stripeCustomers.length) {
+      console.log("before mutations batch - leftover");
       await runMutations({ mutations: mutations_batch });
       mutations_batch = [];
       batch_counter = 0;

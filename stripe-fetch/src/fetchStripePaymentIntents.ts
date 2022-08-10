@@ -64,6 +64,7 @@ const handler = async () => {
   if (stripePaymentIntents == null) {
     return;
   }
+  console.log("FINISHED ALL API CALLS");
 
   // fetch existing Stripe paymentIntents
   const existing_stripe_data = await querySqlMirror({

@@ -65,6 +65,7 @@ const handler = async () => {
     return;
   }
 
+  console.log("FINISHED ALL API CALLS");
   // fetch existing Stripe invoices
   const existing_stripe_data = await querySqlMirror({
     sqlQuery: `select
