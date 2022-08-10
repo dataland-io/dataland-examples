@@ -133,75 +133,75 @@ const cronHandler = async (cronEvent: CronEvent) => {
 
 registerCronHandler(cronHandler);
 
-const transactionHandler = async (transaction: Transaction) => {
-  if (CRON_SYNC_MARKER in transaction.transactionAnnotations) {
-    console.log("skipping own cron sync transactions from writeback");
-  }
+// const transactionHandler = async (transaction: Transaction) => {
+//   if (CRON_SYNC_MARKER in transaction.transactionAnnotations) {
+//     console.log("skipping own cron sync transactions from writeback");
+//   }
 
-  const { tableDescriptors } = await getCatalogSnapshot({
-    // Note that passing `transaction.logicalTimestamp - 1` means that we're
-    // reading state of the schema at the instant **before** this transaction happened.
-    logicalTimestamp: transaction.logicalTimestamp - 1,
-  });
-  const databaseSchema: DatabaseSchema = keyBy(
-    tableDescriptors,
-    (x) => x.tableUuid
-  );
+//   const { tableDescriptors } = await getCatalogSnapshot({
+//     // Note that passing `transaction.logicalTimestamp - 1` means that we're
+//     // reading state of the schema at the instant **before** this transaction happened.
+//     logicalTimestamp: transaction.logicalTimestamp - 1,
+//   });
+//   const databaseSchema: DatabaseSchema = keyBy(
+//     tableDescriptors,
+//     (x) => x.tableUuid
+//   );
 
-  const sqlStatements = transactionToSqlStatements(databaseSchema, transaction);
+//   const sqlStatements = transactionToSqlStatements(databaseSchema, transaction);
 
-  if (sqlStatements.length === 0) {
-    return;
-  }
+//   if (sqlStatements.length === 0) {
+//     return;
+//   }
 
-  const transactionUuid = transaction.transactionUuid;
+//   const transactionUuid = transaction.transactionUuid;
 
-  console.log("replicating transaction", transactionUuid, sqlStatements.length);
+//   console.log("replicating transaction", transactionUuid, sqlStatements.length);
 
-  const client = getClient();
-  await client.connect();
+//   const client = getClient();
+//   await client.connect();
 
-  console.log("connected to database", transactionUuid);
+//   console.log("connected to database", transactionUuid);
 
-  const tx = await client.createTransaction(transaction.transactionUuid, {
-    isolation_level: "serializable",
-    read_only: false,
-  });
+//   const tx = await client.createTransaction(transaction.transactionUuid, {
+//     isolation_level: "serializable",
+//     read_only: false,
+//   });
 
-  await tx.begin();
+//   await tx.begin();
 
-  console.log("started tx", transactionUuid);
+//   console.log("started tx", transactionUuid);
 
-  const pgSchema = tryGetEnv("PGSCHEMA") ?? "public";
-  await tx.queryArray(
-    `create schema if not exists ${quoteIdentifier(pgSchema)}`
-  );
-  await tx.queryArray(`set local search_path to ${quoteIdentifier(pgSchema)}`);
+//   const pgSchema = tryGetEnv("PGSCHEMA") ?? "public";
+//   await tx.queryArray(
+//     `create schema if not exists ${quoteIdentifier(pgSchema)}`
+//   );
+//   await tx.queryArray(`set local search_path to ${quoteIdentifier(pgSchema)}`);
 
-  for (const sqlStatement of sqlStatements) {
-    // Skip statement if it doesn't include the token "postgres-"
-    if (!sqlStatement.includes("postgres")) {
-      console.log("non-postgres source table -- skipping");
-      continue;
-    }
+//   for (const sqlStatement of sqlStatements) {
+//     // Skip statement if it doesn't include the token "postgres-"
+//     if (!sqlStatement.includes("postgres")) {
+//       console.log("non-postgres source table -- skipping");
+//       continue;
+//     }
 
-    console.log("running statement", transactionUuid, sqlStatement);
-    const result = await tx.queryArray(sqlStatement);
-    console.log("completed statement", transactionUuid, result);
-  }
+//     console.log("running statement", transactionUuid, sqlStatement);
+//     const result = await tx.queryArray(sqlStatement);
+//     console.log("completed statement", transactionUuid, result);
+//   }
 
-  await tx.commit();
+//   await tx.commit();
 
-  console.log("committed tx", transactionUuid);
+//   console.log("committed tx", transactionUuid);
 
-  await client.end();
+//   await client.end();
 
-  console.log("disconnected from database", transactionUuid);
-};
+//   console.log("disconnected from database", transactionUuid);
+// };
 
-registerTransactionHandler(transactionHandler, {
-  filterTransactions: "handle-all",
-});
+// registerTransactionHandler(transactionHandler, {
+//   filterTransactions: "handle-all",
+// });
 
 const getClient = () => {
   const pgHost = getEnv("PGHOST");
