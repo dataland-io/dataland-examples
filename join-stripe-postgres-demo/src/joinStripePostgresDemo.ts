@@ -46,13 +46,13 @@ const handler = async () => {
   }
 
   console.log("joined_query", joined_query);
-  const joined_query_rows = unpackRows(joined_query);
-  const arrowTable = tableFromJSON(joined_query_rows);
-  // batch the mutations
-  const arrowRecordBatch = tableToIPC(arrowTable);
+  // const joined_query_rows = unpackRows(joined_query);
+  // const arrowTable = tableFromJSON(joined_query_rows);
+  // // batch the mutations
+  // const arrowRecordBatch = tableToIPC(arrowTable);
   const syncTable: SyncTable = {
     tableName: "Alerts on Orders",
-    arrowRecordBatches: [arrowRecordBatch],
+    arrowRecordBatches: joined_query.arrowRecordBatches,
     identityColumnNames: ["Order ID"],
   };
   try {
