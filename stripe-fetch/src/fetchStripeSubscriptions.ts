@@ -27,6 +27,7 @@ const fetchStripeSubscriptions = async () => {
   let has_more = true;
 
   do {
+    console.log("api-call started");
     const stripe_response = await fetch(url, {
       method: "GET",
       headers: headers,
@@ -41,14 +42,9 @@ const fetchStripeSubscriptions = async () => {
       for (const result of results) {
         full_results.push(result);
         total_counter++;
-        console.log(
-          "Subscription id: ",
-          result.id,
-          " – total_counter: ",
-          total_counter
-        );
       }
     }
+    console.log("api-call finished");
   } while (has_more);
 
   return full_results;
