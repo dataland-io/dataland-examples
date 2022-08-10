@@ -179,6 +179,12 @@ const transactionHandler = async (transaction: Transaction) => {
   await tx.queryArray(`set local search_path to ${quoteIdentifier(pgSchema)}`);
 
   for (const sqlStatement of sqlStatements) {
+    // Skip statement if it doesn't include the token "postgres-"
+    if (!sqlStatement.includes("postgres")) {
+      console.log("non-postgres source table -- skipping");
+      continue;
+    }
+
     console.log("running statement", transactionUuid, sqlStatement);
     const result = await tx.queryArray(sqlStatement);
     console.log("completed statement", transactionUuid, result);
