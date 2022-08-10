@@ -97,3 +97,36 @@ tables:
       - columnId: total-order-value
         columnName: "Lifetime Order Value"
         dataType: string
+
+      - columnId: "stripe-url"
+        columnName: "Stripe URL"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
+
+      - columnId: "stripe-url"
+        columnName: "Stripe Customer ID"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
+
+      - columnId: "issue-credit"
+        columnName: "Issue credit"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Issue $25 credit",
+              "theme": "blue"
+            }
+
+      - columnId: "credit-processed-at"
+        columnName: "Credit processed at"
+        dataType: string

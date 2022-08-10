@@ -56,13 +56,16 @@ const handler = async () => {
       pu.phone,
       pu.email,
       pu.name,
-      tovbc.total_order_value
+      tovbc.total_order_value,
+      sc.id as "stripe_customer_id",
     FROM 
       "postgres-orders" po 
     LEFT JOIN 
       "postgres-users" pu ON po.customer_id = pu.id
     LEFT JOIN
         "total_order_value_by_customer" tovbc ON tovbc.customer_id = pu.id;
+    LEFT JOIN
+        "stripe-customers" sc ON po.customer_id = sc.id;
 `,
   });
 
@@ -83,6 +86,11 @@ const handler = async () => {
     const ordinal = await ordinalGenerator.nextOrdinal();
 
     const subscription_id = joined_query_row.subscription_id;
+
+    const stripe_customer_id = joined_query_row.stripe_customer_id;
+
+    const stripe_url =
+      "https://dashboard.stripe.com/test/customers/" + stripe_customer_id;
 
     // Check if the subscription already exists in the table. if so, update the existing row.
     if (existing_stripe_ids.includes(subscription_id)) {
@@ -108,6 +116,8 @@ const handler = async () => {
         Email: joined_query_row.email,
         Name: joined_query_row.name,
         "Lifetime Order Value": joined_query_row.total_order_value,
+        "Stripe Customer ID": joined_query_row.stripe_customer_id,
+        "Stripe URL": stripe_url,
       });
 
       if (update == null) {
@@ -135,6 +145,8 @@ const handler = async () => {
         Email: joined_query_row.email,
         Name: joined_query_row.name,
         "Lifetime Order Value": joined_query_row.total_order_value,
+        "Stripe Customer ID": joined_query_row.stripe_customer_id,
+        "Stripe URL": stripe_url,
       });
 
       if (insert == null) {
