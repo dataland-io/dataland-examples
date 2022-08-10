@@ -30,7 +30,7 @@ workers:
       PGSCHEMA: pgschema
     triggers:
       cron:
-        cronExpression: "0 0 0 0 * * *"
+        cronExpression: "0 0 */12 * * * *"
       transaction: {}
 # tables:
 #   - tableId: "postgres-orders"
