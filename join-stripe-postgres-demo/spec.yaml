@@ -5,3 +5,34 @@ buildCommand: npm run build
 workers:
   - workerId: join-stripe-postgres-demo
     scriptPath: dist/joinStripePostgresDemo.bundle.js
+
+tables:
+  - tableId: alerts-on-orders
+    tableName: "Alerts on Orders"
+    autoMigrate: true
+    columnDescriptors:
+      # id
+      # customer_id
+      # delivery_status
+      # order_placed_at
+      # order_delivered_at
+      # delivery_time
+      # rating
+      # user_rating_comment
+      # order_value
+
+      - columnId: phone
+        columnName: "Phone"
+        dataType: string
+
+      - columnId: email
+        columnName: "Email"
+        dataType: string
+
+      - columnId: name
+        columnName: "Name"
+        dataType: string
+
+      - columnId: total-order-value
+        columnName: "Lifetime Order Value"
+        dataType: string
