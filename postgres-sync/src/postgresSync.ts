@@ -133,75 +133,88 @@ const cronHandler = async (cronEvent: CronEvent) => {
 
 registerCronHandler(cronHandler);
 
-// const transactionHandler = async (transaction: Transaction) => {
-//   if (CRON_SYNC_MARKER in transaction.transactionAnnotations) {
-//     console.log("skipping own cron sync transactions from writeback");
-//   }
+const transactionHandler = async (transaction: Transaction) => {
+  if (CRON_SYNC_MARKER in transaction.transactionAnnotations) {
+    console.log("skipping own cron sync transactions from writeback");
+  }
 
-//   const { tableDescriptors } = await getCatalogSnapshot({
-//     // Note that passing `transaction.logicalTimestamp - 1` means that we're
-//     // reading state of the schema at the instant **before** this transaction happened.
-//     logicalTimestamp: transaction.logicalTimestamp - 1,
-//   });
-//   const databaseSchema: DatabaseSchema = keyBy(
-//     tableDescriptors,
-//     (x) => x.tableUuid
-//   );
+  // TODO(awu): This is configurable by the allow-drop-tables-boolean flag.
+  const allow_writeback_boolean = getEnv(
+    "ALLOW_WRITEBACK_BOOLEAN"
+  ).toLowerCase();
+  if (allow_writeback_boolean == null) {
+    throw new Error("Missing environment variable - ALLOW_WRITEBACK_BOOLEAN");
+  }
 
-//   const sqlStatements = transactionToSqlStatements(databaseSchema, transaction);
+  if (allow_writeback_boolean == "false") {
+    console.log("skipping writeback due to ALLOW_WRITEBACK_BOOLEAN=false");
+    return;
+  }
 
-//   if (sqlStatements.length === 0) {
-//     return;
-//   }
+  const { tableDescriptors } = await getCatalogSnapshot({
+    // Note that passing `transaction.logicalTimestamp - 1` means that we're
+    // reading state of the schema at the instant **before** this transaction happened.
+    logicalTimestamp: transaction.logicalTimestamp - 1,
+  });
+  const databaseSchema: DatabaseSchema = keyBy(
+    tableDescriptors,
+    (x) => x.tableUuid
+  );
 
-//   const transactionUuid = transaction.transactionUuid;
+  const sqlStatements = transactionToSqlStatements(databaseSchema, transaction);
 
-//   console.log("replicating transaction", transactionUuid, sqlStatements.length);
+  if (sqlStatements.length === 0) {
+    return;
+  }
 
-//   const client = getClient();
-//   await client.connect();
+  const transactionUuid = transaction.transactionUuid;
 
-//   console.log("connected to database", transactionUuid);
+  console.log("replicating transaction", transactionUuid, sqlStatements.length);
 
-//   const tx = await client.createTransaction(transaction.transactionUuid, {
-//     isolation_level: "serializable",
-//     read_only: false,
-//   });
+  const client = getClient();
+  await client.connect();
 
-//   await tx.begin();
+  console.log("connected to database", transactionUuid);
 
-//   console.log("started tx", transactionUuid);
+  const tx = await client.createTransaction(transaction.transactionUuid, {
+    isolation_level: "serializable",
+    read_only: false,
+  });
 
-//   const pgSchema = tryGetEnv("PGSCHEMA") ?? "public";
-//   await tx.queryArray(
-//     `create schema if not exists ${quoteIdentifier(pgSchema)}`
-//   );
-//   await tx.queryArray(`set local search_path to ${quoteIdentifier(pgSchema)}`);
+  await tx.begin();
 
-//   for (const sqlStatement of sqlStatements) {
-//     // Skip statement if it doesn't include the token "postgres-"
-//     if (!sqlStatement.includes("postgres")) {
-//       console.log("non-postgres source table -- skipping");
-//       continue;
-//     }
+  console.log("started tx", transactionUuid);
 
-//     console.log("running statement", transactionUuid, sqlStatement);
-//     const result = await tx.queryArray(sqlStatement);
-//     console.log("completed statement", transactionUuid, result);
-//   }
+  const pgSchema = tryGetEnv("PGSCHEMA") ?? "public";
+  await tx.queryArray(
+    `create schema if not exists ${quoteIdentifier(pgSchema)}`
+  );
+  await tx.queryArray(`set local search_path to ${quoteIdentifier(pgSchema)}`);
 
-//   await tx.commit();
+  for (const sqlStatement of sqlStatements) {
+    // Skip statement if it doesn't include the token "postgres-"
+    if (!sqlStatement.includes("postgres")) {
+      console.log("non-postgres source table -- skipping");
+      continue;
+    }
 
-//   console.log("committed tx", transactionUuid);
+    console.log("running statement", transactionUuid, sqlStatement);
+    const result = await tx.queryArray(sqlStatement);
+    console.log("completed statement", transactionUuid, result);
+  }
 
-//   await client.end();
+  await tx.commit();
 
-//   console.log("disconnected from database", transactionUuid);
-// };
+  console.log("committed tx", transactionUuid);
 
-// registerTransactionHandler(transactionHandler, {
-//   filterTransactions: "handle-all",
-// });
+  await client.end();
+
+  console.log("disconnected from database", transactionUuid);
+};
+
+registerTransactionHandler(transactionHandler, {
+  filterTransactions: "handle-all",
+});
 
 const getClient = () => {
   const pgHost = getEnv("PGHOST");
@@ -495,12 +508,24 @@ export const mutationToSqlStatements = (
       return [`create table ${tableName} (${columnInfos.join(",")})`];
     }
     case "drop_table": {
-      // TODO(awu): Don't want to drop table by accident in source postgres
-      // const dropTable: DropTable = mutation.value;
-      // const tableDescriptor = databaseSchema[dropTable.tableUuid];
-      // invariant(tableDescriptor != null);
-      // const tableName = quoteIdentifier(tableDescriptor.tableName);
-      // return [`drop table ${tableName}`];
+      // TODO(awu): This is configurable by the allow-drop-tables-boolean flag.
+      const allow_drop_tables_boolean = getEnv(
+        "ALLOW_DROP_TABLES_BOOLEAN"
+      ).toLowerCase();
+      if (allow_drop_tables_boolean == null) {
+        throw new Error(
+          "Missing environment variable - ALLOW_DROP_TABLES_BOOLEAN"
+        );
+      }
+      if (allow_drop_tables_boolean == "true") {
+        const dropTable: DropTable = mutation.value;
+        const tableDescriptor = databaseSchema[dropTable.tableUuid];
+        invariant(tableDescriptor != null);
+        const tableName = quoteIdentifier(tableDescriptor.tableName);
+        return [`drop table ${tableName}`];
+      } else if (allow_drop_tables_boolean == "false") {
+        return [];
+      }
       return [];
     }
     case "rename_table": {
