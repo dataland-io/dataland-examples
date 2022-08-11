@@ -14,26 +14,27 @@ import { isString, isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const postStripeRefund = async (stripe_customer_id: string) => {
-  var headers = new Headers();
-  headers.append("Content-Type", "application/x-www-form-urlencoded");
-  headers.append("Authorization", `Bearer ${stripe_key}`);
+const postStripeCredit = async (stripe_customer_id: string) => {
+  var myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
+  myHeaders.append("Authorization", `Bearer ${stripe_key}`);
 
-  const url =
-    "https://api.stripe.com/v1/customers/" +
-    stripe_customer_id +
-    "/balance_transactions?amount=2500&currency=usd";
+  var urlencoded = new URLSearchParams();
+  urlencoded.append("amount", "2500");
+  urlencoded.append("currency", "usd");
 
-  const options = {
-    method: "POST",
-    headers: headers,
-  };
+  const response = await fetch(
+    "https://api.stripe.com//v1/customers/<string>/balance_transactions",
+    {
+      method: "POST",
+      headers: myHeaders,
+      body: urlencoded,
+      redirect: "follow",
+    }
+  );
 
-  const response = await fetch(url, options);
   const result = await response.json();
-
-  console.log("xx - result: ", result);
-
+  console.log("yy - result: ", result);
   return result;
 };
 
@@ -95,7 +96,7 @@ const handler = async (transaction: Transaction) => {
       continue;
     }
 
-    const credit_response = await postStripeRefund(stripe_customer_id);
+    const credit_response = await postStripeCredit(stripe_customer_id);
 
     if (credit_response.id == null) {
       continue;
