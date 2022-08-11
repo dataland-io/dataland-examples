@@ -24,7 +24,9 @@ const postStripeCredit = async (stripe_customer_id: string) => {
   urlencoded.append("currency", "usd");
 
   const response = await fetch(
-    "https://api.stripe.com//v1/customers/<string>/balance_transactions",
+    "https://api.stripe.com//v1/customers/" +
+      stripe_customer_id +
+      "/balance_transactions",
     {
       method: "POST",
       headers: myHeaders,
