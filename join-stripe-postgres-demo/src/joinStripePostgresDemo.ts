@@ -72,6 +72,7 @@ const handler = async () => {
     tableName: "Alerts on Orders",
     arrowRecordBatches: joined_query.arrowRecordBatches,
     identityColumnNames: ["Order ID"],
+    keepExtraColumns: true,
   };
   try {
     await syncTables({
