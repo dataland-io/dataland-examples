@@ -14,7 +14,7 @@ workers:
     scriptPath: dist/airtableSync.bundle.js
     triggers:
       cron:
-        cronExpression: "*/30 * * * * * *"
+        cronExpression: "0 */15 * * * * *"
       transaction: {}
     env:
       AIRTABLE_API_KEY: airtable-api-key

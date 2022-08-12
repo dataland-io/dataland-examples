@@ -1,5 +1,4 @@
 import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
-import { Duration } from "@apache-arrow/es2015-esm/fb/duration";
 import {
   getEnv,
   syncTables,
@@ -14,6 +13,7 @@ import {
   Mutation,
   runMutations,
   Scalar,
+  getCatalogMirror,
 } from "@dataland-io/dataland-sdk-worker";
 import Airtable, {
   Attachment,
@@ -23,14 +23,10 @@ import Airtable, {
   Table as AirtableTable,
 } from "airtable";
 
-//   api-key: keyQPCbJY10bBoGVK
-//   workspace: apprQlsgtOGSVZrMa,
-//   table: 50000 rows,
-//   view-name: Grid View
+const RECORD_ID = "record-id";
 
-const viewName = getEnv("AIRTABLE_VIEW_NAME");
-const datalandTable = getEnv("DATALAND_TABLE_NAME");
-//
+const VIEW_NAME = getEnv("AIRTABLE_VIEW_NAME");
+const DATALAND_TABLE_NAME = getEnv("DATALAND_TABLE_NAME");
 const airtableBase = new Airtable({
   apiKey: getEnv("AIRTABLE_API_KEY"),
 }).base(getEnv("AIRTABLE_BASE_ID"));
@@ -80,7 +76,9 @@ const parseAirableValue = (value: AirtableValue): Scalar => {
   return null;
 };
 
-const readFromAirtable = async (): Promise<Record<string, any>[]> => {
+const readFromAirtable = async (
+  columnNames: string[]
+): Promise<Record<string, any>[]> => {
   const allRecords: Record<string, any>[] = [];
 
   await new Promise((resolve, error) => {
@@ -88,28 +86,38 @@ const readFromAirtable = async (): Promise<Record<string, any>[]> => {
       .select({
         pageSize: 100,
         // maxRecords: 3,
-        view: viewName,
+        view: VIEW_NAME,
       })
       .eachPage(
         (records, fetchNextPage) => {
-          if (records) {
-            // console.log(
-            //   "records before",
-            //   JSON.stringify(records[0]!.fields, null, 2)
-            // );
+          // console.log(
+          //   "records before",
+          //   JSON.stringify(records[0]!.fields, null, 2)
+          // );
 
-            for (const record of records) {
-              const parsedRecord: Record<string, Scalar> = {
-                "record-id": record.id,
-              };
-              for (const columnName in record.fields) {
-                const columnValue = record.fields[columnName];
-                const parsedColumnValue = parseAirableValue(columnValue);
-                parsedRecord[columnName] = parsedColumnValue;
-              }
-
-              allRecords.push(parsedRecord);
+          for (const record of records) {
+            const parsedRecord: Record<string, Scalar> = {
+              [RECORD_ID]: record.id,
+            };
+            for (const columnName in record.fields) {
+              const columnValue = record.fields[columnName];
+              const parsedColumnValue = parseAirableValue(columnValue);
+              parsedRecord[columnName] = parsedColumnValue;
             }
+            // NOTE(gab): fields containing empty values (false, "", [], {}) are
+            // never sent from airtable. these fields are added as null explicitly
+            for (const columnName of columnNames) {
+              if (
+                columnName in parsedRecord ||
+                columnName === "_dataland_key" ||
+                columnName === "_dataland_ordinal"
+              ) {
+                continue;
+              }
+              parsedRecord[columnName] = null;
+            }
+
+            allRecords.push(parsedRecord);
           }
 
           fetchNextPage();
@@ -128,25 +136,44 @@ const readFromAirtable = async (): Promise<Record<string, any>[]> => {
   return allRecords;
 };
 
-const handler = async () => {
-  const records = await readFromAirtable();
+const cronHandler = async () => {
+  console.log("Start sync");
+
+  const { tableDescriptors } = await getCatalogMirror();
+  const tableDescriptor = tableDescriptors.find(
+    (t) => t.tableName === DATALAND_TABLE_NAME
+  );
+
+  if (tableDescriptor == null) {
+    console.error("Airtable Sync - Could not find table descriptor");
+    return;
+  }
+
+  const columnNames = tableDescriptor.columnDescriptors.map(
+    (c) => c.columnName
+  );
+
+  const records = await readFromAirtable(columnNames);
 
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
 
   const syncTable: SyncTable = {
-    tableName: datalandTable,
+    tableName: DATALAND_TABLE_NAME,
     arrowRecordBatches: [batch],
-    identityColumnNames: ["record-id"],
+    identityColumnNames: [RECORD_ID],
+    keepExtraColumns: true,
   };
 
   await syncTables({ syncTables: [syncTable] });
+  console.log("Sync done");
 };
 
 const airtableUpdateRows = async (
   table: AirtableTable<AirtableFieldSet>,
   updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[]
 ) => {
+  console.log("UPDATE", updateRows);
   return await new Promise((resolve, error) => {
     table.update(updateRows, { typecast: true }, (err) => {
       if (err) {
@@ -199,34 +226,45 @@ const airtableDestoryRows = async (
   });
 };
 
+const airtablifyValue = (value: any) => {
+  return value ?? null;
+  // try {
+  //   const parsed = JSON.parse(value);
+  //   if (typeof parsed === "object") {
+  //     return parsed;
+  //   }
+  // } catch (e) {
+  //   // do nothing
+  // }
+  // return value ?? null;dfs
+};
+
 const handler2 = async (transaction: Transaction) => {
   const { tableDescriptors } = await getCatalogSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
   });
 
   const response = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `select "_dataland_key", "record-id" from "${datalandTable}"`,
+    logicalTimestamp: transaction.logicalTimestamp - 1,
+    sqlQuery: `select "_dataland_key", "${RECORD_ID}" from "${DATALAND_TABLE_NAME}"`,
   });
 
   const rows = unpackRows(response);
 
   const recordIdMap: Record<number, string> = {};
-  const datalandKeyMap: Record<string, number> = {};
   for (const row of rows) {
     const key = row["_dataland_key"] as number;
-    const recordId = row["record-id"] as string;
+    const recordId = row[RECORD_ID] as string;
     recordIdMap[key] = recordId;
-    datalandKeyMap[recordId] = key;
   }
 
   const tableDescriptor = tableDescriptors.find(
-    (descriptor) => descriptor.tableName === datalandTable
+    (descriptor) => descriptor.tableName === DATALAND_TABLE_NAME
   );
   if (tableDescriptor == null) {
     console.error(
       "Airtable Sync - Could not find table descriptor by table name",
-      { tableName: datalandTable }
+      { tableName: DATALAND_TABLE_NAME }
     );
     return;
   }
@@ -277,7 +315,7 @@ const handler2 = async (transaction: Transaction) => {
             if (columnName === "_dataland_ordinal") {
               continue;
             }
-            createRow[columnName] = rowValue?.value;
+            createRow[columnName] = airtablifyValue(rowValue?.value);
           }
 
           createRows.push({ fields: createRow });
@@ -297,9 +335,13 @@ const handler2 = async (transaction: Transaction) => {
             return;
           }
 
-          const update = schema.makeUpdateRows(datalandTable, datalandKey, {
-            "record-id": recordId,
-          });
+          const update = schema.makeUpdateRows(
+            DATALAND_TABLE_NAME,
+            datalandKey,
+            {
+              [RECORD_ID]: recordId,
+            }
+          );
           mutations.push(update);
         }
         await runMutations({ mutations });
@@ -326,7 +368,7 @@ const handler2 = async (transaction: Transaction) => {
             if (columnName === "_dataland_ordinal") {
               continue;
             }
-            updateRow[columnName] = rowValue?.value;
+            updateRow[columnName] = airtablifyValue(rowValue?.value);
           }
 
           updateRows.push({ id: recordIdMap[key], fields: updateRow });
@@ -344,10 +386,14 @@ const handler2 = async (transaction: Transaction) => {
             console.error("Airtable Sync - Could not find Airtable record id", {
               datalandKey: key,
             });
-            continue;
+            return;
           }
 
           deleteRows.push(recordId);
+        }
+
+        if (deleteRows.length === 0) {
+          continue;
         }
         await airtableDestoryRows(airtableTable, deleteRows);
         break;
@@ -358,4 +404,4 @@ const handler2 = async (transaction: Transaction) => {
 
 console.log("REFISTERING AIRTABLE HANDELR");
 registerTransactionHandler(handler2);
-registerCronHandler(handler);
+registerCronHandler(cronHandler);
