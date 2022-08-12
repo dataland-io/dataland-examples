@@ -1,214 +1,361 @@
-// This is a template that reads all records in an Airtable base. If the record already exists in
-// the imported records table in Dataland, then the worker will update the Dataland row. If the record does not exist,
-// then this worker will insert it into Dataland.
-
-// Search for the string "TODO" to find the places where you need to change things in this file.
-
-import { isString } from "lodash-es";
+import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
+import { Duration } from "@apache-arrow/es2015-esm/fb/duration";
 import {
-  getCatalogSnapshot,
   getEnv,
-  Mutation,
-  KeyGenerator,
-  OrdinalGenerator,
-  querySqlSnapshot,
-  registerTransactionHandler,
-  runMutations,
-  Schema,
+  syncTables,
+  SyncTable,
   Transaction,
+  registerTransactionHandler,
+  registerCronHandler,
+  getCatalogSnapshot,
+  querySqlSnapshot,
   unpackRows,
+  Schema,
+  Mutation,
+  runMutations,
+  Scalar,
 } from "@dataland-io/dataland-sdk-worker";
+import Airtable, {
+  Attachment,
+  Collaborator,
+  FieldSet as AirtableFieldSet,
+  RecordData as AirtableRecordData,
+  Table as AirtableTable,
+} from "airtable";
 
-// By default, these names match with the table names declared in spec.yaml.
-const trigger_table_name = "Airtable Sync Trigger";
-const imported_records_table_name = "Records from Airtable";
+//   api-key: keyQPCbJY10bBoGVK
+//   workspace: apprQlsgtOGSVZrMa,
+//   table: 50000 rows,
+//   view-name: Grid View
 
-// TODO: Make sure to declare your Airtable API Key in the .env file and also declare the parameter in spec.yaml.
-// This template assumes the .env variable is declared as `DL_PARAM_AIRTABLE_API_KEY`.
-// See the tutorial for using environment variables here: {link}
-const airtable_api_key = getEnv("AIRTABLE_API_KEY");
+const viewName = getEnv("AIRTABLE_VIEW_NAME");
+const datalandTable = getEnv("DATALAND_TABLE_NAME");
+//
+const airtableBase = new Airtable({
+  apiKey: getEnv("AIRTABLE_API_KEY"),
+}).base(getEnv("AIRTABLE_BASE_ID"));
+const airtableTable = airtableBase(getEnv("AIRTABLE_TABLE_NAME"));
 
-if (airtable_api_key == null) {
-  throw new Error("Missing environment variable - AIRTABLE_API_KEY");
-}
+type AirtableValue =
+  | undefined
+  | string
+  | number
+  | boolean
+  | Collaborator
+  | ReadonlyArray<Collaborator>
+  | ReadonlyArray<string>
+  | ReadonlyArray<Attachment>;
 
-// TODO: Update the URL to the API endpoint of your Airtable table below.
-// The endpoint format is https://api.airtable.com/v0/<BASE_ID>/<TABLE_NAME>
+const parseAirableValue = (value: AirtableValue): Scalar => {
+  if (value == null) {
+    return null;
+  }
 
-const airtable_url_base =
-  "https://api.airtable.com/v0/appN1FQpWEfIWXvZP/Example";
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
 
-const readFromAirtable = async () => {
-  var headers = new Headers();
-  headers.append("Content-Type", "application/x-www-form-urlencoded");
-  headers.append("Authorization", "Bearer " + airtable_api_key);
+  // if (Array.isArray(value)) {
+  //   if (value.length === 0) {
+  //     return null;
+  //   }
+  //   if (typeof value[0] !== "object") {
+  //     return value.join(", ");
+  //   }
+  //   return JSON.stringify(value);
+  // }
 
-  const full_records = [];
+  if (typeof value === "object") {
+    // if (isEmpty(value)) {
+    //   return null;
+    // }
+    return JSON.stringify(value);
+  }
 
-  let url = airtable_url_base;
-  let offset = "";
-
-  do {
-    const airtable_response = await fetch(url, {
-      method: "GET",
-      headers: headers,
-      redirect: "follow",
-    });
-    const data = await airtable_response.json();
-    const records = data.records;
-
-    if (records) {
-      for (const record of records) {
-        full_records.push(record);
-      }
-    }
-
-    offset = data.offset;
-
-    url = airtable_url_base + "?offset=" + offset;
-    console.log("offset: ", offset);
-    console.log("processed row count: ", full_records.length);
-  } while (offset);
-
-  return full_records;
+  console.error("Airtable Sync - Could not parse value", { value });
+  return null;
 };
 
-const handler = async (transaction: Transaction) => {
+const readFromAirtable = async (): Promise<Record<string, any>[]> => {
+  const allRecords: Record<string, any>[] = [];
+
+  await new Promise((resolve, error) => {
+    airtableTable
+      .select({
+        pageSize: 100,
+        // maxRecords: 3,
+        view: viewName,
+      })
+      .eachPage(
+        (records, fetchNextPage) => {
+          if (records) {
+            // console.log(
+            //   "records before",
+            //   JSON.stringify(records[0]!.fields, null, 2)
+            // );
+
+            for (const record of records) {
+              const parsedRecord: Record<string, Scalar> = {
+                "record-id": record.id,
+              };
+              for (const columnName in record.fields) {
+                const columnValue = record.fields[columnName];
+                const parsedColumnValue = parseAirableValue(columnValue);
+                parsedRecord[columnName] = parsedColumnValue;
+              }
+
+              allRecords.push(parsedRecord);
+            }
+          }
+
+          fetchNextPage();
+        },
+        (err) => {
+          if (err) {
+            console.error("Airtable Fetch Error -", err);
+            error();
+            return;
+          }
+          resolve(true);
+        }
+      );
+  });
+  // console.log("records after", JSON.stringify(allRecords[0]!, null, 2)!);
+  return allRecords;
+};
+
+const handler = async () => {
+  const records = await readFromAirtable();
+
+  const table = tableFromJSON(records);
+  const batch = tableToIPC(table);
+
+  const syncTable: SyncTable = {
+    tableName: datalandTable,
+    arrowRecordBatches: [batch],
+    identityColumnNames: ["record-id"],
+  };
+
+  await syncTables({ syncTables: [syncTable] });
+};
+
+const airtableUpdateRows = async (
+  table: AirtableTable<AirtableFieldSet>,
+  updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[]
+) => {
+  return await new Promise((resolve, error) => {
+    table.update(updateRows, { typecast: true }, (err) => {
+      if (err) {
+        console.error("Airtable Update Rows - Failed to update rows", {
+          error: err,
+        });
+        error(err);
+        return;
+      }
+      resolve(true);
+    });
+  });
+};
+
+const airtableCreateRows = async (
+  table: AirtableTable<AirtableFieldSet>,
+  createRows: { fields: AirtableFieldSet }[]
+): Promise<string[]> => {
+  return await new Promise((resolve, error) => {
+    table.create(createRows, { typecast: true }, (err, records) => {
+      if (err || records == null) {
+        console.error("Airtable Create Rows - Failed to update rows", {
+          error: err,
+        });
+        error(err);
+        return;
+      }
+
+      const recordIds = records.map((record) => record.getId());
+      resolve(recordIds);
+    });
+  });
+};
+
+const airtableDestoryRows = async (
+  table: AirtableTable<AirtableFieldSet>,
+  recordIds: string[]
+) => {
+  return await new Promise((resolve, error) => {
+    table.destroy(recordIds, (err) => {
+      if (err) {
+        console.error("Airtable Create Rows - Failed to update rows", {
+          error: err,
+        });
+        error(err);
+        return;
+      }
+      resolve(true);
+    });
+  });
+};
+
+const handler2 = async (transaction: Transaction) => {
   const { tableDescriptors } = await getCatalogSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
   });
 
-  const schema = new Schema(tableDescriptors);
-
-  const affectedRows = schema.getAffectedRows(
-    trigger_table_name,
-    // TODO: If you're using a different column name than "Trigger sync" in the trigger table,
-    // update the below argument. Also make sure this is reflected in spec.yaml as well.
-    "Trigger sync",
-    transaction
-  );
-
-  const lookupKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number") {
-      lookupKeys.push(key);
-    }
-  }
-
-  if (lookupKeys.length === 0) {
-    return;
-  }
-  const keyList = `(${lookupKeys.join(",")})`;
-
   const response = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `select
-      _dataland_key
-    from "${trigger_table_name}"
-    where _dataland_key in ${keyList}`,
+    sqlQuery: `select "_dataland_key", "record-id" from "${datalandTable}"`,
   });
 
-  const trigger_rows = unpackRows(response);
+  const rows = unpackRows(response);
 
-  const keyGenerator = new KeyGenerator();
-  const ordinalGenerator = new OrdinalGenerator();
-
-  const mutations: Mutation[] = [];
-  for (const trigger_row of trigger_rows) {
-    const key = Number(trigger_row["_dataland_key"]);
-
-    const update = schema.makeUpdateRows(trigger_table_name, key, {
-      "Last pressed": new Date().toISOString(),
-    });
-
-    if (update == null) {
-      console.log("No update found");
-      continue;
-    }
-    mutations.push(update);
+  const recordIdMap: Record<number, string> = {};
+  const datalandKeyMap: Record<string, number> = {};
+  for (const row of rows) {
+    const key = row["_dataland_key"] as number;
+    const recordId = row["record-id"] as string;
+    recordIdMap[key] = recordId;
+    datalandKeyMap[recordId] = key;
   }
 
-  const existingTable = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `select *
-    from "${imported_records_table_name}"`,
-  });
-
-  const existing_rows = unpackRows(existingTable);
-
-  let data_id_key_pairs: any = {};
-
-  const existingIds = new Set<string>();
-  for (const row of existing_rows) {
-    // This is the Record ID generated by Airtable
-    const id = row["Record ID"];
-    if (!isString(id)) {
-      continue;
-    }
-    existingIds.add(id);
-    data_id_key_pairs[id] = row["_dataland_key"];
+  const tableDescriptor = tableDescriptors.find(
+    (descriptor) => descriptor.tableName === datalandTable
+  );
+  if (tableDescriptor == null) {
+    console.error(
+      "Airtable Sync - Could not find table descriptor by table name",
+      { tableName: datalandTable }
+    );
+    return;
   }
 
-  const syntheticKey = await keyGenerator.nextKey();
-  const airtable_records = await readFromAirtable();
+  const schema = new Schema(tableDescriptors);
 
-  for (const airtable_record of airtable_records) {
-    const airtable_record_id = airtable_record.id;
+  const getColumnName = (columnUuid: string): string | null => {
+    const column = tableDescriptor.columnDescriptors.find(
+      (c) => c.columnUuid === columnUuid
+    );
+    if (column == null) {
+      return null;
+    }
+    return column.columnName;
+  };
 
-    // TODO: Take each field name in Airtable table to be imported, and store the value in a variable.
-    // In the below example, there are three fields in the example Airtable table - Customer ID, Email, and Phone.
-    // Change them to match your Airtable schema.
-    const airtable_record_customer_id = airtable_record.fields["Customer ID"];
-    const airtable_record_email = airtable_record.fields["Email"];
-    const airtable_record_phone = airtable_record.fields["Phone"];
+  for (const mutation of transaction.mutations) {
+    if (
+      mutation.kind !== "insert_rows" &&
+      mutation.kind !== "update_rows" &&
+      mutation.kind !== "delete_rows"
+    ) {
+      return;
+    }
 
-    // If ID exists, update the existing values for this record
-    if (existingIds.has(airtable_record_id)) {
-      const existing_key = data_id_key_pairs[airtable_record_id];
+    if (tableDescriptor.tableUuid !== mutation.value.tableUuid) {
+      continue;
+    }
 
-      const update = schema.makeUpdateRows(
-        imported_records_table_name,
-        existing_key,
-        {
-          _dataland_ordinal: String(existing_key),
-          "Record ID": airtable_record_id,
+    switch (mutation.kind) {
+      case "insert_rows": {
+        const createRows: { fields: AirtableFieldSet }[] = [];
+        for (let i = 0; i < mutation.value.rows.length; i++) {
+          const createRow: AirtableFieldSet = {};
+          const { key, values } = mutation.value.rows[i]!;
 
-          // TODO: Update the keys below to correspond to the column names in the imported records table.
-          // Remember to align spec.yaml by declaring the same columnNames in the table schema.
-          // The format is {columnName}: {cell_value}
-          "Customer ID": airtable_record_customer_id,
-          Email: airtable_record_email,
-          Phone: airtable_record_phone,
+          for (let j = 0; j < mutation.value.rows.length; j++) {
+            const rowValue = values[j];
+            const columnUuid = mutation.value.columnMapping[i];
+            const columnName = getColumnName(columnUuid);
+            if (columnName == null) {
+              console.error(
+                "Airtable Sync - Could not find column by column uuid",
+                { columnUuid }
+              );
+              return;
+            }
+            if (columnName === "_dataland_ordinal") {
+              continue;
+            }
+            createRow[columnName] = rowValue?.value;
+          }
+
+          createRows.push({ fields: createRow });
         }
-      );
 
-      if (update == null) {
-        continue;
+        const recordIds = await airtableCreateRows(airtableTable, createRows);
+        const mutations: Mutation[] = [];
+        for (let i = 0; i < recordIds.length; i++) {
+          const recordId = recordIds[i];
+          const datalandKey = mutation.value.rows[i]?.key;
+
+          if (datalandKey == null) {
+            console.error(
+              "Airtable Sync - Could not find dataland key for record id",
+              { recordId }
+            );
+            return;
+          }
+
+          const update = schema.makeUpdateRows(datalandTable, datalandKey, {
+            "record-id": recordId,
+          });
+          mutations.push(update);
+        }
+        await runMutations({ mutations });
+
+        break;
       }
-      mutations.push(update);
-    } else {
-      // Otherwise, insert a new record
-      const id = await keyGenerator.nextKey();
-      const ordinal = await ordinalGenerator.nextOrdinal();
+      case "update_rows": {
+        const updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[] = [];
+        for (let i = 0; i < mutation.value.rows.length; i++) {
+          const updateRow: Partial<AirtableFieldSet> = {};
+          const { key, values } = mutation.value.rows[i]!;
 
-      const insert = schema.makeInsertRows(imported_records_table_name, id, {
-        _dataland_ordinal: ordinal,
-        "Record ID": airtable_record_id,
-        // TODO: Update the keys below to correspond to the column names in the imported records table.
-        // Remember to align spec.yaml by declaring the same columnNames in the table schema.
-        // The format is {columnName}: {cell_value}
-        "Customer ID": airtable_record_customer_id,
-        Email: airtable_record_email,
-        Phone: airtable_record_phone,
-      });
+          for (let j = 0; j < mutation.value.rows.length; j++) {
+            const rowValue = values[j];
+            const columnUuid = mutation.value.columnMapping[i];
+            const columnName = getColumnName(columnUuid);
+            if (columnName == null) {
+              console.error(
+                "Airtable Sync - Could not find column by column uuid",
+                { columnUuid }
+              );
+              return;
+            }
+            if (columnName === "_dataland_ordinal") {
+              continue;
+            }
+            updateRow[columnName] = rowValue?.value;
+          }
 
-      if (insert == null) {
-        continue;
+          updateRows.push({ id: recordIdMap[key], fields: updateRow });
+        }
+        await airtableUpdateRows(airtableTable, updateRows);
+        break;
       }
-      mutations.push(insert);
+      case "delete_rows": {
+        const deleteRows: string[] = [];
+        for (let i = 0; i < mutation.value.keys.length; i++) {
+          const key = mutation.value.keys[i];
+          const recordId = recordIdMap[key];
+
+          if (recordId == null) {
+            console.error("Airtable Sync - Could not find Airtable record id", {
+              datalandKey: key,
+            });
+            continue;
+          }
+
+          deleteRows.push(recordId);
+        }
+        await airtableDestoryRows(airtableTable, deleteRows);
+        break;
+      }
     }
   }
-  await runMutations({ mutations });
 };
 
-registerTransactionHandler(handler);
+console.log("REFISTERING AIRTABLE HANDELR");
+registerTransactionHandler(handler2);
+registerCronHandler(handler);

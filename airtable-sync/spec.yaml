@@ -2,53 +2,23 @@ moduleId: airtable-sync-example
 
 buildCommand: npm run build
 
-# TODO: Remember to create a .env file at the root of this directory, and add a line for `DL_PARAM_AIRTABLE_API_KEY={your-api-key}`
 parameters:
   - airtable-api-key
+  - airtable-base-id
+  - airtable-table-name
+  - airtable-view-name
+  - dataland-table-name
 
 workers:
   - workerId: airtable-sync
     scriptPath: dist/airtableSync.bundle.js
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
+      transaction: {}
     env:
       AIRTABLE_API_KEY: airtable-api-key
-
-tables:
-  # Defines the imported records table, which will contain the data from the Airtable table
-  # TODO: Add / delete / update columns below such that the columnNames are the same as what you are updating in the `airtableSync.ts`` function
-  - tableId: airtable
-    tableName: "Records from Airtable"
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: record-id
-        columnName: "Record ID"
-        dataType: string
-      - columnId: customer-id
-        columnName: "Customer ID"
-        dataType: string
-      - columnId: email
-        columnName: "Email"
-        dataType: string
-      - columnId: phone
-        columnName: "Phone"
-        dataType: string
-
-  # Defines the trigger table, which will contain a button column that triggers the import into the imported records table
-  # You can rename these tables, but make sure you update the references in the `airtableSync.ts` file as well.
-  - tableId: trigger-airtable
-    tableName: "Airtable Sync Trigger"
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: "trigger"
-        columnName: "Trigger sync"
-        dataType: int32
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "button",
-              "label": "Trigger",
-              "theme": "blue"
-            }
-
-      - columnId: "last-pressed"
-        columnName: "Last pressed"
-        dataType: string
+      AIRTABLE_BASE_ID: airtable-base-id
+      AIRTABLE_TABLE_NAME: airtable-table-name
+      AIRTABLE_VIEW_NAME: airtable-view-name
+      DATALAND_TABLE_NAME: dataland-table-name

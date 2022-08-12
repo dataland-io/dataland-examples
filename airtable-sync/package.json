@@ -7,11 +7,14 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
-    "@dataland-io/dataland-sdk-worker": "0.13.0",
-    "lodash-es": "4.17.21"
+    "@dataland-io/dataland-sdk-worker": "0.15.0",
+    "@apache-arrow/es2015-esm": "9.0.0",
+    "common-tags": "1.8.2",
+    "io-ts": "2.2.16",
+    "lodash-es": "4.17.21",
+    "airtable": "^0.11.4"
   },
   "devDependencies": {
-    "@types/lodash-es": "4.17.6",
     "@types/webpack": "5.28.0",
     "ts-loader": "9.2.8",
     "ts-node": "10.7.0",
