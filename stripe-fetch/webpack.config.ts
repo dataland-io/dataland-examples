@@ -18,6 +18,7 @@ const config: Configuration = {
     viewStripeSubscriptionsWithCustomers:
       "./src/viewStripeSubscriptionsWithCustomers.ts",
     cronLogger: "./src/cronLogger.ts",
+    testSyncTables: "./src/testSyncTables.ts",
   },
   module: {
     rules: [
