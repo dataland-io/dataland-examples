@@ -16,124 +16,125 @@ workers:
     scriptPath: dist/postStripeCredit.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
-# tables:
-#   - tableId: alerts-on-orders
-#     tableName: "Alerts on Orders"
-#     autoMigrate: true
-#     columnDescriptors:
-#       # id
-#       - columnId: "id"
-#         columnName: "Order ID"
-#         dataType: string
 
-#       # customer_id
-#       - columnId: "customer-id"
-#         columnName: "Customer ID"
-#         dataType: string
+tables:
+  - tableId: alerts-on-orders
+    tableName: "Alerts on Orders"
+    autoMigrate: true
+    columnDescriptors:
+      # id
+      - columnId: "id"
+        columnName: "Order ID"
+        dataType: string
 
-#       # delivery-status
-#       - columnId: "delivery-status"
-#         columnName: "Delivery Status"
-#         dataType: string
-#         columnAnnotations:
-#           dataland.io/column-display-config: |
-#             {
-#               "type": "select",
-#               "options": [
-#                 {
-#                   "value": "Unable to get delivered",
-#                   "theme": "ruby"
-#                 },
-#                 {
-#                   "value": "In warehouse",
-#                   "theme": "orange"
-#                 },
-#                 {
-#                   "value": "In transit",
-#                   "theme": "yellow"
-#                 },
-#                 {
-#                   "value": "Delivered",
-#                   "theme": "green"
-#                 }
-#               ]
-#             }
+      # customer_id
+      - columnId: "customer-id"
+        columnName: "Customer ID"
+        dataType: string
 
-#       # order_placed_at
-#       - columnId: "order-placed-at"
-#         columnName: "Order Placed At"
-#         dataType: string
+      # delivery-status
+      - columnId: "delivery-status"
+        columnName: "Delivery Status"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "Unable to get delivered",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "In warehouse",
+                  "theme": "orange"
+                },
+                {
+                  "value": "In transit",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "Delivered",
+                  "theme": "green"
+                }
+              ]
+            }
 
-#       # order_delivered_at
-#       - columnId: "order-delivered-at"
-#         columnName: "Order Delivered At"
-#         dataType: string
+      # order_placed_at
+      - columnId: "order-placed-at"
+        columnName: "Order Placed At"
+        dataType: string
 
-#       # delivery_time
-#       - columnId: "delivery-time"
-#         columnName: "Delivery Time (mins)"
-#         dataType: int64
+      # order_delivered_at
+      - columnId: "order-delivered-at"
+        columnName: "Order Delivered At"
+        dataType: string
 
-#       # rating
-#       - columnId: rating
-#         columnName: "User Rating"
-#         dataType: int32
+      # delivery_time
+      - columnId: "delivery-time"
+        columnName: "Delivery Time (mins)"
+        dataType: int64
 
-#       # user_rating_comment
-#       - columnId: "user-rating-comment"
-#         columnName: "User Rating Comment"
-#         dataType: string
+      # rating
+      - columnId: rating
+        columnName: "User Rating"
+        dataType: int32
 
-#       # order_value
-#       - columnId: "order-value"
-#         columnName: "Order Value"
-#         dataType: int64
+      # user_rating_comment
+      - columnId: "user-rating-comment"
+        columnName: "User Rating Comment"
+        dataType: string
 
-#       - columnId: phone
-#         columnName: "Phone"
-#         dataType: string
+      # order_value
+      - columnId: "order-value"
+        columnName: "Order Value"
+        dataType: int64
 
-#       - columnId: email
-#         columnName: "Email"
-#         dataType: string
+      - columnId: phone
+        columnName: "Phone"
+        dataType: string
 
-#       - columnId: name
-#         columnName: "Name"
-#         dataType: string
+      - columnId: email
+        columnName: "Email"
+        dataType: string
 
-#       - columnId: total-order-value
-#         columnName: "Lifetime Order Value"
-#         dataType: int64
+      - columnId: name
+        columnName: "Name"
+        dataType: string
 
-#       - columnId: "stripe-url"
-#         columnName: "Stripe URL"
-#         dataType: string
-#         columnAnnotations:
-#           dataland.io/column-display-config: |
-#             {
-#               "type": "url"
-#             }
+      - columnId: total-order-value
+        columnName: "Lifetime Order Value"
+        dataType: int64
 
-#       - columnId: "stripe-customer-id"
-#         columnName: "Stripe Customer ID"
-#         dataType: string
-#         columnAnnotations:
-#           dataland.io/column-display-config: |
-#             {
-#               "type": "url"
-#             }
+      - columnId: "stripe-url"
+        columnName: "Stripe URL"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
 
-#       - columnId: "issue-credit"
-#         columnName: "Issue credit"
-#         dataType: int32
-#         columnAnnotations:
-#           dataland.io/column-display-config: |
-#             {
-#               "type": "button",
-#               "label": "Issue $25 credit",
-#               "theme": "blue"
-#             }
+      - columnId: "stripe-customer-id"
+        columnName: "Stripe Customer ID"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
 
-#       - columnId: "credit-processed-at"
-#         columnName: "Credit processed at"
-#         dataType: string
+      - columnId: "issue-credit"
+        columnName: "Issue credit"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Issue $25 credit",
+              "theme": "blue"
+            }
+
+      - columnId: "credit-processed-at"
+        columnName: "Credit processed at"
+        dataType: string
