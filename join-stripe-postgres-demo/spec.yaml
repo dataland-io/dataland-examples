@@ -78,7 +78,7 @@ tables:
       # rating
       - columnId: rating
         columnName: "User Rating"
-        dataType: int32
+        dataType: int64
 
       # user_rating_comment
       - columnId: "user-rating-comment"
