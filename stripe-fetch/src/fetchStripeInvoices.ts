@@ -55,7 +55,7 @@ const handler = async () => {
   console.log("xx batch done", batch);
 
   const syncTable: SyncTable = {
-    tableName: "stripe-refunds",
+    tableName: "stripe-invoices",
     arrowRecordBatches: [batch],
     identityColumnNames: ["id"],
   };
