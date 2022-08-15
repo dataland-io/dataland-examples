@@ -1,0 +1,7 @@
+moduleId: docs-cron-example-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: docs-cron-example
+    scriptPath: dist/docsCronExample.bundle.js
