@@ -8,13 +8,13 @@ Data in the Dataland UI will be re-updated every 15 minutes by default. This cad
 
 ## Parameter setup
 
-This module contains several workers for parameters:
-
-| Name                      | About                                                                                                                                       |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `airtable-api-key`        | Your API key. This can take a service user's API key to lock down specific permissions on the Airtable side.                                |
-| `airtable-base-id`        | A base's ID                                                                                                                                 |
-| `airtable-table-name`     | A table's ID or display name                                                                                                                |
-| `airtable-view-name`      | A view's ID or display name                                                                                                                 |
-| `allow-writeback-boolean` | If `true`, row updates/creation/deletion in Dataland will attempt writebacks to your Airtable table. If `false`, no writeback is attempted. |
-| `dataland-table-name`     | Dataland will create a table with this name, and replicate Airtable data into it                                                            |
+| Name                        | About                                                                                                                                                                                                                      |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pghost`                    | Database host                                                                                                                                                                                                              |
+| `pgport`                    | Database port                                                                                                                                                                                                              |
+| `pgdatabase`                | Database name                                                                                                                                                                                                              |
+| `pguser`                    | Database user                                                                                                                                                                                                              |
+| `pgpassword`                | Database password                                                                                                                                                                                                          |
+| `pgschema`                  | Database schema                                                                                                                                                                                                            |
+| `allow-drop-tables-boolean` | If `true`, Dataland executes DROP TABLE commands if tables are deleted. Otherwise if `false` (or any other value), Dataland ignores any DROP TABLE command.                                                                |
+| `allow-writeback-boolean`   | If `true`, row updates/creation/deletion in Dataland will attempt the same transactions in the source Postgres. Otherwise if `false` (or any other value), Dataland is just a read-only interface to your source Postgres. |
