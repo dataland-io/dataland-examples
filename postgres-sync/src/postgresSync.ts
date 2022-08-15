@@ -138,6 +138,19 @@ const transactionHandler = async (transaction: Transaction) => {
     console.log("skipping own cron sync transactions from writeback");
   }
 
+  // TODO(awu): This is configurable by the allow-drop-tables-boolean flag.
+  const allow_writeback_boolean = getEnv(
+    "ALLOW_WRITEBACK_BOOLEAN"
+  ).toLowerCase();
+  if (allow_writeback_boolean == null) {
+    throw new Error("Missing environment variable - ALLOW_WRITEBACK_BOOLEAN");
+  }
+
+  if (allow_writeback_boolean == "false") {
+    console.log("skipping writeback due to ALLOW_WRITEBACK_BOOLEAN=false");
+    return;
+  }
+
   const { tableDescriptors } = await getCatalogSnapshot({
     // Note that passing `transaction.logicalTimestamp - 1` means that we're
     // reading state of the schema at the instant **before** this transaction happened.
@@ -179,6 +192,12 @@ const transactionHandler = async (transaction: Transaction) => {
   await tx.queryArray(`set local search_path to ${quoteIdentifier(pgSchema)}`);
 
   for (const sqlStatement of sqlStatements) {
+    // Skip statement if it doesn't include the token "postgres-"
+    if (!sqlStatement.includes("postgres")) {
+      console.log("non-postgres source table -- skipping");
+      continue;
+    }
+
     console.log("running statement", transactionUuid, sqlStatement);
     const result = await tx.queryArray(sqlStatement);
     console.log("completed statement", transactionUuid, result);
@@ -489,11 +508,25 @@ export const mutationToSqlStatements = (
       return [`create table ${tableName} (${columnInfos.join(",")})`];
     }
     case "drop_table": {
-      const dropTable: DropTable = mutation.value;
-      const tableDescriptor = databaseSchema[dropTable.tableUuid];
-      invariant(tableDescriptor != null);
-      const tableName = quoteIdentifier(tableDescriptor.tableName);
-      return [`drop table ${tableName}`];
+      // TODO(awu): This is configurable by the allow-drop-tables-boolean flag.
+      const allow_drop_tables_boolean = getEnv(
+        "ALLOW_DROP_TABLES_BOOLEAN"
+      ).toLowerCase();
+      if (allow_drop_tables_boolean == null) {
+        throw new Error(
+          "Missing environment variable - ALLOW_DROP_TABLES_BOOLEAN"
+        );
+      }
+      if (allow_drop_tables_boolean == "true") {
+        const dropTable: DropTable = mutation.value;
+        const tableDescriptor = databaseSchema[dropTable.tableUuid];
+        invariant(tableDescriptor != null);
+        const tableName = quoteIdentifier(tableDescriptor.tableName);
+        return [`drop table ${tableName}`];
+      } else if (allow_drop_tables_boolean == "false") {
+        return [];
+      }
+      return [];
     }
     case "rename_table": {
       const renameTable: RenameTable = mutation.value;
