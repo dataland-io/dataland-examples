@@ -16,8 +16,6 @@ Data in the Dataland UI will be re-updated every 15 minutes by default. This cad
 
 ## Parameter setup
 
-This module contains several workers for parameters:
-
 | Name                      | About                                                                                                                                       |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `airtable-api-key`        | Your API key. This can take a service user's API key to lock down specific permissions on the Airtable side.                                |
