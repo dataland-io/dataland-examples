@@ -10,7 +10,7 @@ This includes:
 - Updating existing record fields, except for computed columns\*. See details below.
 - Deleting records
 
-Dataland always treats your Airtable instance as the source of truth. Any invalid transactions attempted from Dataland will be rejected by your source Airtable. For example, since the Airtable API prevents updates to formula column values, any change from Dataland to a formula column will be rejected.
+Dataland always treats your Airtable instance as the source of truth. Any invalid transactions attempted from Dataland will be rejected by your source Airtable, and then overriden in Dataland by the next sync from Airtable. For example, since the Airtable API prevents updates to formula column values, any change from Dataland to a formula column will be rejected.
 
 Data in the Dataland UI will be re-updated every 15 minutes by default. This cadence can be configurable.
 
