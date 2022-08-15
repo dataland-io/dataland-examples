@@ -1,6 +1,6 @@
 # Overview
 
-Sync your data from Airtable into Dataland.
+Set up a two-way sync for your Airtable table in Dataland.
 
 If the `ALLOW_WRITEBACK_FLAG` is enabled, any changes done in the Dataland UI will execute a transaction that writes back to your Airtable.
 
@@ -29,6 +29,16 @@ This module contains several workers for parameters:
 | `dataland-table-name` | Dataland will create a table with this name, and replicate Airtable data into it |
 
 ### How to get your Airtable base, table, or view IDs
+
+Go to your Airtable table in the browser. If using the Airtabledesktop app, press `Ctrl` + `L` on Windows or `⌘` + `L` on Mac to get the link.
+
+You can then parse out the base ID, table ID, and view ID like shown:
+
+`https://airtable.com/{{base-id}}/{{table-id}}/{{view-id}}?blocks=hide`
+
+For example:
+
+![Image showing how to parse base, table, and view ID values from a link](airtable-params.svg)
 
 ## Computed columns that reject updates
 
