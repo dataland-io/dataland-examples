@@ -2,7 +2,7 @@ moduleId: dev-workers
 
 info:
   title: Airtable
-  description: Sync a Postgres table to Dataland
+  description: Sync an Airtable table to Dataland
   author: Dataland Devs <devs@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
   readmePath: README.md
