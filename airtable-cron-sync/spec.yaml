@@ -1,0 +1,32 @@
+moduleId: dev-workers
+
+info:
+  title: Airtable
+  description: Sync a Postgres table to Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: icon.svg
+
+buildCommand: npm run build
+
+parameters:
+  - airtable-api-key
+  - airtable-base-id
+  - airtable-table-name
+  - airtable-view-name
+  - dataland-table-name
+
+workers:
+  - workerId: airtable-import-cron
+    scriptPath: dist/bundle.js
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
+      transaction: {}
+    env:
+      AIRTABLE_API_KEY: airtable-api-key
+      AIRTABLE_BASE_ID: airtable-base-id
+      AIRTABLE_TABLE_NAME: airtable-table-name
+      AIRTABLE_VIEW_NAME: airtable-view-name
+      DATALAND_TABLE_NAME: dataland-table-name

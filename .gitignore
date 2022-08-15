@@ -1,3 +1,6 @@
 # examples should not be opinionated about choice of package manager
 package-lock.json
 yarn.lock
+
+# not opinionated about choice of VSCode setup
+.vscode
