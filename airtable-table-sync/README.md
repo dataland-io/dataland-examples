@@ -37,14 +37,23 @@ For example:
 
 ![Image showing how to parse base, table, and view ID values from a link](airtable-params.svg)
 
-## Computed columns that reject external updates
+## Field types that reject writeback
 
-Airtable has certain fields that reject any updates via API, and will therefore reject updates from Dataland:
+Computed fields reject any updates via API, and will therefore reject updates from Dataland. These computed field types include:
 
 - Autonumber
 - Button
 - Count
-- Created time, Created By, Modified time, Modified by
+- Created by
+- Created time
 - Formula
+- Last modified by
+- Last modified time
 - Lookup
 - Rollup
+
+Dataland also doesn't support writeback for these field types:
+
+- Attachment
+- Barcode
+- Collaborator
