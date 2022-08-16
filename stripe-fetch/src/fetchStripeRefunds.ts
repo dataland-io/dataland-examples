@@ -33,6 +33,7 @@ const fetchStripeRefunds = async () => {
 
     if (results) {
       for (const result of results) {
+        result["metadata"] = JSON.stringify(result["metadata"]);
         full_results.push(result);
         total_counter++;
         console.log("id: ", result.id, " – total_counter: ", total_counter);
@@ -46,6 +47,7 @@ const fetchStripeRefunds = async () => {
 const handler = async () => {
   const records = await fetchStripeRefunds();
   console.log("xx records done", records.length);
+  console.log(records);
   const table = tableFromJSON(records);
   console.log("xx table done", table);
   const batch = tableToIPC(table);
