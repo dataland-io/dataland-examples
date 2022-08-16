@@ -27,61 +27,85 @@ const airtableBase = new Airtable({
 }).base(AIRTABLE_BASE_ID);
 const airtableTable = airtableBase(AIRTABLE_TABLE_NAME);
 
+const AIRTABLE_MAX_UPDATES = 10;
+const chunkAirtablePayload = <T>(array: T[]) => {
+  const chunks: T[][] = [];
+
+  for (let i = 0; i < array.length; i += AIRTABLE_MAX_UPDATES) {
+    const chunk = array.slice(i, i + AIRTABLE_MAX_UPDATES);
+    chunks.push(chunk);
+  }
+  return chunks;
+};
+
 const airtableUpdateRows = async (
   table: AirtableTable<AirtableFieldSet>,
   updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[]
 ) => {
-  console.log("UPDATING", updateRows);
-  return await new Promise((resolve, error) => {
-    table.update(updateRows, { typecast: true }, (err) => {
-      if (err) {
-        console.error("Airtable Update Rows - Failed to update rows", {
-          error: err,
-        });
-        error(err);
-        return;
-      }
-      resolve(true);
+  const chunks = chunkAirtablePayload(updateRows);
+  console.log("chunks", chunks);
+  for (const chunk of chunks) {
+    console.log("chunk", chunk);
+    await new Promise((resolve, error) => {
+      table.update(chunk, { typecast: true }, (err) => {
+        if (err) {
+          console.error("Airtable Update Rows - Failed to update rows", {
+            error: err,
+          });
+          error(err);
+          return;
+        }
+        resolve(true);
+      });
     });
-  });
+  }
 };
 
 const airtableCreateRows = async (
   table: AirtableTable<AirtableFieldSet>,
   createRows: { fields: AirtableFieldSet }[]
 ): Promise<string[]> => {
-  return await new Promise((resolve, error) => {
-    table.create(createRows, { typecast: true }, (err, records) => {
-      if (err || records == null) {
-        console.error("Airtable Create Rows - Failed to update rows", {
-          error: err,
-        });
-        error(err);
-        return;
-      }
+  const recordIds: string[] = [];
+  const chunks = chunkAirtablePayload(createRows);
+  for (const chunk of chunks) {
+    const chunkRecordIds = await new Promise<string[]>((resolve, error) => {
+      table.create(chunk, { typecast: true }, (err, records) => {
+        if (err || records == null) {
+          console.error("Airtable Create Rows - Failed to update rows", {
+            error: err,
+          });
+          error(err);
+          return;
+        }
 
-      const recordIds = records.map((record) => record.getId());
-      resolve(recordIds);
+        const recordIds = records.map((record) => record.getId());
+        resolve(recordIds);
+      });
     });
-  });
+    recordIds.push(...chunkRecordIds);
+  }
+  return recordIds;
 };
 
 const airtableDestroyRows = async (
   table: AirtableTable<AirtableFieldSet>,
   recordIds: string[]
 ) => {
-  return await new Promise((resolve, error) => {
-    table.destroy(recordIds, (err) => {
-      if (err) {
-        console.error("Airtable Create Rows - Failed to update rows", {
-          error: err,
-        });
-        error(err);
-        return;
-      }
-      resolve(true);
+  const chunks = chunkAirtablePayload(recordIds);
+  for (const chunk of chunks) {
+    await new Promise((resolve, error) => {
+      table.destroy(chunk, (err) => {
+        if (err) {
+          console.error("Airtable Create Rows - Failed to update rows", {
+            error: err,
+          });
+          error(err);
+          return;
+        }
+        resolve(true);
+      });
     });
-  });
+  }
 };
 
 const handler2 = async (transaction: Transaction) => {
@@ -256,7 +280,7 @@ const handler2 = async (transaction: Transaction) => {
     }
   }
 };
-
+//
 if (ALLOW_WRITEBACK_BOOLEAN !== "true" && ALLOW_WRITEBACK_BOOLEAN !== "false") {
   console.error(
     `'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`

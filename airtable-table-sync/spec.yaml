@@ -1,7 +1,7 @@
-moduleId: airtable-table-sync2
+moduleId: airtable-module-5
 
 info:
-  title: Airtable
+  title: Airtable-5
   description: Sync a Airtable table to Dataland
   author: Dataland Devs <devs@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
@@ -11,24 +11,24 @@ info:
 buildCommand: npm run build
 
 parameters:
-  - airtable-api-key
-  - airtable-base-id
-  - airtable-table-name
-  - airtable-view-name
-  - allow-writeback-boolean
-  - dataland-table-name
+  - airtable-api-key-5
+  - airtable-base-id-5
+  - airtable-table-name-5
+  - airtable-view-name-5
+  - allow-writeback-boolean-5
+  - dataland-table-name-5
 
 workers:
-  - workerId: airtable-table-sync
+  - workerId: airtable-table-sync-5
     scriptPath: dist/bundle.js
     triggers:
       cron:
         cronExpression: "*/30 * * * * * *"
       transaction: {}
     env:
-      AIRTABLE_API_KEY: airtable-api-key
-      AIRTABLE_BASE_ID: airtable-base-id
-      AIRTABLE_TABLE_NAME: airtable-table-name
-      AIRTABLE_VIEW_NAME: airtable-view-name
-      ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
-      DATALAND_TABLE_NAME: dataland-table-name
+      AIRTABLE_API_KEY_5: airtable-api-key-5
+      AIRTABLE_BASE_ID_5: airtable-base-id-5
+      AIRTABLE_TABLE_NAME_5: airtable-table-name-5
+      AIRTABLE_VIEW_NAME_5: airtable-view-name-5
+      ALLOW_WRITEBACK_BOOLEAN_5: allow-writeback-boolean-5
+      DATALAND_TABLE_NAME_5: dataland-table-name-5
