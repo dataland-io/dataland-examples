@@ -1,0 +1,34 @@
+moduleId: airtable-table-sync2
+
+info:
+  title: Airtable
+  description: Sync a Airtable table to Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: icon.svg
+
+buildCommand: npm run build
+
+parameters:
+  - airtable-api-key
+  - airtable-base-id
+  - airtable-table-name
+  - airtable-view-name
+  - allow-writeback-boolean
+  - dataland-table-name
+
+workers:
+  - workerId: airtable-table-sync
+    scriptPath: dist/bundle.js
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
+      transaction: {}
+    env:
+      AIRTABLE_API_KEY: airtable-api-key
+      AIRTABLE_BASE_ID: airtable-base-id
+      AIRTABLE_TABLE_NAME: airtable-table-name
+      AIRTABLE_VIEW_NAME: airtable-view-name
+      ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
+      DATALAND_TABLE_NAME: dataland-table-name
