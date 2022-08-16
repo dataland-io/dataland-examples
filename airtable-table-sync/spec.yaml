@@ -1,4 +1,4 @@
-moduleId: airtable-table-sync2
+moduleId: airtable-table-sync
 
 info:
   title: Airtable
@@ -19,11 +19,11 @@ parameters:
   - dataland-table-name
 
 workers:
-  - workerId: airtable-table-sync
+  - workerId: airtable-table-sync-worker
     scriptPath: dist/bundle.js
     triggers:
       cron:
-        cronExpression: "*/30 * * * * * *"
+        cronExpression: "0 */5 * * * * *"
       transaction: {}
     env:
       AIRTABLE_API_KEY: airtable-api-key
