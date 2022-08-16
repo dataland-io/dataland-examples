@@ -689,43 +689,43 @@ workers:
       cron:
         cronExpression: "*/30 * * * * * *"
 
-  # - workerId: fetch-stripe-customers
-  #   scriptPath: dist/fetchStripeCustomers.bundle.js
-  #   env:
-  #     STRIPE_API_KEY: stripe-api-key
-  #   triggers:
-  #     cron:
-  #       cronExpression: "0 */15 * * * * *"
+  - workerId: fetch-stripe-customers
+    scriptPath: dist/fetchStripeCustomers.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */15 * * * * *"
 
-  # - workerId: test-sync-tables
-  #   scriptPath: dist/testSyncTables.bundle.js
-  #   triggers:
-  #     cron:
-  #       cronExpression: "*/15 * * * * * *"
+  - workerId: test-sync-tables
+    scriptPath: dist/testSyncTables.bundle.js
+    triggers:
+      cron:
+        cronExpression: "*/15 * * * * * *"
 
-  # - workerId: fetch-stripe-invoices
-  #   scriptPath: dist/fetchStripeInvoices.bundle.js
-  #   env:
-  #     STRIPE_API_KEY: stripe-api-key
-  #   triggers:
-  #     cron:
-  #       cronExpression: "0 */15 * * * * *"
+  - workerId: fetch-stripe-invoices
+    scriptPath: dist/fetchStripeInvoices.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */15 * * * * *"
 
-  # - workerId: fetch-stripe-subscriptions
-  #   scriptPath: dist/fetchStripeSubscriptions.bundle.js
-  #   env:
-  #     STRIPE_API_KEY: stripe-api-key
-  #   triggers:
-  #     cron:
-  #       cronExpression: "0 */15 * * * * *"
+  - workerId: fetch-stripe-subscriptions
+    scriptPath: dist/fetchStripeSubscriptions.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */15 * * * * *"
 
-  # - workerId: fetch-stripe-payment-intents
-  #   scriptPath: dist/fetchStripePaymentIntents.bundle.js
-  #   env:
-  #     STRIPE_API_KEY: stripe-api-key
-  #   triggers:
-  #     cron:
-  #       cronExpression: "0 */15 * * * * *"
+  - workerId: fetch-stripe-payment-intents
+    scriptPath: dist/fetchStripePaymentIntents.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */15 * * * * *"
 
   - workerId: fetch-stripe-refunds
     scriptPath: dist/fetchStripeRefunds.bundle.js
