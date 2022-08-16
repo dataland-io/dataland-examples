@@ -12,7 +12,7 @@ This includes:
 
 Dataland always treats your Airtable instance as the source of truth. Any invalid transactions attempted from Dataland will be rejected by your source Airtable, and then overriden in Dataland by the next sync from Airtable. For example, since the Airtable API prevents updates to formula column values, any change from Dataland to a formula column will be rejected.
 
-Data in the Dataland UI will be re-updated every 15 minutes by default. This cadence can be configurable.
+Data in the Dataland UI will be re-updated every 5 minutes by default. This cadence can be configurable.
 
 ## Parameter setup
 
@@ -37,14 +37,23 @@ For example:
 
 ![Image showing how to parse base, table, and view ID values from a link](airtable-params.svg)
 
-## Computed columns that reject external updates
+## Field types that reject writeback
 
-Airtable has certain fields that reject any updates via API, and will therefore reject updates from Dataland:
+Computed fields reject any updates via API, and will therefore reject updates from Dataland. These computed field types include:
 
 - Autonumber
 - Button
 - Count
-- Created time, Created By, Modified time, Modified by
+- Created by
+- Created time
 - Formula
+- Last modified by
+- Last modified time
 - Lookup
 - Rollup
+
+Dataland also doesn't support writeback for these field types:
+
+- Attachment
+- Barcode
+- Collaborator

@@ -23,7 +23,7 @@ workers:
     scriptPath: dist/bundle.js
     triggers:
       cron:
-        cronExpression: "*/30 * * * * * *"
+        cronExpression: "0 */5 * * * * *"
       transaction: {}
     env:
       AIRTABLE_API_KEY_5: airtable-api-key-5
