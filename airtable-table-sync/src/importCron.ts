@@ -30,7 +30,7 @@ type AirtableValue =
   | ReadonlyArray<string>
   | ReadonlyArray<Attachment>;
 
-const parseAirableValue = (value: AirtableValue): Scalar => {
+const parseAirtableValue = (value: AirtableValue): Scalar => {
   if (value == null) {
     return null;
   }
@@ -43,9 +43,24 @@ const parseAirableValue = (value: AirtableValue): Scalar => {
     return value;
   }
 
+  // NOTE(gab):
+  // the reason these fields are parsed as strings is that when sending an update to airtable,
+  // airtable expects lists to be in this format: "x,y,z" or '"x","y","z"', and not in its
+  // stringified json form '["x", "y", "z"]'. this allows us to not need any additional parsing on
+  // updating values
+  //
+  // field types that NEEDS to be parsed as a concatenated string:
+  // - Linked record (list of strings)
+  // - Multiple select (list of strings)
+  //
+  // additionally all lookup fields containing only strings or numbers are also parsed as a concatenated string,
+  // since the field type cannot be known in-beforehand. this also makes the UI more consistent and has no impact
+  // in any other way, since this field is precomputed
+  //
+  // full list of fields: https://datalandhq.quip.com/JeqZAWbt5Z9o/Module-planning-Airtable#temp:C:cZHf643296828573be85cea3bb62
   if (Array.isArray(value)) {
     const isCommaSeparated = value.every(
-      (v) => typeof v === "string" || v === "number"
+      (v) => typeof v === "string" || typeof v === "number"
     );
     if (isCommaSeparated === true) {
       return `"${value.join('","')}"`;
@@ -57,11 +72,11 @@ const parseAirableValue = (value: AirtableValue): Scalar => {
     return JSON.stringify(value);
   }
 
-  console.error("Airtable Sync - Could not parse value", { value });
+  console.error("Import - Could not parse value from Airtable", { value });
   return null;
 };
 
-const readFromAirtable = async (): Promise<Record<string, any>[]> => {
+const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
   const allRecords: Record<string, any>[] = [];
 
   await new Promise((resolve, error) => {
@@ -72,10 +87,10 @@ const readFromAirtable = async (): Promise<Record<string, any>[]> => {
       })
       .eachPage(
         (records, fetchNextPage) => {
-          const columnNames: Set<string> = new Set();
+          const fieldNames: Set<string> = new Set();
           for (const record of records) {
-            for (const columnName in record.fields) {
-              columnNames.add(columnName);
+            for (const fieldName in record.fields) {
+              fieldNames.add(fieldName);
             }
           }
 
@@ -85,24 +100,20 @@ const readFromAirtable = async (): Promise<Record<string, any>[]> => {
             };
             for (const columnName in record.fields) {
               const columnValue = record.fields[columnName];
-              const parsedColumnValue = parseAirableValue(columnValue);
+              const parsedColumnValue = parseAirtableValue(columnValue);
               parsedRecord[columnName] = parsedColumnValue;
             }
 
             // NOTE(gab): fields containing empty values (false, "", [], {}) are
             // never sent from airtable. these fields are added as null explicitly.
-            // this also means a completely empty column will now show up at all,
-            // since no value will be returned from the api from that field
-            for (const columnName of columnNames) {
-              if (
-                columnName in parsedRecord ||
-                columnName === "_dataland_key" ||
-                columnName === "_dataland_ordinal"
-              ) {
-                continue;
-              }
-              parsedRecord[columnName] = null;
-            }
+            // this also means we have no way of getting a completely empty column from
+            // airtable since they will never send a value with that field.
+            // for (const columnName of fieldNames) {
+            //   if (columnName in parsedRecord) {
+            //     continue;
+            //   }
+            //   parsedRecord[columnName] = null;
+            // }
 
             allRecords.push(parsedRecord);
           }
@@ -111,7 +122,7 @@ const readFromAirtable = async (): Promise<Record<string, any>[]> => {
         },
         (err) => {
           if (err) {
-            console.error("Airtable Fetch Error -", err);
+            console.error("Import - Airtable Fetch Error -", err);
             error();
             return;
           }
