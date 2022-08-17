@@ -7,6 +7,7 @@ import {
   Mutation,
   runMutations,
   registerTransactionHandler,
+  Uuid,
 } from "@dataland-io/dataland-sdk-worker";
 import Airtable, {
   FieldSet as AirtableFieldSet,
@@ -27,66 +28,91 @@ const airtableBase = new Airtable({
 }).base(AIRTABLE_BASE_ID);
 const airtableTable = airtableBase(AIRTABLE_TABLE_NAME);
 
+const AIRTABLE_MAX_UPDATES = 10;
+const chunkAirtablePayload = <T>(array: T[]) => {
+  const chunks: T[][] = [];
+
+  for (let i = 0; i < array.length; i += AIRTABLE_MAX_UPDATES) {
+    const chunk = array.slice(i, i + AIRTABLE_MAX_UPDATES);
+    chunks.push(chunk);
+  }
+  return chunks;
+};
+
 const airtableUpdateRows = async (
   table: AirtableTable<AirtableFieldSet>,
   updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[]
 ) => {
-  console.log("UPDATING", updateRows);
-  return await new Promise((resolve, error) => {
-    table.update(updateRows, { typecast: true }, (err) => {
-      if (err) {
-        console.error("Airtable Update Rows - Failed to update rows", {
-          error: err,
-        });
-        error(err);
-        return;
-      }
-      resolve(true);
+  const chunks = chunkAirtablePayload(updateRows);
+  for (const chunk of chunks) {
+    await new Promise((resolve) => {
+      table.update(chunk, { typecast: true }, (err) => {
+        if (err != null) {
+          console.error("Writeback - Failed to update rows", {
+            error: err,
+            updateRows,
+          });
+          resolve(false);
+          return;
+        }
+        resolve(true);
+      });
     });
-  });
+  }
 };
 
 const airtableCreateRows = async (
   table: AirtableTable<AirtableFieldSet>,
   createRows: { fields: AirtableFieldSet }[]
 ): Promise<string[]> => {
-  return await new Promise((resolve, error) => {
-    table.create(createRows, { typecast: true }, (err, records) => {
-      if (err || records == null) {
-        console.error("Airtable Create Rows - Failed to update rows", {
-          error: err,
-        });
-        error(err);
-        return;
-      }
+  const recordIds: string[] = [];
+  const chunks = chunkAirtablePayload(createRows);
+  for (const chunk of chunks) {
+    const chunkRecordIds = await new Promise<string[]>((resolve) => {
+      table.create(chunk, { typecast: true }, (err, records) => {
+        if (err != null || records == null) {
+          console.error("Writeback - Failed to create rows", {
+            error: err,
+            createRows,
+          });
+          resolve([]);
+          return;
+        }
 
-      const recordIds = records.map((record) => record.getId());
-      resolve(recordIds);
+        const recordIds = records.map((record) => record.getId());
+        resolve(recordIds);
+      });
     });
-  });
+    recordIds.push(...chunkRecordIds);
+  }
+  return recordIds;
 };
 
 const airtableDestroyRows = async (
   table: AirtableTable<AirtableFieldSet>,
   recordIds: string[]
 ) => {
-  return await new Promise((resolve, error) => {
-    table.destroy(recordIds, (err) => {
-      if (err) {
-        console.error("Airtable Create Rows - Failed to update rows", {
-          error: err,
-        });
-        error(err);
-        return;
-      }
-      resolve(true);
+  const chunks = chunkAirtablePayload(recordIds);
+  for (const chunk of chunks) {
+    await new Promise((resolve) => {
+      table.destroy(chunk, (err) => {
+        if (err != null) {
+          console.error("Writeback - Failed to update rows", {
+            error: err,
+            recordIds,
+          });
+          resolve(false);
+          return;
+        }
+        resolve(true);
+      });
     });
-  });
+  }
 };
 
-const handler2 = async (transaction: Transaction) => {
+const transactionHandler = async (transaction: Transaction) => {
   const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
+    logicalTimestamp: transaction.logicalTimestamp - 1,
   });
 
   const response = await querySqlSnapshot({
@@ -95,6 +121,17 @@ const handler2 = async (transaction: Transaction) => {
   });
 
   const rows = unpackRows(response);
+  const tableDescriptor = tableDescriptors.find(
+    (descriptor) => descriptor.tableName === DATALAND_TABLE_NAME
+  );
+  if (tableDescriptor == null) {
+    console.error("Writeback - Could not find table descriptor by table name", {
+      tableName: DATALAND_TABLE_NAME,
+    });
+    return;
+  }
+
+  const schema = new Schema(tableDescriptors);
 
   const recordIdMap: Record<number, string> = {};
   for (const row of rows) {
@@ -103,28 +140,10 @@ const handler2 = async (transaction: Transaction) => {
     recordIdMap[key] = recordId;
   }
 
-  const tableDescriptor = tableDescriptors.find(
-    (descriptor) => descriptor.tableName === DATALAND_TABLE_NAME
-  );
-  if (tableDescriptor == null) {
-    console.error(
-      "Airtable Sync - Could not find table descriptor by table name",
-      { tableName: DATALAND_TABLE_NAME }
-    );
-    return;
+  const columnNameMap: Record<Uuid, string> = {};
+  for (const columnDescriptor of tableDescriptor.columnDescriptors) {
+    columnNameMap[columnDescriptor.columnUuid] = columnDescriptor.columnName;
   }
-
-  const schema = new Schema(tableDescriptors);
-
-  const getColumnName = (columnUuid: string): string | null => {
-    const column = tableDescriptor.columnDescriptors.find(
-      (c) => c.columnUuid === columnUuid
-    );
-    if (column == null) {
-      return null;
-    }
-    return column.columnName;
-  };
 
   for (const mutation of transaction.mutations) {
     if (
@@ -132,7 +151,7 @@ const handler2 = async (transaction: Transaction) => {
       mutation.kind !== "update_rows" &&
       mutation.kind !== "delete_rows"
     ) {
-      return;
+      continue;
     }
 
     if (tableDescriptor.tableUuid !== mutation.value.tableUuid) {
@@ -142,43 +161,56 @@ const handler2 = async (transaction: Transaction) => {
     switch (mutation.kind) {
       case "insert_rows": {
         const createRows: { fields: AirtableFieldSet }[] = [];
-        for (let i = 0; i < mutation.value.rows.length; i++) {
+        const { rows, columnMapping } = mutation.value;
+        for (let i = 0; i < rows.length; i++) {
           const createRow: AirtableFieldSet = {};
           const { values } = mutation.value.rows[i]!;
 
-          for (let j = 0; j < mutation.value.rows.length; j++) {
+          for (let j = 0; j < values.length; j++) {
             const rowValue = values[j];
-            const columnUuid = mutation.value.columnMapping[i];
-            const columnName = getColumnName(columnUuid);
+            const columnUuid = columnMapping[j]!;
+            const columnName = columnNameMap[columnUuid];
             if (columnName == null) {
               console.error(
-                "Airtable Sync - Could not find column by column uuid",
+                "Writeback - Could not find column name by column uuid",
                 { columnUuid }
               );
-              return;
+              continue;
             }
             if (columnName === "_dataland_ordinal") {
               continue;
             }
+
             createRow[columnName] = rowValue?.value;
           }
 
           createRows.push({ fields: createRow });
         }
 
+        // TODO(gab): if deciding to sort rows as in the airtable view, make sure
+        // records are returned in the same order that they are passed if multiple
+        // create rows are in the same transaction
+        if (createRows.length === 0) {
+          break;
+        }
         const recordIds = await airtableCreateRows(airtableTable, createRows);
+        if (recordIds.length !== mutation.value.rows.length) {
+          console.error(
+            "Writeback - Created rows in Dataland and created rows in Airtable was of different length. State will be reconciled in next Airtable Sync",
+            {
+              datalandRowsLength: mutation.value.rows.length,
+              airtableRecordsLength: recordIds.length,
+            }
+          );
+          break;
+        }
+
         const mutations: Mutation[] = [];
         for (let i = 0; i < recordIds.length; i++) {
-          const recordId = recordIds[i];
-          const datalandKey = mutation.value.rows[i]?.key;
+          const recordId = recordIds[i]!;
+          const datalandKey = mutation.value.rows[i]!.key;
 
-          if (datalandKey == null) {
-            console.error(
-              "Airtable Sync - Could not find dataland key for record id",
-              { recordId }
-            );
-            return;
-          }
+          recordIdMap[datalandKey] = recordId;
 
           const update = schema.makeUpdateRows(
             DATALAND_TABLE_NAME,
@@ -190,26 +222,28 @@ const handler2 = async (transaction: Transaction) => {
           mutations.push(update);
         }
         await runMutations({ mutations });
-
         break;
       }
       case "update_rows": {
         const updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[] = [];
-        for (let i = 0; i < mutation.value.rows.length; i++) {
+        const { rows, columnMapping } = mutation.value;
+        for (let i = 0; i < rows.length; i++) {
           const updateRow: Partial<AirtableFieldSet> = {};
-          const { key, values } = mutation.value.rows[i]!;
+          const { key, values } = rows[i]!;
 
-          for (let j = 0; j < mutation.value.rows.length; j++) {
+          for (let j = 0; j < values.length; j++) {
             const rowValue = values[j];
-            const columnUuid = mutation.value.columnMapping[i];
-            const columnName = getColumnName(columnUuid);
+            const columnUuid = columnMapping[j]!;
+            const columnName = columnNameMap[columnUuid];
+            // console.log(columnNameMap);
             if (columnName == null) {
               console.error(
-                "Airtable Sync - Could not find column by column uuid",
+                "Writeback - Could not find column name by column uuid",
                 { columnUuid }
               );
               continue;
             }
+
             if (columnName === "_dataland_ordinal") {
               continue;
             }
@@ -221,12 +255,19 @@ const handler2 = async (transaction: Transaction) => {
 
           const recordId = recordIdMap[key];
           if (recordId == null) {
-            console.error("Airtable Write Back - Could not find record id", {
-              key,
-            });
-            return;
+            console.error(
+              "Writeback - Could not find record-id by dataland key",
+              {
+                key,
+              }
+            );
+            continue;
           }
           updateRows.push({ id: recordId, fields: updateRow });
+        }
+
+        if (updateRows.length === 0) {
+          break;
         }
         await airtableUpdateRows(airtableTable, updateRows);
         break;
@@ -234,21 +275,23 @@ const handler2 = async (transaction: Transaction) => {
       case "delete_rows": {
         const deleteRows: string[] = [];
         for (let i = 0; i < mutation.value.keys.length; i++) {
-          const key = mutation.value.keys[i];
+          const key = mutation.value.keys[i]!;
           const recordId = recordIdMap[key];
-
           if (recordId == null) {
-            console.error("Airtable Sync - Could not find Airtable record id", {
-              datalandKey: key,
-            });
-            return;
+            console.error(
+              "Writeback - Could not find record-id by dataland key",
+              {
+                key,
+              }
+            );
+            continue;
           }
 
           deleteRows.push(recordId);
         }
 
         if (deleteRows.length === 0) {
-          continue;
+          break;
         }
         await airtableDestroyRows(airtableTable, deleteRows);
         break;
@@ -259,10 +302,10 @@ const handler2 = async (transaction: Transaction) => {
 
 if (ALLOW_WRITEBACK_BOOLEAN !== "true" && ALLOW_WRITEBACK_BOOLEAN !== "false") {
   console.error(
-    `'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
+    `Writeback - 'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
   );
 }
 
 if (ALLOW_WRITEBACK_BOOLEAN === "true") {
-  registerTransactionHandler(handler2);
+  registerTransactionHandler(transactionHandler);
 }
