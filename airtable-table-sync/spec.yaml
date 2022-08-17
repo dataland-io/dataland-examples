@@ -1,11 +1,9 @@
-moduleId: airtable-table-sync-1
-# moduleId: airtable-table-sync-2
+moduleId: airtable-table-sync
 
 info:
-  title: Airtable 1
-  # title: Airtable 2
-  description: Sync a Airtable table to Dataland
-  author: Dataland Devs <devs@dataland.io>
+  title: Airtable
+  description: Sync an Airtable table to Dataland
+  author: Dataland Devs <support@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
   readmePath: README.md
   iconPath: icon.svg
@@ -13,37 +11,24 @@ info:
 buildCommand: npm run build
 
 parameters:
-  - airtable-api-key-1
-  - airtable-base-id-1
-  - airtable-table-name-1
-  - airtable-view-name-1
-  - allow-writeback-boolean-1
-  - dataland-table-name-1
-  # - airtable-api-key-2
-  # - airtable-base-id-2
-  # - airtable-table-name-2
-  # - airtable-view-name-2
-  # - allow-writeback-boolean-2
-  # - dataland-table-name-2
+  - airtable-api-key
+  - airtable-base-id
+  - airtable-table-name
+  - airtable-view-name
+  - allow-writeback-boolean
+  - dataland-table-name
 
 workers:
-  - workerId: airtable-table-sync-worker-1
-    # - workerId: airtable-table-sync-worker-2
+  - workerId: airtable-table-sync-worker
     scriptPath: dist/bundle.js
     triggers:
       cron:
         cronExpression: "0 */5 * * * * *"
       transaction: {}
     env:
-      AIRTABLE_API_KEY: airtable-api-key-1
-      AIRTABLE_BASE_ID: airtable-base-id-1
-      AIRTABLE_TABLE_NAME: airtable-table-name-1
-      AIRTABLE_VIEW_NAME: airtable-view-name-1
-      ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean-1
-      DATALAND_TABLE_NAME: dataland-table-name-1
-      # AIRTABLE_API_KEY: airtable-api-key-2
-      # AIRTABLE_BASE_ID: airtable-base-id-2
-      # AIRTABLE_TABLE_NAME: airtable-table-name-2
-      # AIRTABLE_VIEW_NAME: airtable-view-name-2
-      # ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean-2
-      # DATALAND_TABLE_NAME: dataland-table-name-2
+      AIRTABLE_API_KEY: airtable-api-key
+      AIRTABLE_BASE_ID: airtable-base-id
+      AIRTABLE_TABLE_NAME: airtable-table-name
+      AIRTABLE_VIEW_NAME: airtable-view-name
+      ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
+      DATALAND_TABLE_NAME: dataland-table-name
