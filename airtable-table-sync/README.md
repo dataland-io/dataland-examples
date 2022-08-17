@@ -39,7 +39,9 @@ For example:
 
 ## Field types that reject writeback
 
-Computed fields reject any updates via API, and will therefore reject updates from Dataland. These computed field types include:
+The Dataland table comes with a column titled `record-id`, which maps a row in Dataland to a record in Airtable. `record-id` can't be edited.
+
+In addition to `record-id`, there are computed fieldsthat reject any updates via API, and will therefore reject updates from Dataland. These computed field types include:
 
 - Autonumber
 - Button

@@ -2,8 +2,8 @@ moduleId: airtable-table-sync
 
 info:
   title: Airtable
-  description: Sync a Airtable table to Dataland
-  author: Dataland Devs <devs@dataland.io>
+  description: Sync an Airtable table to Dataland
+  author: Dataland Devs <support@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
   readmePath: README.md
   iconPath: icon.svg
