@@ -122,7 +122,7 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
         },
         (err) => {
           if (err) {
-            console.error("Import - Airtable Fetch Error -", err);
+            console.error("Import fetch rows failed - ", err);
             error();
             return;
           }

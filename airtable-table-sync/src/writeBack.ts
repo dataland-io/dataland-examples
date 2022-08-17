@@ -52,6 +52,7 @@ const airtableUpdateRows = async (
             error: err,
             updateRows,
           });
+          resolve(false);
           return;
         }
         resolve(true);
@@ -74,6 +75,7 @@ const airtableCreateRows = async (
             error: err,
             createRows,
           });
+          resolve([]);
           return;
         }
 
@@ -99,6 +101,7 @@ const airtableDestroyRows = async (
             error: err,
             recordIds,
           });
+          resolve(false);
           return;
         }
         resolve(true);
@@ -130,8 +133,6 @@ const transactionHandler = async (transaction: Transaction) => {
 
   const schema = new Schema(tableDescriptors);
 
-  // NOTE(gab): be careful here - we fetch the rows BEFORE the timestamp,
-  // meaning an inserted row will not appear in this map
   const recordIdMap: Record<number, string> = {};
   for (const row of rows) {
     const key = row["_dataland_key"] as number;
@@ -160,13 +161,14 @@ const transactionHandler = async (transaction: Transaction) => {
     switch (mutation.kind) {
       case "insert_rows": {
         const createRows: { fields: AirtableFieldSet }[] = [];
-        for (let i = 0; i < mutation.value.rows.length; i++) {
+        const { rows, columnMapping } = mutation.value;
+        for (let i = 0; i < rows.length; i++) {
           const createRow: AirtableFieldSet = {};
           const { values } = mutation.value.rows[i]!;
 
-          for (let j = 0; j < mutation.value.rows.length; j++) {
-            const rowValue = values[j]!;
-            const columnUuid = mutation.value.columnMapping[i]!;
+          for (let j = 0; j < values.length; j++) {
+            const rowValue = values[j];
+            const columnUuid = columnMapping[j]!;
             const columnName = columnNameMap[columnUuid];
             if (columnName == null) {
               console.error(
@@ -189,7 +191,7 @@ const transactionHandler = async (transaction: Transaction) => {
         // records are returned in the same order that they are passed if multiple
         // create rows are in the same transaction
         if (createRows.length === 0) {
-          continue;
+          break;
         }
         const recordIds = await airtableCreateRows(airtableTable, createRows);
         if (recordIds.length !== mutation.value.rows.length) {
@@ -200,7 +202,7 @@ const transactionHandler = async (transaction: Transaction) => {
               airtableRecordsLength: recordIds.length,
             }
           );
-          continue;
+          break;
         }
 
         const mutations: Mutation[] = [];
@@ -224,15 +226,16 @@ const transactionHandler = async (transaction: Transaction) => {
       }
       case "update_rows": {
         const updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[] = [];
-        for (let i = 0; i < mutation.value.rows.length; i++) {
+        const { rows, columnMapping } = mutation.value;
+        for (let i = 0; i < rows.length; i++) {
           const updateRow: Partial<AirtableFieldSet> = {};
-          const { key, values } = mutation.value.rows[i]!;
+          const { key, values } = rows[i]!;
 
           for (let j = 0; j < values.length; j++) {
-            const rowValue = values[j]!;
-            const columnUuid = mutation.value.columnMapping[i]!;
+            const rowValue = values[j];
+            const columnUuid = columnMapping[j]!;
             const columnName = columnNameMap[columnUuid];
-            console.log(columnNameMap);
+            // console.log(columnNameMap);
             if (columnName == null) {
               console.error(
                 "Writeback - Could not find column name by column uuid",
@@ -264,7 +267,7 @@ const transactionHandler = async (transaction: Transaction) => {
         }
 
         if (updateRows.length === 0) {
-          continue;
+          break;
         }
         await airtableUpdateRows(airtableTable, updateRows);
         break;
@@ -281,14 +284,14 @@ const transactionHandler = async (transaction: Transaction) => {
                 key,
               }
             );
-            return;
+            continue;
           }
 
           deleteRows.push(recordId);
         }
 
         if (deleteRows.length === 0) {
-          continue;
+          break;
         }
         await airtableDestroyRows(airtableTable, deleteRows);
         break;
@@ -296,7 +299,7 @@ const transactionHandler = async (transaction: Transaction) => {
     }
   }
 };
-//
+
 if (ALLOW_WRITEBACK_BOOLEAN !== "true" && ALLOW_WRITEBACK_BOOLEAN !== "false") {
   console.error(
     `Writeback - 'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
