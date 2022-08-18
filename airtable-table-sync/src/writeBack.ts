@@ -113,55 +113,6 @@ const airtableDestroyRows = async (
   }
 };
 
-const updateRowsWriteback = async (
-  mutation: Extract<Mutation, { kind: "update_rows" }>,
-  columnNameMap: Record<Uuid, string>,
-  recordIdMap: Record<number, string>
-) => {
-  const updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[] = [];
-  const { rows, columnMapping } = mutation.value;
-  for (let i = 0; i < rows.length; i++) {
-    const updateRow: Partial<AirtableFieldSet> = {};
-    const { key, values } = rows[i]!;
-
-    for (let j = 0; j < values.length; j++) {
-      const taggedScalar = values[j];
-      const columnUuid = columnMapping[j]!;
-      const columnName = columnNameMap[columnUuid];
-      if (columnName == null) {
-        console.error("Writeback - Could not find column name by column uuid", {
-          columnUuid,
-        });
-        continue;
-      }
-
-      if (columnName === "_dataland_ordinal") {
-        continue;
-      }
-
-      // @ts-ignore - NOTE(gab): nulls are used to clear ANY field value from airtable.
-      // the reason it is not in their type system is probably that they actually "expect"
-      // the empty type for that field, "false", "", [] etc and not null. but since
-      // they won't provide a schema, null is a nice way of clearing any cell
-      updateRow[columnName] = taggedScalar?.value ?? null;
-    }
-
-    const recordId = recordIdMap[key];
-    if (recordId == null) {
-      console.error("Writeback - Could not find record id by dataland key", {
-        key,
-      });
-      continue;
-    }
-    updateRows.push({ id: recordId, fields: updateRow });
-  }
-
-  if (updateRows.length === 0) {
-    return;
-  }
-  await airtableUpdateRows(airtableTable, updateRows);
-};
-
 const insertRowsWriteback = async (
   mutation: Extract<Mutation, { kind: "insert_rows" }>,
   schema: Schema,
@@ -222,6 +173,55 @@ const insertRowsWriteback = async (
     mutations.push(update);
   }
   await runMutations({ mutations });
+};
+
+const updateRowsWriteback = async (
+  mutation: Extract<Mutation, { kind: "update_rows" }>,
+  columnNameMap: Record<Uuid, string>,
+  recordIdMap: Record<number, string>
+) => {
+  const updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[] = [];
+  const { rows, columnMapping } = mutation.value;
+  for (let i = 0; i < rows.length; i++) {
+    const updateRow: Partial<AirtableFieldSet> = {};
+    const { key, values } = rows[i]!;
+
+    for (let j = 0; j < values.length; j++) {
+      const taggedScalar = values[j];
+      const columnUuid = columnMapping[j]!;
+      const columnName = columnNameMap[columnUuid];
+      if (columnName == null) {
+        console.error("Writeback - Could not find column name by column uuid", {
+          columnUuid,
+        });
+        continue;
+      }
+
+      if (columnName === "_dataland_ordinal") {
+        continue;
+      }
+
+      // @ts-ignore - NOTE(gab): nulls are used to clear ANY field value from airtable.
+      // the reason it is not in their type system is probably that they actually "expect"
+      // the empty type for that field, "false", "", [] etc and not null. but since
+      // they won't provide a schema, null is a nice way of clearing any cell
+      updateRow[columnName] = taggedScalar?.value ?? null;
+    }
+
+    const recordId = recordIdMap[key];
+    if (recordId == null) {
+      console.error("Writeback - Could not find record id by dataland key", {
+        key,
+      });
+      continue;
+    }
+    updateRows.push({ id: recordId, fields: updateRow });
+  }
+
+  if (updateRows.length === 0) {
+    return;
+  }
+  await airtableUpdateRows(airtableTable, updateRows);
 };
 
 const deleteRowsWriteback = async (
