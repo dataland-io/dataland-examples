@@ -164,8 +164,9 @@ const insertRowsWriteback = async (
 
   const mutations: Mutation[] = [];
   for (let i = 0; i < recordIds.length; i++) {
-    // NOTE(gab): recordIds are returned in the same order as the create records are sent,
-    // therefore we can safely index them here
+    // NOTE(gab): Record ids are returned from Airtable in the same order
+    // as the records were sent, therefore we can safely assume the first index
+    // of recordIds corresponds to the first index of the rows.
     const recordId = recordIds[i]!;
     const datalandKey = mutation.value.rows[i]!.key;
 
@@ -253,11 +254,11 @@ const deleteRowsWriteback = async (
 };
 
 const transactionHandler = async (transaction: Transaction) => {
-  // NOTE(gab): updating a cell in dataland while airtable cron sync is running would
-  // cause the synced data from airtable to be outdated. when the syncTables transaction
+  // NOTE(gab): Updating a cell in Dataland while Airtable import cron is running would
+  // cause the imported data from airtable to be outdated. When the syncTables transaction
   // finally goes through, it would set the cell to its previous value which we expect.
-  // the discrepancy would then be reconciled in the next sync. but if the transaction handler
-  // is run on syncTables, the outdated cell change would propagate to airtable again,
+  // The discrepancy would then be reconciled in the next sync. But if the transaction handler
+  // is triggered on syncTables, the outdated cell change would propagate to Airtable again,
   // permanently reverting the cell update.
   if (SYNC_TABLES_MARKER in transaction.transactionAnnotations) {
     transaction.mutations.forEach(console.log);
