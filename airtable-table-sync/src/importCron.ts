@@ -13,6 +13,7 @@ import {
   AIRTABLE_VIEW_NAME,
   DATALAND_TABLE_NAME,
   RECORD_ID,
+  SYNC_TABLES_MARKER,
 } from "./constants";
 
 const airtableBase = new Airtable({
@@ -144,7 +145,12 @@ const cronHandler = async () => {
     identityColumnNames: [RECORD_ID],
   };
 
-  await syncTables({ syncTables: [syncTable] });
+  await syncTables({
+    syncTables: [syncTable],
+    transactionAnnotations: {
+      [SYNC_TABLES_MARKER]: "true",
+    },
+  });
   console.log("Sync done");
 };
 

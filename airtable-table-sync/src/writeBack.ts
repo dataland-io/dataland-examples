@@ -21,6 +21,7 @@ import {
   ALLOW_WRITEBACK_BOOLEAN,
   DATALAND_TABLE_NAME,
   RECORD_ID,
+  SYNC_TABLES_MARKER,
 } from "./constants";
 
 const airtableBase = new Airtable({
@@ -121,6 +122,7 @@ const insertRowsWriteback = async (
 ) => {
   const createRows: { fields: AirtableFieldSet }[] = [];
   const { rows, columnMapping } = mutation.value;
+
   for (let i = 0; i < rows.length; i++) {
     const createRow: AirtableFieldSet = {};
     const { values } = rows[i]!;
@@ -149,7 +151,7 @@ const insertRowsWriteback = async (
     return;
   }
   const recordIds = await airtableCreateRows(airtableTable, createRows);
-  if (recordIds.length !== mutation.value.rows.length) {
+  if (recordIds.length !== rows.length) {
     console.error(
       "Writeback - Created rows in Dataland and created rows in Airtable was of different length. State will be reconciled in next Airtable Sync",
       {
@@ -162,6 +164,8 @@ const insertRowsWriteback = async (
 
   const mutations: Mutation[] = [];
   for (let i = 0; i < recordIds.length; i++) {
+    // NOTE(gab): recordIds are returned in the same order as the create records are sent,
+    // therefore we can safely index them here
     const recordId = recordIds[i]!;
     const datalandKey = mutation.value.rows[i]!.key;
 
@@ -249,6 +253,17 @@ const deleteRowsWriteback = async (
 };
 
 const transactionHandler = async (transaction: Transaction) => {
+  // NOTE(gab): updating a cell in dataland while airtable cron sync is running would
+  // cause the synced data from airtable to be outdated. when the syncTables transaction
+  // finally goes through, it would set the cell to its previous value which we expect.
+  // the discrepancy would then be reconciled in the next sync. but if the transaction handler
+  // is run on syncTables, the outdated cell change would propagate to airtable again,
+  // permanently reverting the cell update.
+  if (SYNC_TABLES_MARKER in transaction.transactionAnnotations) {
+    transaction.mutations.forEach(console.log);
+    return;
+  }
+
   const response = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp - 1,
     sqlQuery: `select "_dataland_key", "${RECORD_ID}" from "${DATALAND_TABLE_NAME}"`,
