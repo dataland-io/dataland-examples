@@ -318,5 +318,7 @@ if (ALLOW_WRITEBACK_BOOLEAN !== "true" && ALLOW_WRITEBACK_BOOLEAN !== "false") {
 }
 
 if (ALLOW_WRITEBACK_BOOLEAN === "true") {
-  registerTransactionHandler(transactionHandler);
+  registerTransactionHandler(transactionHandler, {
+    filterTransactions: "handle-all",
+  });
 }
