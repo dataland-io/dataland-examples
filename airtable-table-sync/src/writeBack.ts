@@ -210,7 +210,7 @@ const updateRowsWriteback = async (
       // The reason it's not in their type system is probably that they"expect"
       // the empty type for that field: "false", "", [] etc and not null. But since
       // no schema is provided from their side, the correct "empty type" cannot be known,
-      // and null is used
+      // and null is used.
       updateRow[columnName] = taggedScalar?.value ?? null;
     }
 
