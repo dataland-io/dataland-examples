@@ -44,19 +44,19 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
   }
 
   // NOTE(gab):
-  // the reason these fields are parsed as strings is that when sending an update to airtable,
-  // airtable expects lists to be in this format: "x,y,z" or '"x","y","z"', and not in its
-  // stringified json form '["x", "y", "z"]'. this allows us to not need any additional parsing on
-  // updating values
+  // The reason these fields are parsed as strings is that when sending an update to Airtable,
+  // Airtable expects lists to be in this format: "x,y,z" or '"x","y","z"', and not in its
+  // stringified json form '["x", "y", "z"]'. This allows us to not need any additional parsing on
+  // updating values.
   //
-  // field types that NEEDS to be parsed as a concatenated string:
+  // Field types that NEED to be parsed as a concatenated string:
   // - Linked record (list of strings)
   // - Multiple select (list of strings)
   //
-  // additionally all lookup fields containing only strings or numbers are also parsed as a concatenated string,
-  // since the field type cannot be known in-beforehand. this also makes the UI more consistent
+  // Additionally, all lookup fields containing only strings or numbers are also parsed as a concatenated string,
+  // since the field type cannot be known beforehand. This also makes the UI more consistent.
   //
-  // full list of fields: https://datalandhq.quip.com/JeqZAWbt5Z9o/Module-planning-Airtable#temp:C:cZHf643296828573be85cea3bb62
+  // Full list of fields (for Dataland core team reference): https://datalandhq.quip.com/JeqZAWbt5Z9o/Module-planning-Airtable#temp:C:cZHf643296828573be85cea3bb62
   if (Array.isArray(value)) {
     const isCommaSeparated = value.every(
       (v) => typeof v === "string" || typeof v === "number"
@@ -103,10 +103,10 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
               parsedRecord[columnName] = parsedColumnValue;
             }
 
-            // NOTE(gab): fields containing empty values (false, "", [], {}) are
-            // never sent from airtable. these fields are added as null explicitly.
-            // this is due to syncTables having an issue of setting number cells to
-            // NaN if the column name is excluded from the row
+            // NOTE(gab): Fields containing empty values (false, "", [], {}) are
+            // never sent from Airtable. These fields are added as null explicitly.
+            // This is due to syncTables having an issue of setting number cells to
+            // NaN if the column name is excluded from the row.
             for (const columnName of fieldNames) {
               if (columnName in parsedRecord) {
                 continue;
