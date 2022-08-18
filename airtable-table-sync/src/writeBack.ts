@@ -261,7 +261,6 @@ const transactionHandler = async (transaction: Transaction) => {
   // is triggered on syncTables, the outdated cell change would propagate to Airtable again,
   // permanently reverting the cell update.
   if (SYNC_TABLES_MARKER in transaction.transactionAnnotations) {
-    transaction.mutations.forEach(console.log);
     return;
   }
 
