@@ -168,7 +168,7 @@ const insertRowsWriteback = async (
     // as the records were sent, therefore we can safely assume the first index
     // of recordIds corresponds to the first index of the rows.
     const recordId = recordIds[i]!;
-    const datalandKey = mutation.value.rows[i]!.key;
+    const datalandKey = rows[i]!.key;
 
     recordIdMap[datalandKey] = recordId;
 
@@ -206,10 +206,11 @@ const updateRowsWriteback = async (
         continue;
       }
 
-      // @ts-ignore - NOTE(gab): nulls are used to clear ANY field value from airtable.
-      // the reason it is not in their type system is probably that they actually "expect"
-      // the empty type for that field, "false", "", [] etc and not null. but since
-      // they won't provide a schema, null is a nice way of clearing any cell
+      // @ts-ignore - NOTE(gab): Nulls are used to clear ANY field value from Airtable.
+      // The reason it's not in their type system is probably that they"expect"
+      // the empty type for that field: "false", "", [] etc and not null. But since
+      // no schema is provided from their side, the correct "empty type" cannot be known,
+      // and null is used
       updateRow[columnName] = taggedScalar?.value ?? null;
     }
 

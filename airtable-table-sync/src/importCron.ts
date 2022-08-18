@@ -151,7 +151,6 @@ const cronHandler = async () => {
       [SYNC_TABLES_MARKER]: "true",
     },
   });
-  console.log("Sync done");
 };
 
 registerCronHandler(cronHandler);
