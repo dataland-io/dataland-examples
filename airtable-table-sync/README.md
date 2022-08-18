@@ -33,9 +33,11 @@ You can then parse out the base ID, table ID, and view ID like shown:
 
 `https://airtable.com/{{base-id}}/{{table-id}}/{{view-id}}?blocks=hide`
 
-For example:
+For example, for the URL `https://airtable.com/appIY466wioivh2aU/tblXoP3z4g038nDsu/viwtQsYbKqlW9EfOZ?blocks=hide`:
 
-![Image showing how to parse base, table, and view ID values from a link](airtable-params.svg)
+- Base ID: `appIY466wioivh2aU`
+- Table ID: `tblXoP3z4g038nDsu`
+- View ID: `viwtQsYbKqlW9EfOZ`
 
 ## Field types that reject writeback
 
