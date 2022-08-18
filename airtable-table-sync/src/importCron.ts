@@ -54,8 +54,7 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
   // - Multiple select (list of strings)
   //
   // additionally all lookup fields containing only strings or numbers are also parsed as a concatenated string,
-  // since the field type cannot be known in-beforehand. this also makes the UI more consistent and has no impact
-  // in any other way, since this field is precomputed
+  // since the field type cannot be known in-beforehand. this also makes the UI more consistent
   //
   // full list of fields: https://datalandhq.quip.com/JeqZAWbt5Z9o/Module-planning-Airtable#temp:C:cZHf643296828573be85cea3bb62
   if (Array.isArray(value)) {
@@ -77,7 +76,7 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
 };
 
 const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
-  const allRecords: Record<string, any>[] = [];
+  const records: Record<string, any>[] = [];
 
   await new Promise((resolve, error) => {
     airtableTable
@@ -86,15 +85,15 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
         view: AIRTABLE_VIEW_NAME,
       })
       .eachPage(
-        (records, fetchNextPage) => {
+        (pageRecords, fetchNextPage) => {
           const fieldNames: Set<string> = new Set();
-          for (const record of records) {
+          for (const record of pageRecords) {
             for (const fieldName in record.fields) {
               fieldNames.add(fieldName);
             }
           }
 
-          for (const record of records) {
+          for (const record of pageRecords) {
             const parsedRecord: Record<string, Scalar> = {
               [RECORD_ID]: record.id,
             };
@@ -106,16 +105,16 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
 
             // NOTE(gab): fields containing empty values (false, "", [], {}) are
             // never sent from airtable. these fields are added as null explicitly.
-            // this also means we have no way of getting a completely empty column from
-            // airtable since they will never send a value with that field.
-            // for (const columnName of fieldNames) {
-            //   if (columnName in parsedRecord) {
-            //     continue;
-            //   }
-            //   parsedRecord[columnName] = null;
-            // }
+            // this is due to syncTables having an issue of setting number cells to
+            // NaN if the column name is excluded from the row
+            for (const columnName of fieldNames) {
+              if (columnName in parsedRecord) {
+                continue;
+              }
+              parsedRecord[columnName] = null;
+            }
 
-            allRecords.push(parsedRecord);
+            records.push(parsedRecord);
           }
 
           fetchNextPage();
@@ -130,7 +129,7 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
         }
       );
   });
-  return allRecords;
+  return records;
 };
 
 const cronHandler = async () => {
