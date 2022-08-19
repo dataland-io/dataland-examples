@@ -17,6 +17,8 @@ parameters:
   - pguser
   - pgpassword
   - pgschema
+  - allow-drop-tables-boolean
+  - allow-writeback-boolean
 
 workers:
   - workerId: postgres-sync
@@ -28,6 +30,8 @@ workers:
       PGUSER: pguser
       PGPASSWORD: pgpassword
       PGSCHEMA: pgschema
+      ALLOW_DROP_TABLES_BOOLEAN: allow-drop-tables-boolean
+      ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
     triggers:
       cron:
         cronExpression: "*/30 * * * * * *"
