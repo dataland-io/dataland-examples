@@ -1,6 +1,7 @@
 import { getEnv } from "@dataland-io/dataland-sdk-worker";
 
-export const SYNC_TABLES_MARKER = "sync-tables-marker";
+export const SYNC_TABLES_MARKER =
+  "airtable-table-sync.workers.dataland.io/cron-sync-marker";
 export const RECORD_ID = "record-id";
 
 export const DATALAND_TABLE_NAME = getEnv("DATALAND_TABLE_NAME");
