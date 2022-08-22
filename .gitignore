@@ -15,6 +15,5 @@ yarn.lock
 **/.env.*
 **/!.env.template
 
-
 # not opinionated about choice of VSCode setup
 .vscode
