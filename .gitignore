@@ -2,8 +2,19 @@
 package-lock.json
 yarn.lock
 
-# examples should ignore node_modules within subdirectores
+# examples should ignore these files within subdirectories
 **/node_modules/
+**/target/
+**/build/
+**/dist/
+**/tmp/
+**/*.iml
+**/.idea
+**/.DS_Store
+**/.env
+**/.env.*
+**/!.env.template
+
 
 # not opinionated about choice of VSCode setup
 .vscode
