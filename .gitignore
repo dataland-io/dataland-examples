@@ -2,5 +2,8 @@
 package-lock.json
 yarn.lock
 
+# examples should ignore node_modules within subdirectores
+**/node_modules/
+
 # not opinionated about choice of VSCode setup
 .vscode
