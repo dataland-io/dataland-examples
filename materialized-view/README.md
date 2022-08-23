@@ -1,6 +1,6 @@
 # Overview
 
-Define a custom SQL query that generates a materialized view as an output table every 30 seconds. This modules is helpful to create tables with custom joins using the other tables in your Dataland workspace.
+Define a custom SQL query that generates a materialized view as an output table every 30 seconds. This module lets you construct joins between your other tables in your workspace.
 
 It's helpful to test SQL queries in the Dataland CLI with the command `dataland sql`, before using the query in this module.
 

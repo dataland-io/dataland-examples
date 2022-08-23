@@ -16,7 +16,8 @@ parameters:
   - materialized-view-identity-column-name
   - keep-extra-columns-boolean
 
-# If deploying with the Dataland CLI, you must create a .env file in the root of the project with the following contents:
+# If deploying with the Dataland CLI, you must first create an .env file
+# in the root of the project with the following variables:
 # DL_PARAM_SQL_QUERY={your-sql-query}
 # DL_PARAM_MATERIALIZED_VIEW_DATALAND_TABLE_NAME={your-dataland-table-name}
 # DL_PARAM_MATERIALIZED_VIEW_IDENTITY_COLUMN_NAME={your-identity-column-name}
