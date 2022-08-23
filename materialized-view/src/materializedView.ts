@@ -57,7 +57,6 @@ const handler = async () => {
     await syncTables({
       syncTables: [syncTable],
     });
-    console.log("Sync complete");
   } catch (e) {
     console.warn(`syncTables failed`, e);
   }
