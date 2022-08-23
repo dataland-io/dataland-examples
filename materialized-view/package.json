@@ -1,9 +1,5 @@
----
-to: <%= h.changeCase.param(name) %>/package.json
----
-
 {
-  "name": "@dataland-examples/<%= h.changeCase.param(name) %>",
+  "name": "@dataland-examples/materialized-view",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
