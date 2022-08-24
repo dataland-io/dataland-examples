@@ -15,8 +15,8 @@ parameters:
   - airtable-base-id
   - airtable-table-name
   - airtable-view-name
-  - allow-writeback-boolean
-  - dataland-table-name
+  - airtable-allow-writeback-boolean
+  - airtable-dataland-table-name
 
 workers:
   - workerId: airtable-table-sync-worker
@@ -30,5 +30,5 @@ workers:
       AIRTABLE_BASE_ID: airtable-base-id
       AIRTABLE_TABLE_NAME: airtable-table-name
       AIRTABLE_VIEW_NAME: airtable-view-name
-      ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
-      DATALAND_TABLE_NAME: dataland-table-name
+      ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
+      DATALAND_TABLE_NAME: airtable-dataland-table-name
