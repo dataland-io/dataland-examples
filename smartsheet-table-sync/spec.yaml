@@ -1,0 +1,28 @@
+moduleId: smartsheet-table-sync-example
+
+info:
+  title: Smartsheet
+  description: Sync a Smartsheet sheet into Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: smartsheet-icon.svg
+
+buildCommand: npm run build
+
+parameters:
+  - smartsheet-api-key
+  - smartsheet-sheet-id
+  - smartsheet-dataland-table-name
+
+workers:
+  - workerId: smartsheet-table-sync
+    scriptPath: dist/smartsheetTableSync.bundle.js
+    triggers:
+      cron:
+        cronExpression: "0 */5 * * * * *"
+      transaction: {}
+    env:
+      SMARTSHEET_API_KEY: smartsheet-api-key
+      SMARTSHEET_SHEET_ID: smartsheet-sheet-id
+      SMARTSHEET_DATALAND_TABLE_NAME: smartsheet-dataland-table-name
