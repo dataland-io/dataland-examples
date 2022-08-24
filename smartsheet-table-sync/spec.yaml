@@ -1,0 +1,20 @@
+moduleId: smartsheet-table-sync-example
+
+buildCommand: npm run build
+
+parameters:
+  - smartsheet-api-key
+  - smartsheet-sheet-id
+  - smartsheet-dataland-table-name
+
+workers:
+  - workerId: smartsheet-table-sync
+    scriptPath: dist/smartsheetTableSync.bundle.js
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
+      transaction: {}
+    env:
+      SMARTSHEET_API_KEY: smartsheet-api-key
+      SMARTSHEET_SHEET_ID: smartsheet-sheet-id
+      SMARTSHEET_DATALAND_TABLE_NAME: smartsheet-dataland-table-name
