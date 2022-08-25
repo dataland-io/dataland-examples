@@ -28,3 +28,310 @@ workers:
       MINDBODY_AUTHORIZATION: mindbody-authorization
       MINDBODY_SITE_ID: mindbody-site-id
       ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
+
+tables:
+  - tableId: clients
+    tableName: clients
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: id
+        columnName: Id
+        dataType: string
+      - columnId: first-name
+        columnName: FirstName
+        dataType: string
+      - columnId: last-name
+        columnName: LastName
+        dataType: string
+      - columnId: status
+        columnName: Status
+        dataType: string
+      - columnId: email
+        columnName: Email
+        dataType: string
+      - columnId: mobile-phone
+        columnName: MobilePhone
+        dataType: string
+      - columnId: is-prospect
+        columnName: IsProspect
+        dataType: boolean
+      - columnId: prospect-stage---active
+        columnName: ProspectStage/~/Active
+        dataType: boolean
+      - columnId: prospect-stage---id
+        columnName: ProspectStage/~/Id
+        dataType: int32
+      - columnId: prospect-stage---description
+        columnName: ProspectStage/~/Description
+        dataType: string
+      - columnId: appointment-gender-preference
+        columnName: AppointmentGenderPreference
+        dataType: string
+      - columnId: birth-date
+        columnName: BirthDate
+        dataType: string
+      - columnId: country
+        columnName: Country
+        dataType: string
+      - columnId: creation-date
+        columnName: CreationDate
+        dataType: string
+      - columnId: client-credit-card---address
+        columnName: ClientCreditCard/~/Address
+        dataType: string
+      - columnId: client-credit-card---card-holder
+        columnName: ClientCreditCard/~/CardHolder
+        dataType: string
+      - columnId: client-credit-card---card-number
+        columnName: ClientCreditCard/~/CardNumber
+        dataType: string
+      - columnId: client-credit-card---card-type
+        columnName: ClientCreditCard/~/CardType
+        dataType: string
+      - columnId: client-credit-card---city
+        columnName: ClientCreditCard/~/City
+        dataType: string
+      - columnId: client-credit-card---exp-month
+        columnName: ClientCreditCard/~/ExpMonth
+        dataType: string
+      - columnId: client-credit-card---exp-year
+        columnName: ClientCreditCard/~/ExpYear
+        dataType: string
+      - columnId: client-credit-card---last-four
+        columnName: ClientCreditCard/~/LastFour
+        dataType: string
+      - columnId: client-credit-card---postal-code
+        columnName: ClientCreditCard/~/PostalCode
+        dataType: string
+      - columnId: client-credit-card---state
+        columnName: ClientCreditCard/~/State
+        dataType: string
+      - columnId: client-indexes
+        columnName: ClientIndexes
+        dataType: string
+      - columnId: client-relationships
+        columnName: ClientRelationships
+        dataType: string
+      - columnId: first-appointment-date
+        columnName: FirstAppointmentDate
+        dataType: string
+      - columnId: is-company
+        columnName: IsCompany
+        dataType: boolean
+      - columnId: liability---agreement-date
+        columnName: Liability/~/AgreementDate
+        dataType: string
+      - columnId: liability---is-released
+        columnName: Liability/~/IsReleased
+        dataType: boolean
+      - columnId: liability---released-by
+        columnName: Liability/~/ReleasedBy
+        dataType: int32
+      - columnId: liability-release
+        columnName: LiabilityRelease
+        dataType: boolean
+      - columnId: membership-icon
+        columnName: MembershipIcon
+        dataType: int32
+      - columnId: notes
+        columnName: Notes
+        dataType: string
+      - columnId: send-account-emails
+        columnName: SendAccountEmails
+        dataType: boolean
+      - columnId: send-account-texts
+        columnName: SendAccountTexts
+        dataType: boolean
+      - columnId: send-promotional-emails
+        columnName: SendPromotionalEmails
+        dataType: boolean
+      - columnId: send-promotional-texts
+        columnName: SendPromotionalTexts
+        dataType: boolean
+      - columnId: send-schedule-emails
+        columnName: SendScheduleEmails
+        dataType: boolean
+      - columnId: send-schedule-texts
+        columnName: SendScheduleTexts
+        dataType: boolean
+      - columnId: state
+        columnName: State
+        dataType: string
+      - columnId: suspension-info---booking-suspended
+        columnName: SuspensionInfo/~/BookingSuspended
+        dataType: boolean
+      - columnId: suspension-info---suspension-start-date
+        columnName: SuspensionInfo/~/SuspensionStartDate
+        dataType: string
+      - columnId: suspension-info---suspension-end-date
+        columnName: SuspensionInfo/~/SuspensionEndDate
+        dataType: string
+      - columnId: unique-id
+        columnName: UniqueId
+        dataType: int32
+      - columnId: last-modified-date-time
+        columnName: LastModifiedDateTime
+        dataType: string
+      - columnId: red-alert
+        columnName: RedAlert
+        dataType: string
+      - columnId: yellow-alert
+        columnName: YellowAlert
+        dataType: string
+      - columnId: middle-name
+        columnName: MiddleName
+        dataType: string
+      - columnId: mobile-provider
+        columnName: MobileProvider
+        dataType: string
+      - columnId: home-phone
+        columnName: HomePhone
+        dataType: string
+      - columnId: work-phone
+        columnName: WorkPhone
+        dataType: string
+      - columnId: work-extension
+        columnName: WorkExtension
+        dataType: string
+      - columnId: custom-client-fields
+        columnName: CustomClientFields
+        dataType: string
+      - columnId: account-balance
+        columnName: AccountBalance
+        dataType: float64
+      - columnId: address-line-1
+        columnName: AddressLine1
+        dataType: string
+      - columnId: city
+        columnName: City
+        dataType: string
+      - columnId: postal-code
+        columnName: PostalCode
+        dataType: string
+      - columnId: referred-by
+        columnName: ReferredBy
+        dataType: string
+      - columnId: photo-url
+        columnName: PhotoUrl
+        dataType: string
+      - columnId: emergency-contact-info-name
+        columnName: EmergencyContactInfoName
+        dataType: string
+      - columnId: emergency-contact-info-email
+        columnName: EmergencyContactInfoEmail
+        dataType: string
+      - columnId: emergency-contact-info-phone
+        columnName: EmergencyContactInfoPhone
+        dataType: string
+      - columnId: emergency-contact-info-relationship
+        columnName: EmergencyContactInfoRelationship
+        dataType: string
+      - columnId: gender
+        columnName: Gender
+        dataType: string
+      - columnId: last-formula-notes
+        columnName: LastFormulaNotes
+        dataType: string
+      - columnId: active
+        columnName: Active
+        dataType: boolean
+      - columnId: sales-reps
+        columnName: SalesReps
+        dataType: string
+      - columnId: action
+        columnName: Action
+        dataType: string
+      - columnId: home-location---additional-image-urls
+        columnName: HomeLocation/~/AdditionalImageURLs
+        dataType: string
+      - columnId: home-location---address
+        columnName: HomeLocation/~/Address
+        dataType: string
+      - columnId: home-location---address2
+        columnName: HomeLocation/~/Address2
+        dataType: string
+      - columnId: home-location---amenities
+        columnName: HomeLocation/~/Amenities
+        dataType: string
+      - columnId: home-location---business-description
+        columnName: HomeLocation/~/BusinessDescription
+        dataType: string
+      - columnId: home-location---city
+        columnName: HomeLocation/~/City
+        dataType: string
+      - columnId: home-location---description
+        columnName: HomeLocation/~/Description
+        dataType: string
+      - columnId: home-location---has-classes
+        columnName: HomeLocation/~/HasClasses
+        dataType: boolean
+      - columnId: home-location---id
+        columnName: HomeLocation/~/Id
+        dataType: int32
+      - columnId: home-location---latitude
+        columnName: HomeLocation/~/Latitude
+        dataType: float64
+      - columnId: home-location---longitude
+        columnName: HomeLocation/~/Longitude
+        dataType: float64
+      - columnId: home-location---name
+        columnName: HomeLocation/~/Name
+        dataType: string
+      - columnId: home-location---phone
+        columnName: HomeLocation/~/Phone
+        dataType: string
+      - columnId: home-location---phone-extension
+        columnName: HomeLocation/~/PhoneExtension
+        dataType: string
+      - columnId: home-location---postal-code
+        columnName: HomeLocation/~/PostalCode
+        dataType: string
+      - columnId: home-location---site-id
+        columnName: HomeLocation/~/SiteID
+        dataType: int32
+      - columnId: home-location---state-prov-code
+        columnName: HomeLocation/~/StateProvCode
+        dataType: string
+      - columnId: home-location---tax1
+        columnName: HomeLocation/~/Tax1
+        dataType: float64
+      - columnId: home-location---tax2
+        columnName: HomeLocation/~/Tax2
+        dataType: float64
+      - columnId: home-location---tax3
+        columnName: HomeLocation/~/Tax3
+        dataType: float64
+      - columnId: home-location---tax4
+        columnName: HomeLocation/~/Tax4
+        dataType: float64
+      - columnId: home-location---tax5
+        columnName: HomeLocation/~/Tax5
+        dataType: float64
+      - columnId: home-location---total-number-of-ratings
+        columnName: HomeLocation/~/TotalNumberOfRatings
+        dataType: int32
+      - columnId: home-location---average-rating
+        columnName: HomeLocation/~/AverageRating
+        dataType: float64
+      - columnId: home-location---total-number-of-deals
+        columnName: HomeLocation/~/TotalNumberOfDeals
+        dataType: int32
+      - columnId: locker-number
+        columnName: LockerNumber
+        dataType: int32
+      - columnId: "push-to-mbo"
+        columnName: "MBO Push"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Push to MBO",
+              "theme": "blue"
+            }
+      - columnId: "mbo-push-status"
+        columnName: "MBO push Status"
+        dataType: string
+      - columnId: "mbo-sync-timestamp"
+        columnName: "MBO pushed at"
+        dataType: string

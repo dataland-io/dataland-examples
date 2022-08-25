@@ -15,7 +15,28 @@ import {
 } from "./constants";
 
 type ParsedClient = Record<string, Scalar>;
-//
+
+const parseValue = (k: string, v: Scalar) => {
+  // NOTE(gab): docs says it's a string but APPARENTLY can be 0.
+  if (k === "MobileProvider" && typeof v === "number") {
+    if (v === 0) {
+      return null;
+    }
+    console.error("Import - MobileProvider is of the wrong data type", {
+      MobileProvider: v,
+    });
+  }
+
+  if (v === "null") {
+    return null;
+  }
+
+  if (typeof v === "object") {
+    return JSON.stringify(v);
+  }
+  return v;
+};
+
 const fetchData = async () => {
   const myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
@@ -42,18 +63,19 @@ const fetchData = async () => {
     return;
   }
 
-  const fieldNames: Set<string> = new Set();
+  const columnNames: Set<string> = new Set();
   for (const client of clients) {
     for (const key in client) {
       const v = client[key];
 
       if (!Array.isArray(v) && typeof v === "object") {
-        for (const key2 in client) {
-          fieldNames.add(`${key}/~/${key2}`);
+        for (const key2 in v) {
+          columnNames.add(`${key}/~/${key2}`);
         }
+        continue;
       }
 
-      fieldNames.add(key);
+      columnNames.add(key);
     }
   }
 
@@ -71,24 +93,15 @@ const fetchData = async () => {
       if (typeof value === "object") {
         for (const valueKey in value) {
           const key2 = `${key}/~/${valueKey}`;
-
-          const val2 = value[valueKey];
-          const val = (() => {
-            if (typeof val2 === "object") {
-              return JSON.stringify(val2);
-            }
-            return val2;
-          })();
-
-          parsedClient[key2] = val;
+          parsedClient[key2] = parseValue(key2, value[valueKey]);
         }
         continue;
       }
 
-      parsedClient[key] = value;
+      parsedClient[key] = parseValue(key, value);
     }
 
-    for (const columnName of fieldNames) {
+    for (const columnName of columnNames) {
       if (columnName in parsedClient) {
         continue;
       }
@@ -102,10 +115,22 @@ const fetchData = async () => {
 };
 
 const cronHandler = async () => {
+  console.log("cron");
   const records = await fetchData();
   if (records == null) {
     return;
   }
+
+  const d: any = {};
+  records.forEach((record) => {
+    for (const k in record) {
+      const v = record[k];
+      if (v != null) {
+        d[k] = v;
+      }
+    }
+  });
+  console.log("TYPPPES", d);
 
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
@@ -114,15 +139,19 @@ const cronHandler = async () => {
     tableName: DATALAND_TABLE_NAME,
     arrowRecordBatches: [batch],
     identityColumnNames: [CLIENT_ID],
+    keepExtraColumns: true,
   };
 
-  await syncTables({
+  console.log("befoere sync");
+  const transaction = await syncTables({
     syncTables: [syncTable],
+
     transactionAnnotations: {
       [SYNC_TABLES_MARKER]: "true",
     },
   });
-  console.log("Sync done");
+  console.log("Sync done", transaction);
 };
 
+console.log("ref"); //
 registerCronHandler(cronHandler);
