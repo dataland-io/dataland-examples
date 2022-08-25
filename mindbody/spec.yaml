@@ -1,0 +1,30 @@
+moduleId: mindbody-module
+
+info:
+  title: Mindbody
+  description: Sync Mindbody into Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: icon.svg
+
+buildCommand: npm run build
+
+parameters:
+  - mindbody-api-key
+  - mindbody-authorization
+  - mindbody-site-id
+  - allow-writeback-boolean
+
+workers:
+  - workerId: mindbody-worker
+    scriptPath: dist/bundle.js
+    triggers:
+      cron:
+        cronExpression: "*/15 * * * * * *"
+      transaction: {}
+    env:
+      MINDBODY_API_KEY: mindbody-api-key
+      MINDBODY_AUTHORIZATION: mindbody-authorization
+      MINDBODY_SITE_ID: mindbody-site-id
+      ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
