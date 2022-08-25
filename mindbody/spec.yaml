@@ -28,10 +28,9 @@ workers:
       MINDBODY_AUTHORIZATION: mindbody-authorization
       MINDBODY_SITE_ID: mindbody-site-id
       ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
-
 tables:
-  - tableId: clients
-    tableName: clients
+  - tableId: clients-2
+    tableName: clients-2
     autoMigrate: true
     columnDescriptors:
       - columnId: id
@@ -60,7 +59,7 @@ tables:
         dataType: boolean
       - columnId: prospect-stage---id
         columnName: ProspectStage/~/Id
-        dataType: int32
+        dataType: int64
       - columnId: prospect-stage---description
         columnName: ProspectStage/~/Description
         dataType: string
@@ -126,13 +125,13 @@ tables:
         dataType: boolean
       - columnId: liability---released-by
         columnName: Liability/~/ReleasedBy
-        dataType: int32
+        dataType: int64
       - columnId: liability-release
         columnName: LiabilityRelease
         dataType: boolean
       - columnId: membership-icon
         columnName: MembershipIcon
-        dataType: int32
+        dataType: int64
       - columnId: notes
         columnName: Notes
         dataType: string
@@ -168,7 +167,7 @@ tables:
         dataType: string
       - columnId: unique-id
         columnName: UniqueId
-        dataType: int32
+        dataType: int64
       - columnId: last-modified-date-time
         columnName: LastModifiedDateTime
         dataType: string
@@ -267,7 +266,7 @@ tables:
         dataType: boolean
       - columnId: home-location---id
         columnName: HomeLocation/~/Id
-        dataType: int32
+        dataType: int64
       - columnId: home-location---latitude
         columnName: HomeLocation/~/Latitude
         dataType: float64
@@ -288,7 +287,7 @@ tables:
         dataType: string
       - columnId: home-location---site-id
         columnName: HomeLocation/~/SiteID
-        dataType: int32
+        dataType: int64
       - columnId: home-location---state-prov-code
         columnName: HomeLocation/~/StateProvCode
         dataType: string
@@ -309,19 +308,19 @@ tables:
         dataType: float64
       - columnId: home-location---total-number-of-ratings
         columnName: HomeLocation/~/TotalNumberOfRatings
-        dataType: int32
+        dataType: int64
       - columnId: home-location---average-rating
         columnName: HomeLocation/~/AverageRating
         dataType: float64
       - columnId: home-location---total-number-of-deals
         columnName: HomeLocation/~/TotalNumberOfDeals
-        dataType: int32
+        dataType: int64
       - columnId: locker-number
         columnName: LockerNumber
-        dataType: int32
+        dataType: int64
       - columnId: "push-to-mbo"
         columnName: "MBO Push"
-        dataType: int32
+        dataType: int64
         columnAnnotations:
           dataland.io/column-display-config: |
             {

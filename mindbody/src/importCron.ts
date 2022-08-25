@@ -53,11 +53,15 @@ const fetchData = async () => {
   let clients;
   try {
     const resp = await fetch(
-      "https://api.mindbodyonline.com/public/v6/client/clients?limit=10&offset=0",
+      "https://api.mindbodyonline.com/public/v6/client/clients?limit=1&offset=0",
       requestOptions
     );
     const res = await resp.json();
     clients = res.Clients;
+    if (clients == null) {
+      console.error("Clients is null for no reason?", res);
+      return;
+    }
   } catch (error) {
     console.error("Error fetching data", error);
     return;
@@ -110,7 +114,6 @@ const fetchData = async () => {
 
     parsedClients.push(parsedClient);
   }
-
   return parsedClients;
 };
 
@@ -130,7 +133,7 @@ const cronHandler = async () => {
       }
     }
   });
-  console.log("TYPPPES", d);
+  // console.log("TYPPPES", d);…
 
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
