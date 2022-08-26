@@ -38,36 +38,7 @@ const parseValue = (k: string, v: Scalar) => {
   return v;
 };
 
-const fetchData = async () => {
-  const myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/json");
-  myHeaders.append("API-Key", MINDBODY_API_KEY);
-  myHeaders.append("SiteId", MINDBODY_SITE_ID);
-  myHeaders.append("Authorization", MINDBODY_AUTHORIZATION);
-
-  const requestOptions: RequestInit = {
-    method: "GET",
-    headers: myHeaders,
-    redirect: "follow",
-  };
-
-  let clients;
-  try {
-    const resp = await fetch(
-      "https://api.mindbodyonline.com/public/v6/client/clients?limit=5&offset=0",
-      requestOptions
-    );
-    const res = await resp.json();
-    clients = res.Clients;
-    if (clients == null) {
-      console.error("Clients is null for no reason?", res);
-      return;
-    }
-  } catch (error) {
-    console.error("Error fetching data", error);
-    return;
-  }
-
+export const parseClients = (clients: Record<string, any>[]) => {
   const columnNames: Set<string> = new Set();
   for (const client of clients) {
     for (const key in client) {
@@ -116,10 +87,46 @@ const fetchData = async () => {
   }
   return parsedClients;
 };
+export const fetchClients = async (opts?: { clientId?: string }) => {
+  const myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/json");
+  myHeaders.append("API-Key", MINDBODY_API_KEY);
+  myHeaders.append("SiteId", MINDBODY_SITE_ID);
+  myHeaders.append("Authorization", MINDBODY_AUTHORIZATION);
+
+  let url =
+    "https://api.mindbodyonline.com/public/v6/client/clients?limit=5&offset=0";
+  const clientId = opts?.clientId;
+  if (clientId != null) {
+    url = `${url}?clientIDs=${clientId}`;
+  }
+
+  const requestOptions: RequestInit = {
+    method: "GET",
+    headers: myHeaders,
+    redirect: "follow",
+  };
+
+  let clients;
+  try {
+    const resp = await fetch(url, requestOptions);
+    const res = await resp.json();
+    clients = res.Clients;
+    if (clients == null) {
+      console.error("Clients is null for no reason?", res);
+      return;
+    }
+  } catch (error) {
+    console.error("Error fetching data", error);
+    return;
+  }
+
+  return parseClients(clients);
+};
 
 const cronHandler = async () => {
   console.log("cron");
-  const records = await fetchData();
+  const records = await fetchClients();
   if (records == null) {
     return;
   }

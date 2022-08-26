@@ -8,8 +8,10 @@ import {
   registerTransactionHandler,
   Mutation,
   runMutations,
+  wait,
 } from "@dataland-io/dataland-sdk-worker";
 import { DATALAND_CLIENTS_TABLE_NAME } from "./constants";
+import { fetchClients, parseClients } from "./importCron";
 import { postUpdateClient } from "./writeBack";
 
 const transactionHandler = async (transaction: Transaction) => {
@@ -33,6 +35,7 @@ const transactionHandler = async (transaction: Transaction) => {
   );
 
   if (affectedRows.size === 0) {
+    console.log("ignoring transactions");
     return;
   }
 
@@ -53,22 +56,37 @@ const transactionHandler = async (transaction: Transaction) => {
 
   const mutations: Mutation[] = [];
   for (const row of rows) {
-    const { _dataland_key, _dataland_ordinal, ...mindBodyRow } = row;
-    const respText = await postUpdateClient(mindBodyRow);
+    const {
+      _dataland_key,
+      _dataland_ordinal,
+      "MBO push status": _1,
+      "MBO pushed at": _2,
+      "MBO push": _3,
+      ...mindBodyRow
+    } = row;
+    const key = _dataland_key as number;
 
-    const values: Record<string, string> = {
-      "MBO push status": respText,
+    const resp = await postUpdateClient(mindBodyRow);
+    const values: Record<string, Scalar> = {
+      "MBO push status": resp.message,
+      "MBO pushed at": new Date().toISOString(),
     };
-    if (!respText.startsWith("500")) {
-      values["MBO pushed at"] = new Date().toISOString();
+
+    const client = resp.client;
+    if (client != null) {
+      const parsedClient = parseClients([client])[0]!;
+      for (const clientKey in parsedClient) {
+        const clientValue = parsedClient[clientKey];
+        values[clientKey] = clientValue;
+      }
     }
 
-    const key = row["_dataland_key"] as number;
     const mutation = schema.makeUpdateRows(
       DATALAND_CLIENTS_TABLE_NAME,
       key,
       values
     );
+
     mutations.push(mutation);
   }
 
