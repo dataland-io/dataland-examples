@@ -6,7 +6,7 @@ info:
   author: Dataland Devs <devs@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
   readmePath: README.md
-  iconPath: icon.svg
+  iconPath: otf-icon.svg
 
 buildCommand: npm run build
 
@@ -47,6 +47,38 @@ tables:
       - columnId: status
         columnName: Status
         dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "Suspended",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "Terminated",
+                  "theme": "ruby"
+                },                
+                {
+                  "value": "Non-Member",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "Expired",
+                  "theme": "silver"
+                },      
+                {
+                  "value": "Declined",
+                  "theme": "silver"
+                },                                
+                {
+                  "value": "Active",
+                  "theme": "green"
+                }
+              ]
+            }
+
       - columnId: email
         columnName: Email
         dataType: string
@@ -56,9 +88,21 @@ tables:
       - columnId: is-prospect
         columnName: IsProspect
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: prospect-stage---active
         columnName: ProspectStage/~/Active
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: prospect-stage---id
         columnName: ProspectStage/~/Id
         dataType: float64
@@ -119,18 +163,36 @@ tables:
       - columnId: is-company
         columnName: IsCompany
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: liability---agreement-date
         columnName: Liability/~/AgreementDate
         dataType: string
       - columnId: liability---is-released
         columnName: Liability/~/IsReleased
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: liability---released-by
         columnName: Liability/~/ReleasedBy
         dataType: float64
       - columnId: liability-release
         columnName: LiabilityRelease
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: membership-icon
         columnName: MembershipIcon
         dataType: float64
@@ -140,27 +202,69 @@ tables:
       - columnId: send-account-emails
         columnName: SendAccountEmails
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: send-account-texts
         columnName: SendAccountTexts
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: send-promotional-emails
         columnName: SendPromotionalEmails
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: send-promotional-texts
         columnName: SendPromotionalTexts
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: send-schedule-emails
         columnName: SendScheduleEmails
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: send-schedule-texts
         columnName: SendScheduleTexts
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: state
         columnName: State
         dataType: string
       - columnId: suspension-info---booking-suspended
         columnName: SuspensionInfo/~/BookingSuspended
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: suspension-info---suspension-start-date
         columnName: SuspensionInfo/~/SuspensionStartDate
         dataType: string
@@ -236,6 +340,12 @@ tables:
       - columnId: active
         columnName: Active
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: sales-reps
         columnName: SalesReps
         dataType: string
@@ -266,6 +376,12 @@ tables:
       - columnId: home-location---has-classes
         columnName: HomeLocation/~/HasClasses
         dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
       - columnId: home-location---id
         columnName: HomeLocation/~/Id
         dataType: float64

@@ -1,17 +1,34 @@
-# Quickstart Example
+# Overview
 
-```sh
-npm install
-dataland deploy
-```
+Use Dataland as an admin panel into Orangetheory's members and leads, synced from Mindbody.
 
-The starting state of the quickstart example in the Dataland Docs:
-<https://docs.dataland.io/quickstart.html>
+See views like:
 
-This is the "Hello world" of Dataland. It consists of the following constructs:
+- Clients with the lowest account balance by location
+- Prospective members who haven't signed a liability release
 
-- A "greetings" table which has two columns - "name" and "greeting".
-- A "hello" worker which will write `Hello, {name}!` to the greeting column for every row in the table.
+Update client information like:
 
-For example, if a row is added with "world" as the name,
-the hello worker will respond by writing "Hello, world!" to the greeting column.
+- Prospect stage and member status
+- Contact information or preferences
+- Liability release
+- Credit card
+- Home location
+
+## Tables
+
+This module replicates the following objects from Mindbody into Dataland as tables:
+
+| Tables  | Sync schedule | Mindbody Documentation                                    |
+| ------- | ------------- | --------------------------------------------------------- |
+| clients | Every 15 mins | [Customers](https://stripe.com/docs/api/customers/object) |
+
+## Parameter setup
+
+| Name                               | About                                                                                                                        |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `mindbody-api-key`                 | A Mindbody API key                                                                                                           |
+| `mindbody-authorization`           | A Mindbody staff authorization token                                                                                         |
+| `mindbody-site-id`                 | A Mindbody site ID                                                                                                           |
+| `dataland-clients-table-name`      | The name of the output table in Dataland                                                                                     |
+| `mindbody-allow-writeback-boolean` | If `true`, row updates in Dataland will attempt writebacks to your Mindbody instance. If `false`, no writeback is attempted. |
