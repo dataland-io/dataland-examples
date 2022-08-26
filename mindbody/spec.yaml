@@ -6,7 +6,7 @@ info:
   author: Dataland Devs <devs@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
   readmePath: README.md
-  iconPath: icon.svg
+  iconPath: otf-icon.svg
 
 buildCommand: npm run build
 
