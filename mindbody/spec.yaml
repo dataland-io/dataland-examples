@@ -47,6 +47,38 @@ tables:
       - columnId: status
         columnName: Status
         dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "Suspended",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "Terminated",
+                  "theme": "ruby"
+                },                
+                {
+                  "value": "Non-Member",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "Expired",
+                  "theme": "silver"
+                },      
+                {
+                  "value": "Declined",
+                  "theme": "silver"
+                },                                
+                {
+                  "value": "Active",
+                  "theme": "green"
+                }
+              ]
+            }
+
       - columnId: email
         columnName: Email
         dataType: string
