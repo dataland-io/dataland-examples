@@ -9,7 +9,7 @@ import {
   Uuid,
 } from "@dataland-io/dataland-sdk-worker";
 import {
-  ALLOW_WRITEBACK_BOOLEAN,
+  MINDBODY_ALLOW_WRITEBACK_BOOLEAN,
   CLIENT_ID,
   DATALAND_CLIENTS_TABLE_NAME,
   MINDBODY_API_KEY,
@@ -18,7 +18,14 @@ import {
   SYNC_TABLES_MARKER,
 } from "./constants";
 
-export const postUpdateClient = async (client: Record<string, any>) => {
+interface PostUpdateClientResponse {
+  ok: boolean;
+  message: string;
+  client?: Record<string, any>;
+}
+export const postUpdateClient = async (
+  client: Record<string, any>
+): Promise<PostUpdateClientResponse> => {
   console.log("Updating new client with:", client);
   const myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
@@ -47,146 +54,23 @@ export const postUpdateClient = async (client: Record<string, any>) => {
     );
     const json = await resp.json();
     console.log("Success response from MBO:", json);
-    return `${resp.status}: ${resp.statusText}`;
-  } catch (e) {
-    return `500: Error`;
-  }
-};
-
-const insertRowsWriteback = async (
-  mutation: Extract<Mutation, { kind: "insert_rows" }>,
-  schema: Schema,
-  columnNameMap: Record<Uuid, string>,
-  recordIdMap: Record<number, string>
-) => {
-  const createRows: { fields: any }[] = [];
-  const { rows, columnMapping } = mutation.value;
-
-  for (let i = 0; i < rows.length; i++) {
-    const createRow: any = {};
-    const { values } = rows[i]!;
-
-    for (let j = 0; j < values.length; j++) {
-      const taggedScalar = values[j];
-      const columnUuid = columnMapping[j]!;
-      const columnName = columnNameMap[columnUuid];
-      if (columnName == null) {
-        console.error("Writeback - Could not find column name by column uuid", {
-          columnUuid,
-        });
-        continue;
-      }
-      if (columnName === "_dataland_ordinal") {
-        continue;
-      }
-
-      createRow[columnName] = taggedScalar?.value;
-    }
-
-    createRows.push({ fields: createRow });
-  }
-
-  if (createRows.length === 0) {
-    return;
-  }
-};
-
-const updateRowsWriteback = async (
-  mutation: Extract<Mutation, { kind: "update_rows" }>,
-  columnNameMap: Record<Uuid, string>,
-  clientIdMap: Record<number, string>
-) => {
-  console.log("Handling mutation:", mutation);
-  const { rows, columnMapping } = mutation.value;
-  for (let i = 0; i < rows.length; i++) {
-    const updateClient: Record<string, any> = {};
-    const { key, values } = rows[i]!;
-
-    for (let j = 0; j < values.length; j++) {
-      const taggedScalar = values[j];
-      const columnUuid = columnMapping[j]!;
-      const columnName = columnNameMap[columnUuid];
-      if (columnName == null) {
-        console.error("Writeback - Could not find column name by column uuid", {
-          columnUuid,
-        });
-        continue;
-      }
-
-      if (columnName === "_dataland_ordinal") {
-        continue;
-      }
-
-      const value = taggedScalar?.value ?? null;
-      const parsedValue = (() => {
-        if (typeof value !== "string") {
-          return value;
-        }
-        const isObject = value.startsWith("{") && value.endsWith("}");
-        const isArray = value.startsWith("[") && value.endsWith("]");
-
-        if (isObject || isArray) {
-          try {
-            return JSON.parse(value);
-          } catch (e) {
-            console.error("Writeback - Failed to parse to JSON", { value });
-          }
-        }
-        return value;
-      })();
-
-      if (columnName.includes("/~/")) {
-        const [parentPropertyKey, propertyKey] = columnName.split("/~/");
-
-        let parentProperty = updateClient[parentPropertyKey];
-        if (parentProperty == null) {
-          parentProperty = {};
-        }
-        parentProperty[propertyKey] = parsedValue;
-
-        updateClient[parentPropertyKey] = parentProperty;
-      } else {
-        updateClient[columnName] = parsedValue;
-      }
-    }
-
-    const updateClient2: any = {
-      ClientCreditCard: {
-        CardHolder: "Mark alskdjf",
-        CardType: "Visa",
-        CardNumber: "2221007699753343",
-        ExpMonth: "11",
-        ExpYear: "2031",
-      },
+    return {
+      ok: resp.ok,
+      message: `${resp.status}: ${resp.statusText}`,
+      client: json.Client,
     };
-    updateClient[CLIENT_ID] = clientIdMap[key];
-
-    await postUpdateClient(updateClient);
-  }
-};
-
-const deleteRowsWriteback = async (
-  mutation: Extract<Mutation, { kind: "delete_rows" }>,
-  recordIdMap: Record<number, string>
-) => {
-  const deleteRows: string[] = [];
-  for (let i = 0; i < mutation.value.keys.length; i++) {
-    const key = mutation.value.keys[i]!;
-    const recordId = recordIdMap[key];
-    if (recordId == null) {
-      console.error("Writeback - Could not find record id by dataland key", {
-        key,
-      });
-      continue;
+  } catch (e) {
+    if (e instanceof Error) {
+      return {
+        ok: false,
+        message: `Updating Client Error: ${e.name} - ${e.message}`,
+      };
     }
-
-    deleteRows.push(recordId);
+    return {
+      ok: false,
+      message: `UUpdating Client Error: Unexpected error - ${e}`,
+    };
   }
-
-  if (deleteRows.length === 0) {
-    return;
-  }
-  // await airtableDestroyRows(airtableTable, deleteRows);
 };
 
 const transactionHandler = async (transaction: Transaction) => {
@@ -264,13 +148,16 @@ const transactionHandler = async (transaction: Transaction) => {
   }
 };
 
-if (ALLOW_WRITEBACK_BOOLEAN !== "true" && ALLOW_WRITEBACK_BOOLEAN !== "false") {
+if (
+  MINDBODY_ALLOW_WRITEBACK_BOOLEAN !== "true" &&
+  MINDBODY_ALLOW_WRITEBACK_BOOLEAN !== "false"
+) {
   console.error(
-    `Writeback - 'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
+    `Writeback - 'ALLOW_WRITEBACK_BOOLEAN' invalid value '${MINDBODY_ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
   );
 }
 
-if (ALLOW_WRITEBACK_BOOLEAN === "true") {
+if (MINDBODY_ALLOW_WRITEBACK_BOOLEAN === "true") {
   registerTransactionHandler(transactionHandler, {
     filterTransactions: "handle-all",
   });

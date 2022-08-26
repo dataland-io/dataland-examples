@@ -14,8 +14,8 @@ parameters:
   - mindbody-api-key
   - mindbody-authorization
   - mindbody-site-id
+  - mindbody-allow-writeback-boolean
   - dataland-clients-table-name
-  - allow-writeback-boolean
 
 workers:
   - workerId: mindbody-worker
@@ -28,8 +28,8 @@ workers:
       MINDBODY_API_KEY: mindbody-api-key
       MINDBODY_AUTHORIZATION: mindbody-authorization
       MINDBODY_SITE_ID: mindbody-site-id
+      MINDBODY_ALLOW_WRITEBACK_BOOLEAN: mindbody-allow-writeback-boolean
       DATALAND_CLIENTS_TABLE_NAME: dataland-clients-table-name
-      ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
 tables:
   - tableId: clients-3
     tableName: clients-3
@@ -320,7 +320,7 @@ tables:
       - columnId: locker-number
         columnName: LockerNumber
         dataType: string
-      - columnId: "push-to-mbo"
+      - columnId: "mbo-push"
         columnName: "MBO Push"
         dataType: int32
         columnAnnotations:
@@ -333,6 +333,6 @@ tables:
       - columnId: "mbo-push-status"
         columnName: "MBO push status"
         dataType: string
-      - columnId: "mbo-sync-timestamp"
+      - columnId: "mbo-pushed-at"
         columnName: "MBO pushed at"
         dataType: string
