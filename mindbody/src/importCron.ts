@@ -7,7 +7,7 @@ import {
 } from "@dataland-io/dataland-sdk-worker";
 import {
   CLIENT_ID,
-  DATALAND_TABLE_NAME,
+  DATALAND_CLIENTS_TABLE_NAME,
   MINDBODY_API_KEY,
   MINDBODY_AUTHORIZATION,
   MINDBODY_SITE_ID,
@@ -17,17 +17,18 @@ import {
 type ParsedClient = Record<string, Scalar>;
 
 const parseValue = (k: string, v: Scalar) => {
-  // NOTE(gab): docs says it's a string but APPARENTLY can be 0.
-  if (k === "MobileProvider" && typeof v === "number") {
-    if (v === 0) {
-      return null;
-    }
-    console.error("Import - MobileProvider is of the wrong data type", {
-      MobileProvider: v,
-    });
+  if (v == null) {
+    return v;
   }
 
-  if (v === "null") {
+  // NOTE(gab): docs says it's a string but have only seen numbers. adding check to make sure
+  if (k === "MobileProvider" && typeof v !== "number") {
+    console.error(
+      "Import - MobileProvider is the wrong data type, should be a number",
+      {
+        MobileProvider: v,
+      }
+    );
     return null;
   }
 
@@ -53,7 +54,7 @@ const fetchData = async () => {
   let clients;
   try {
     const resp = await fetch(
-      "https://api.mindbodyonline.com/public/v6/client/clients?limit=1&offset=0",
+      "https://api.mindbodyonline.com/public/v6/client/clients?limit=5&offset=0",
       requestOptions
     );
     const res = await resp.json();
@@ -101,7 +102,6 @@ const fetchData = async () => {
         }
         continue;
       }
-
       parsedClient[key] = parseValue(key, value);
     }
 
@@ -128,18 +128,19 @@ const cronHandler = async () => {
   records.forEach((record) => {
     for (const k in record) {
       const v = record[k];
-      if (v != null) {
-        d[k] = v;
+      if (d[k] == null) {
+        d[k] = [];
       }
+      d[k].push({ v });
     }
   });
-  // console.log("TYPPPES", d);…
+  // console.log("TYPPPES", d);
 
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
 
   const syncTable: SyncTable = {
-    tableName: DATALAND_TABLE_NAME,
+    tableName: DATALAND_CLIENTS_TABLE_NAME,
     arrowRecordBatches: [batch],
     identityColumnNames: [CLIENT_ID],
     keepExtraColumns: true,
@@ -153,8 +154,7 @@ const cronHandler = async () => {
       [SYNC_TABLES_MARKER]: "true",
     },
   });
-  console.log("Sync done", transaction);
 };
 
-console.log("ref"); //
+console.log("ref");
 registerCronHandler(cronHandler);

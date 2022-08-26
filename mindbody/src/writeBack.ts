@@ -11,25 +11,14 @@ import {
 import {
   ALLOW_WRITEBACK_BOOLEAN,
   CLIENT_ID,
-  DATALAND_TABLE_NAME,
+  DATALAND_CLIENTS_TABLE_NAME,
   MINDBODY_API_KEY,
   MINDBODY_AUTHORIZATION,
   MINDBODY_SITE_ID,
   SYNC_TABLES_MARKER,
 } from "./constants";
 
-const AIRTABLE_MAX_UPDATES = 10;
-const chunkAirtablePayload = <T>(payload: T[]) => {
-  const chunks: T[][] = [];
-
-  for (let i = 0; i < payload.length; i += AIRTABLE_MAX_UPDATES) {
-    const chunk = payload.slice(i, i + AIRTABLE_MAX_UPDATES);
-    chunks.push(chunk);
-  }
-  return chunks;
-};
-
-const postUpdateClient = async (client: Record<string, any>) => {
+export const postUpdateClient = async (client: Record<string, any>) => {
   console.log("Updating new client with:", client);
   const myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
@@ -58,8 +47,9 @@ const postUpdateClient = async (client: Record<string, any>) => {
     );
     const json = await resp.json();
     console.log("Success response from MBO:", json);
+    return `${resp.status}: ${resp.statusText}`;
   } catch (e) {
-    console.error("failed to update client", e);
+    return `500: Error`;
   }
 };
 
@@ -215,7 +205,7 @@ const transactionHandler = async (transaction: Transaction) => {
 
   const response = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp - 1,
-    sqlQuery: `select "_dataland_key", "${CLIENT_ID}" from "${DATALAND_TABLE_NAME}"`,
+    sqlQuery: `select "_dataland_key", "${CLIENT_ID}" from "${DATALAND_CLIENTS_TABLE_NAME}"`,
   });
   const rows = unpackRows(response);
 
@@ -223,15 +213,14 @@ const transactionHandler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp - 1,
   });
   const tableDescriptor = tableDescriptors.find(
-    (descriptor) => descriptor.tableName === DATALAND_TABLE_NAME
+    (descriptor) => descriptor.tableName === DATALAND_CLIENTS_TABLE_NAME
   );
   if (tableDescriptor == null) {
     console.error("Writeback - Could not find table descriptor by table name", {
-      tableName: DATALAND_TABLE_NAME,
+      tableName: DATALAND_CLIENTS_TABLE_NAME,
     });
     return;
   }
-  const schema = new Schema(tableDescriptors);
 
   const clientIdMap: Record<number, string> = {};
   for (const row of rows) {
@@ -264,7 +253,7 @@ const transactionHandler = async (transaction: Transaction) => {
         break;
       }
       case "update_rows": {
-        await updateRowsWriteback(mutation, columnNameMap, clientIdMap);
+        // await updateRowsWriteback(mutation, columnNameMap, clientIdMap);
         break;
       }
       case "delete_rows": {

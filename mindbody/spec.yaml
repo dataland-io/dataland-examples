@@ -14,23 +14,25 @@ parameters:
   - mindbody-api-key
   - mindbody-authorization
   - mindbody-site-id
+  - dataland-clients-table-name
   - allow-writeback-boolean
 
 workers:
   - workerId: mindbody-worker
     scriptPath: dist/bundle.js
     triggers:
-      cron:
-        cronExpression: "*/15 * * * * * *"
+      # cron:
+      #   cronExpression: "*/15 * * * * * *"
       transaction: {}
     env:
       MINDBODY_API_KEY: mindbody-api-key
       MINDBODY_AUTHORIZATION: mindbody-authorization
       MINDBODY_SITE_ID: mindbody-site-id
+      DATALAND_CLIENTS_TABLE_NAME: dataland-clients-table-name
       ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
 tables:
-  - tableId: clients-2
-    tableName: clients-2
+  - tableId: clients-3
+    tableName: clients-3
     autoMigrate: true
     columnDescriptors:
       - columnId: id
@@ -59,7 +61,7 @@ tables:
         dataType: boolean
       - columnId: prospect-stage---id
         columnName: ProspectStage/~/Id
-        dataType: int64
+        dataType: float64
       - columnId: prospect-stage---description
         columnName: ProspectStage/~/Description
         dataType: string
@@ -125,13 +127,13 @@ tables:
         dataType: boolean
       - columnId: liability---released-by
         columnName: Liability/~/ReleasedBy
-        dataType: int64
+        dataType: float64
       - columnId: liability-release
         columnName: LiabilityRelease
         dataType: boolean
       - columnId: membership-icon
         columnName: MembershipIcon
-        dataType: int64
+        dataType: float64
       - columnId: notes
         columnName: Notes
         dataType: string
@@ -167,7 +169,7 @@ tables:
         dataType: string
       - columnId: unique-id
         columnName: UniqueId
-        dataType: int64
+        dataType: float64
       - columnId: last-modified-date-time
         columnName: LastModifiedDateTime
         dataType: string
@@ -182,7 +184,7 @@ tables:
         dataType: string
       - columnId: mobile-provider
         columnName: MobileProvider
-        dataType: string
+        dataType: float64 # NOTE(gab): it says string in the docs, but apparently it is not.
       - columnId: home-phone
         columnName: HomePhone
         dataType: string
@@ -266,7 +268,7 @@ tables:
         dataType: boolean
       - columnId: home-location---id
         columnName: HomeLocation/~/Id
-        dataType: int64
+        dataType: float64
       - columnId: home-location---latitude
         columnName: HomeLocation/~/Latitude
         dataType: float64
@@ -287,7 +289,7 @@ tables:
         dataType: string
       - columnId: home-location---site-id
         columnName: HomeLocation/~/SiteID
-        dataType: int64
+        dataType: float64
       - columnId: home-location---state-prov-code
         columnName: HomeLocation/~/StateProvCode
         dataType: string
@@ -308,28 +310,28 @@ tables:
         dataType: float64
       - columnId: home-location---total-number-of-ratings
         columnName: HomeLocation/~/TotalNumberOfRatings
-        dataType: int64
+        dataType: float64
       - columnId: home-location---average-rating
         columnName: HomeLocation/~/AverageRating
         dataType: float64
       - columnId: home-location---total-number-of-deals
         columnName: HomeLocation/~/TotalNumberOfDeals
-        dataType: int64
+        dataType: float64
       - columnId: locker-number
         columnName: LockerNumber
-        dataType: int64
+        dataType: string
       - columnId: "push-to-mbo"
         columnName: "MBO Push"
-        dataType: int64
+        dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
             {
               "type": "button",
-              "label": "Push to MBO",
+              "label": "MBO Push",
               "theme": "blue"
             }
       - columnId: "mbo-push-status"
-        columnName: "MBO push Status"
+        columnName: "MBO push status"
         dataType: string
       - columnId: "mbo-sync-timestamp"
         columnName: "MBO pushed at"
