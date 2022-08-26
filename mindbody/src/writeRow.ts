@@ -62,11 +62,46 @@ const transactionHandler = async (transaction: Transaction) => {
       "MBO push status": _1,
       "MBO pushed at": _2,
       "MBO push": _3,
-      ...mindBodyRow
+      ...mbRow
     } = row;
     const key = _dataland_key as number;
 
-    const resp = await postUpdateClient(mindBodyRow);
+    const cli: any = {};
+    for (const columnName in mbRow) {
+      const value = mbRow[columnName];
+      const parsedValue = (() => {
+        if (typeof value !== "string") {
+          return value;
+        }
+        const isObject = value.startsWith("{") && value.endsWith("}");
+        const isArray = value.startsWith("[") && value.endsWith("]");
+
+        if (isObject || isArray) {
+          try {
+            return JSON.parse(value);
+          } catch (e) {
+            console.error("Writeback - Failed to parse to JSON", { value });
+          }
+        }
+        return value;
+      })();
+
+      if (columnName.includes("/~/")) {
+        const [parentPropertyKey, propertyKey] = columnName.split("/~/");
+
+        let parentProperty = cli[parentPropertyKey];
+        if (parentProperty == null) {
+          parentProperty = {};
+        }
+        parentProperty[propertyKey] = parsedValue;
+
+        cli[parentPropertyKey] = parentProperty;
+      } else {
+        cli[columnName] = parsedValue;
+      }
+    }
+
+    const resp = await postUpdateClient(cli);
     const values: Record<string, Scalar> = {
       "MBO push status": resp.message,
       "MBO pushed at": new Date().toISOString(),

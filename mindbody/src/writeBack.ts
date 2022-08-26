@@ -162,3 +162,77 @@ if (MINDBODY_ALLOW_WRITEBACK_BOOLEAN === "true") {
     filterTransactions: "handle-all",
   });
 }
+
+const updateRowsWriteback = async (
+  mutation: Extract<Mutation, { kind: "update_rows" }>,
+  columnNameMap: Record<Uuid, string>,
+  clientIdMap: Record<number, string>
+) => {
+  console.log("Handling mutation:", mutation);
+  const { rows, columnMapping } = mutation.value;
+  for (let i = 0; i < rows.length; i++) {
+    const updateClient: Record<string, any> = {};
+    const { key, values } = rows[i]!;
+
+    for (let j = 0; j < values.length; j++) {
+      const taggedScalar = values[j];
+      const columnUuid = columnMapping[j]!;
+      const columnName = columnNameMap[columnUuid];
+      if (columnName == null) {
+        console.error("Writeback - Could not find column name by column uuid", {
+          columnUuid,
+        });
+        continue;
+      }
+
+      if (columnName === "_dataland_ordinal") {
+        continue;
+      }
+
+      const value = taggedScalar?.value ?? null;
+      const parsedValue = (() => {
+        if (typeof value !== "string") {
+          return value;
+        }
+        const isObject = value.startsWith("{") && value.endsWith("}");
+        const isArray = value.startsWith("[") && value.endsWith("]");
+
+        if (isObject || isArray) {
+          try {
+            return JSON.parse(value);
+          } catch (e) {
+            console.error("Writeback - Failed to parse to JSON", { value });
+          }
+        }
+        return value;
+      })();
+
+      if (columnName.includes("/~/")) {
+        const [parentPropertyKey, propertyKey] = columnName.split("/~/");
+
+        let parentProperty = updateClient[parentPropertyKey];
+        if (parentProperty == null) {
+          parentProperty = {};
+        }
+        parentProperty[propertyKey] = parsedValue;
+
+        updateClient[parentPropertyKey] = parentProperty;
+      } else {
+        updateClient[columnName] = parsedValue;
+      }
+    }
+
+    const updateClient2: any = {
+      ClientCreditCard: {
+        CardHolder: "Mark alskdjf",
+        CardType: "Visa",
+        CardNumber: "2221007699753343",
+        ExpMonth: "11",
+        ExpYear: "2031",
+      },
+    };
+    updateClient[CLIENT_ID] = clientIdMap[key];
+
+    await postUpdateClient(updateClient);
+  }
+};
