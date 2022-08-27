@@ -8,7 +8,6 @@ import {
   registerTransactionHandler,
   Mutation,
   runMutations,
-  wait,
 } from "@dataland-io/dataland-sdk-worker";
 import { clientPostT } from "./client";
 import { DATALAND_CLIENTS_TABLE_NAME } from "./constants";
@@ -16,24 +15,11 @@ import { parseClients } from "./importCron";
 import { postUpdateClient } from "./writeBack";
 
 const transactionHandler = async (transaction: Transaction) => {
-  const t = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp - 1,
-    sqlQuery: `select * from "test"`,
-  });
-  const r = unpackRows(t);
-  console.log(r);
-
   const { tableDescriptors } = await getCatalogSnapshot({
     logicalTimestamp: transaction.logicalTimestamp - 1,
   });
 
   const schema = new Schema(tableDescriptors);
-
-  const mutation = schema.makeInsertRows(DATALAND_CLIENTS_TABLE_NAME, 2, {
-    number1: 1,
-    number2: 2,
-  });
-  await runMutations({ mutations: [mutation] });
 
   const affectedRows: Map<number, Scalar> = schema.getAffectedRows(
     DATALAND_CLIENTS_TABLE_NAME,
@@ -73,7 +59,7 @@ const transactionHandler = async (transaction: Transaction) => {
     } = row;
     const key = _dataland_key as number;
 
-    const cli: any = {};
+    const updateClient: any = {};
     for (const columnName in mbRow) {
       const value = mbRow[columnName];
       const parsedValue = (() => {
@@ -101,28 +87,28 @@ const transactionHandler = async (transaction: Transaction) => {
       if (columnName.includes("/~/")) {
         const [parentPropertyKey, propertyKey] = columnName.split("/~/");
 
-        let parentProperty = cli[parentPropertyKey];
+        let parentProperty = updateClient[parentPropertyKey];
         if (parentProperty == null) {
           parentProperty = {};
         }
         parentProperty[propertyKey] = parsedValue;
 
-        cli[parentPropertyKey] = parentProperty;
+        updateClient[parentPropertyKey] = parentProperty;
       } else {
-        cli[columnName] = parsedValue;
+        updateClient[columnName] = parsedValue;
       }
     }
 
     const values: Record<string, Scalar> = {};
 
-    console.log("CLII", cli);
-    const postClient = clientPostT.safeParse(cli);
+    const postClient = clientPostT.safeParse(updateClient);
     if (postClient.success === true) {
       const resp = await postUpdateClient(postClient.data);
 
       const client = resp.client;
       if (client != null) {
         console.log("BEFORE PARSED CLIENT", client);
+        // TODO(gab): handle incorrect data types being returned from  parseClients
         const parsedClient = parseClients([client])[0]!;
         console.log("PARSED CLIENT", parsedClient);
         for (const clientKey in parsedClient) {

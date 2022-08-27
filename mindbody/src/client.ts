@@ -70,7 +70,7 @@ const clientReadOnlyT = z.object({
       Address: z.string().nullable(),
       CardHolder: z.string().nullable(),
       CardNumber: z.string(),
-      CardType: z.string(),
+      CardType: z.string().nullable(),
       City: z.string().nullable(),
       ExpMonth: z.string(),
       ExpYear: z.string(),

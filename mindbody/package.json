@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "@dataland-io/dataland-sdk-worker": "0.15.0",
-    "zod": "^3.18.0"
+    "fetch-retry-ts": "1.1.25",
+    "zod": "3.18.0"
   },
   "devDependencies": {
     "@types/webpack": "5.28.0",

@@ -8,7 +8,7 @@ import {
   registerTransactionHandler,
   Uuid,
 } from "@dataland-io/dataland-sdk-worker";
-import { ClientPost } from "./client";
+import { ClientGet, ClientPost } from "./client";
 import {
   MINDBODY_ALLOW_WRITEBACK_BOOLEAN,
   CLIENT_ID,

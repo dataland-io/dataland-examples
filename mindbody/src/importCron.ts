@@ -11,9 +11,9 @@ import {
   DATALAND_CLIENTS_TABLE_NAME,
   MINDBODY_API_KEY,
   MINDBODY_AUTHORIZATION,
-  MINDBODY_SITE_ID,
   SYNC_TABLES_MARKER,
 } from "./constants";
+import createFetchRetry from "fetch-retry-ts";
 
 type ParsedClient = Record<string, Scalar>;
 
@@ -49,6 +49,11 @@ export const parseClients = (clients: ClientGet[]) => {
         issues.push(issue);
       }
     }
+  }
+  if (issues.length !== 0) {
+    throw new Error(
+      "Import - aborting due to incorrect data types being passed"
+    );
   }
 
   const columnNames: Set<string> = new Set();
@@ -108,11 +113,13 @@ export const parseClients = (clients: ClientGet[]) => {
   return parsedClients;
 };
 
+const REQUEST_LIMIT = 200;
+
 export const fetchClients = async (opts?: { clientId?: string }) => {
   const myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
   myHeaders.append("API-Key", MINDBODY_API_KEY);
-  myHeaders.append("SiteId", MINDBODY_SITE_ID);
+  // myHeaders.append("SiteId", MINDBODY_SITE_ID);
   myHeaders.append("Authorization", MINDBODY_AUTHORIZATION);
 
   const requestOptions: RequestInit = {
@@ -122,7 +129,7 @@ export const fetchClients = async (opts?: { clientId?: string }) => {
   };
 
   const getUrl = (offset: number) => {
-    let url = `https://api.mindbodyonline.com/public/v6/client/clients?limit=200&offset=${offset}`;
+    let url = `https://api.mindbodyonline.com/public/v6/client/clients?limit=${REQUEST_LIMIT}&offset=${offset}`;
     const clientId = opts?.clientId;
     if (clientId != null) {
       url = `${url}?clientIDs=${clientId}`;
@@ -131,27 +138,58 @@ export const fetchClients = async (opts?: { clientId?: string }) => {
   };
 
   const clients: ClientGet[] = [];
+  const fetchRetry = createFetchRetry(fetch, {
+    retries: 5,
+    retryDelay: (attempt) => {
+      return Math.pow(2, attempt) * 1000;
+    },
+    retryOn: (attempts, retries, error, response) => {
+      console.log(attempts, retries);
+      if (retries >= attempts) {
+        return true;
+      }
+      const isRetry = attempts < retries;
+      const isError =
+        error != null || response == null || response.status >= 400;
+      return isRetry && isError;
+    },
+  });
 
   const onePage = async (offset: number) => {
     const url = getUrl(offset);
 
     try {
-      const resp = await fetch(url, requestOptions);
+      console.log("FETCHING WITH OFFEST", offset);
+      const resp = await fetchRetry(url, requestOptions);
       const res = await resp.json();
       const pageClients = res.Clients;
+      delete res["Clients"];
       console.log(res);
       if (pageClients == null) {
         throw new Error("Clients is null for no reason?", res);
       }
 
-      clients.push(pageClients);
-      await onePage(offset + 200);
+      clients.push(...pageClients);
+
+      const requestedOffset = res["PaginationResponse"]["RequestedOffset"];
+      const totalResults = res["PaginationResponse"]["TotalResults"];
+      console.log();
+
+      if (requestedOffset >= totalResults) {
+        return;
+      }
+
+      await onePage(requestedOffset + REQUEST_LIMIT);
     } catch (error) {
-      console.error("Error fetching data", error);
-      return;
+      console.error("failed", error);
+      if (error instanceof Error) {
+        throw new Error("Error fetching data:", error);
+      }
+      throw new Error(`Unknown error fetching data: ${error}`);
     }
   };
-
+  await onePage(0);
+  console.log("FETCHED", clients.length);
   return parseClients(clients);
 };
 
