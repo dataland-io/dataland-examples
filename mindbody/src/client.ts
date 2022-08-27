@@ -45,7 +45,7 @@ const clientBaseT = z.object({
 const clientOnlyPostT = z.object({
   ProspectStage: z
     .object({
-      Id: z.number(),
+      Id: z.number().nullable(),
     })
     .nullable(),
   HomeLocation: z
@@ -132,8 +132,8 @@ const clientReadOnlyT = z.object({
   LockerNumber: z.string().nullable(), // TODO(gab): has no specified comments
 });
 
-export const clientGetT = clientBaseT.merge(clientReadOnlyT).strict();
+export const clientT = clientBaseT.merge(clientReadOnlyT).strict();
 export const clientPostT = clientBaseT.merge(clientOnlyPostT);
 
-export type ClientGet = z.infer<typeof clientGetT>;
+export type Client = z.infer<typeof clientT>;
 export type ClientPost = z.infer<typeof clientPostT>;

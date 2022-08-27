@@ -8,11 +8,100 @@ import {
   registerTransactionHandler,
   Mutation,
   runMutations,
+  wait,
 } from "@dataland-io/dataland-sdk-worker";
-import { clientPostT } from "./client";
-import { DATALAND_CLIENTS_TABLE_NAME } from "./constants";
-import { parseClients } from "./importCron";
-import { postUpdateClient } from "./writeBack";
+import { Client, ClientPost } from "./client";
+import {
+  DATALAND_CLIENTS_TABLE_NAME,
+  MINDBODY_API_KEY,
+  MINDBODY_AUTHORIZATION,
+  MINDBODY_SITE_ID,
+} from "./constants";
+import { fetchClients } from "./importCron";
+import { getClientPost } from "./parse";
+
+interface PostUpdateClientResponseSuccess {
+  ok: true;
+  message: string;
+  client: Client;
+}
+
+interface PostUpdateClientResponseError {
+  ok: false;
+  message: string;
+}
+
+type PostUpdateClientResponse =
+  | PostUpdateClientResponseSuccess
+  | PostUpdateClientResponseError;
+
+const postUpdateClient = async (
+  client: ClientPost
+): Promise<PostUpdateClientResponse> => {
+  console.log("Updating new client with:", client);
+  const myHeaders = new Headers();
+  myHeaders.append("Content-Type", "application/json");
+  myHeaders.append("API-Key", MINDBODY_API_KEY);
+  myHeaders.append("SiteId", MINDBODY_SITE_ID);
+  myHeaders.append("Authorization", MINDBODY_AUTHORIZATION);
+
+  const raw = JSON.stringify({
+    Client: client,
+    SendEmail: false,
+    CrossRegionalUpdate: false,
+    Test: false,
+  });
+
+  const requestOptions: RequestInit = {
+    method: "POST",
+    headers: myHeaders,
+    body: raw,
+    redirect: "follow",
+  };
+
+  try {
+    const resp = await fetch(
+      "https://api.mindbodyonline.com/public/v6/client/updateclient",
+      requestOptions
+    );
+    const json = await resp.json();
+
+    console.log("response from MBO:", json);
+    const error = json["Error"];
+    if (error != null) {
+      return {
+        ok: false,
+        // NOTE(gab): if a cell is incorrect, such as setting a location ID that does not exist,
+        // mindbody still responds with 200 success, but the payload is an error.
+        message: `400: ${error.Message}`,
+      };
+    }
+
+    const client = json["Client"];
+    if (client != null) {
+      return {
+        ok: resp.ok,
+        message: `${resp.status}: ${resp.statusText}`,
+        client,
+      };
+    }
+
+    // TODO(gab): this should not happen
+    console.error("Write - Unexpected post response", JSON.stringify(json));
+    throw new Error(`Unexpected post response, contact a developer`);
+  } catch (e) {
+    if (e instanceof Error) {
+      return {
+        ok: false,
+        message: `Updating Client Error: ${e.name} - ${e.message}`,
+      };
+    }
+    return {
+      ok: false,
+      message: `Updating Client Error: Unexpected error - ${e}`,
+    };
+  }
+};
 
 const transactionHandler = async (transaction: Transaction) => {
   const { tableDescriptors } = await getCatalogSnapshot({
@@ -59,74 +148,38 @@ const transactionHandler = async (transaction: Transaction) => {
     } = row;
     const key = _dataland_key as number;
 
-    const updateClient: any = {};
-    for (const columnName in mbRow) {
-      const value = mbRow[columnName];
-      const parsedValue = (() => {
-        // NOTE(gab): our backend returns NaN for empty number fields
-        if (typeof value === "number" && isNaN(value)) {
-          return null;
-        }
+    const clientPostResp = getClientPost(mbRow);
 
-        if (typeof value !== "string") {
-          return value;
-        }
-        const isObject = value.startsWith("{") && value.endsWith("}");
-        const isArray = value.startsWith("[") && value.endsWith("]");
+    let values: Record<string, Scalar>;
+    if (clientPostResp.success === true) {
+      const resp = await postUpdateClient(clientPostResp.data);
+      values = {
+        "MBO push status": resp.message,
+        "MBO pushed at": new Date().toISOString(),
+      };
 
-        if (isObject || isArray) {
-          try {
-            return JSON.parse(value);
-          } catch (e) {
-            console.error("Writeback - Failed to parse to JSON", { value });
-          }
-        }
-        return value;
-      })();
-
-      if (columnName.includes("/~/")) {
-        const [parentPropertyKey, propertyKey] = columnName.split("/~/");
-
-        let parentProperty = updateClient[parentPropertyKey];
-        if (parentProperty == null) {
-          parentProperty = {};
-        }
-        parentProperty[propertyKey] = parsedValue;
-
-        updateClient[parentPropertyKey] = parentProperty;
+      const clients = await fetchClients({ clientId: clientPostResp.data.Id });
+      if (clients != null && clients.length === 1) {
+        values = { ...values, ...clients[0]! };
       } else {
-        updateClient[columnName] = parsedValue;
-      }
-    }
-
-    const values: Record<string, Scalar> = {};
-
-    const postClient = clientPostT.safeParse(updateClient);
-    if (postClient.success === true) {
-      const resp = await postUpdateClient(postClient.data);
-
-      const client = resp.client;
-      if (client != null) {
-        console.log("BEFORE PARSED CLIENT", client);
-        // TODO(gab): handle incorrect data types being returned from  parseClients
-        const parsedClient = parseClients([client])[0]!;
-        console.log("PARSED CLIENT", parsedClient);
-        for (const clientKey in parsedClient) {
-          const clientValue = parsedClient[clientKey];
-          values[clientKey] = clientValue;
-        }
+        console.error("Could not find updated client");
       }
 
-      values["MBO push status"] = resp.message;
-      values["MBO pushed at"] = new Date().toISOString();
+      // values = getDatalandWriteback(resp.message, client);
     } else {
-      values["MBO push status"] = `Incorrect data types: ${JSON.stringify(
-        postClient.error.issues
-      )}`;
-      values["MBO pushed at"] = new Date().toISOString();
+      console.error(
+        `Write - Incorrect data types on client: ${JSON.stringify(
+          clientPostResp.error.issues
+        )}`
+      );
+      values = {
+        "MBO push status": `Incorrect data types on client: ${JSON.stringify(
+          clientPostResp.error.issues
+        )}`,
+        "MBO pushed at": new Date().toISOString(),
+      };
     }
 
-    console.log("sending", values);
     const mutation = schema.makeUpdateRows(
       DATALAND_CLIENTS_TABLE_NAME,
       key,

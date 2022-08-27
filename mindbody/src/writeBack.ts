@@ -8,7 +8,7 @@ import {
   registerTransactionHandler,
   Uuid,
 } from "@dataland-io/dataland-sdk-worker";
-import { ClientGet, ClientPost } from "./client";
+import { Client, ClientPost } from "./client";
 import {
   MINDBODY_ALLOW_WRITEBACK_BOOLEAN,
   CLIENT_ID,
@@ -18,61 +18,6 @@ import {
   MINDBODY_SITE_ID,
   SYNC_TABLES_MARKER,
 } from "./constants";
-
-interface PostUpdateClientResponse {
-  ok: boolean;
-  message: string;
-  client?: ClientGet;
-}
-export const postUpdateClient = async (
-  client: ClientPost
-): Promise<PostUpdateClientResponse> => {
-  console.log("Updating new client with:", client);
-  const myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/json");
-  myHeaders.append("API-Key", MINDBODY_API_KEY);
-  myHeaders.append("SiteId", MINDBODY_SITE_ID);
-  myHeaders.append("Authorization", MINDBODY_AUTHORIZATION);
-
-  const raw = JSON.stringify({
-    Client: client,
-    SendEmail: false,
-    CrossRegionalUpdate: false,
-    Test: false,
-  });
-
-  const requestOptions: RequestInit = {
-    method: "POST",
-    headers: myHeaders,
-    body: raw,
-    redirect: "follow",
-  };
-
-  try {
-    const resp = await fetch(
-      "https://api.mindbodyonline.com/public/v6/client/updateclient",
-      requestOptions
-    );
-    const json = await resp.json();
-    console.log("Success response from MBO:", json);
-    return {
-      ok: resp.ok,
-      message: `${resp.status}: ${resp.statusText}`,
-      client: json.Client,
-    };
-  } catch (e) {
-    if (e instanceof Error) {
-      return {
-        ok: false,
-        message: `Updating Client Error: ${e.name} - ${e.message}`,
-      };
-    }
-    return {
-      ok: false,
-      message: `UUpdating Client Error: Unexpected error - ${e}`,
-    };
-  }
-};
 
 const transactionHandler = async (transaction: Transaction) => {
   // NOTE(gab): Updating a cell in Dataland while Airtable import cron is running would
