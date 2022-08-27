@@ -8,6 +8,7 @@ import {
   registerTransactionHandler,
   Uuid,
 } from "@dataland-io/dataland-sdk-worker";
+import { ClientPost } from "./client";
 import {
   MINDBODY_ALLOW_WRITEBACK_BOOLEAN,
   CLIENT_ID,
@@ -21,10 +22,10 @@ import {
 interface PostUpdateClientResponse {
   ok: boolean;
   message: string;
-  client?: Record<string, any>;
+  client?: ClientGet;
 }
 export const postUpdateClient = async (
-  client: Record<string, any>
+  client: ClientPost
 ): Promise<PostUpdateClientResponse> => {
   console.log("Updating new client with:", client);
   const myHeaders = new Headers();
@@ -233,6 +234,6 @@ const updateRowsWriteback = async (
     };
     updateClient[CLIENT_ID] = clientIdMap[key];
 
-    await postUpdateClient(updateClient);
+    // await postUpdateClient(updateClient);
   }
 };

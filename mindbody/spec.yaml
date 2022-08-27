@@ -21,8 +21,8 @@ workers:
   - workerId: mindbody-worker
     scriptPath: dist/bundle.js
     triggers:
-      # cron:
-      #   cronExpression: "*/15 * * * * * *"
+      cron:
+        cronExpression: "*/15 * * * * * *"
       transaction: {}
     env:
       MINDBODY_API_KEY: mindbody-api-key
@@ -306,6 +306,9 @@ tables:
         dataType: float64
       - columnId: address-line-1
         columnName: AddressLine1
+        dataType: string
+      - columnId: address-line-2
+        columnName: AddressLine2
         dataType: string
       - columnId: city
         columnName: City

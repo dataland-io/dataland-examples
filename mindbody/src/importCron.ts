@@ -5,6 +5,7 @@ import {
   SyncTable,
   syncTables,
 } from "@dataland-io/dataland-sdk-worker";
+import { ClientGet, clientGetT } from "./client";
 import {
   CLIENT_ID,
   DATALAND_CLIENTS_TABLE_NAME,
@@ -16,7 +17,7 @@ import {
 
 type ParsedClient = Record<string, Scalar>;
 
-const parseValue = (k: string, v: Scalar) => {
+const parseValue = (k: string, v: any) => {
   if (v == null) {
     return v;
   }
@@ -38,11 +39,22 @@ const parseValue = (k: string, v: Scalar) => {
   return v;
 };
 
-export const parseClients = (clients: Record<string, any>[]) => {
+export const parseClients = (clients: ClientGet[]) => {
+  const issues: any = [];
+  for (const client of clients) {
+    const res = clientGetT.safeParse(client);
+    if (res.success === false) {
+      for (const issue of res.error.issues) {
+        console.error(issue);
+        issues.push(issue);
+      }
+    }
+  }
+
   const columnNames: Set<string> = new Set();
   for (const client of clients) {
     for (const key in client) {
-      const v = client[key];
+      const v = client[key as keyof typeof client];
 
       if (!Array.isArray(v) && typeof v === "object") {
         for (const key2 in v) {
@@ -59,7 +71,12 @@ export const parseClients = (clients: Record<string, any>[]) => {
   for (const client of clients) {
     const parsedClient: ParsedClient = {};
     for (const key in client) {
-      const value = client[key];
+      const value = client[key as keyof ClientGet];
+
+      if (typeof value == null) {
+        parsedClient[key] = value as null;
+        continue;
+      }
 
       if (Array.isArray(value)) {
         parsedClient[key] = JSON.stringify(value);
@@ -69,7 +86,10 @@ export const parseClients = (clients: Record<string, any>[]) => {
       if (typeof value === "object") {
         for (const valueKey in value) {
           const key2 = `${key}/~/${valueKey}`;
-          parsedClient[key2] = parseValue(key2, value[valueKey]);
+          parsedClient[key2] = parseValue(
+            key2,
+            value[valueKey as keyof typeof value]
+          );
         }
         continue;
       }
@@ -87,6 +107,7 @@ export const parseClients = (clients: Record<string, any>[]) => {
   }
   return parsedClients;
 };
+
 export const fetchClients = async (opts?: { clientId?: string }) => {
   const myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
@@ -94,32 +115,42 @@ export const fetchClients = async (opts?: { clientId?: string }) => {
   myHeaders.append("SiteId", MINDBODY_SITE_ID);
   myHeaders.append("Authorization", MINDBODY_AUTHORIZATION);
 
-  let url =
-    "https://api.mindbodyonline.com/public/v6/client/clients?limit=5&offset=0";
-  const clientId = opts?.clientId;
-  if (clientId != null) {
-    url = `${url}?clientIDs=${clientId}`;
-  }
-
   const requestOptions: RequestInit = {
     method: "GET",
     headers: myHeaders,
     redirect: "follow",
   };
 
-  let clients;
-  try {
-    const resp = await fetch(url, requestOptions);
-    const res = await resp.json();
-    clients = res.Clients;
-    if (clients == null) {
-      console.error("Clients is null for no reason?", res);
+  const getUrl = (offset: number) => {
+    let url = `https://api.mindbodyonline.com/public/v6/client/clients?limit=200&offset=${offset}`;
+    const clientId = opts?.clientId;
+    if (clientId != null) {
+      url = `${url}?clientIDs=${clientId}`;
+    }
+    return url;
+  };
+
+  const clients: ClientGet[] = [];
+
+  const onePage = async (offset: number) => {
+    const url = getUrl(offset);
+
+    try {
+      const resp = await fetch(url, requestOptions);
+      const res = await resp.json();
+      const pageClients = res.Clients;
+      console.log(res);
+      if (pageClients == null) {
+        throw new Error("Clients is null for no reason?", res);
+      }
+
+      clients.push(pageClients);
+      await onePage(offset + 200);
+    } catch (error) {
+      console.error("Error fetching data", error);
       return;
     }
-  } catch (error) {
-    console.error("Error fetching data", error);
-    return;
-  }
+  };
 
   return parseClients(clients);
 };
@@ -130,18 +161,6 @@ const cronHandler = async () => {
   if (records == null) {
     return;
   }
-
-  const d: any = {};
-  records.forEach((record) => {
-    for (const k in record) {
-      const v = record[k];
-      if (d[k] == null) {
-        d[k] = [];
-      }
-      d[k].push({ v });
-    }
-  });
-  // console.log("TYPPPES", d);
 
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
