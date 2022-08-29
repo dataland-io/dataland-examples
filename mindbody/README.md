@@ -4,8 +4,9 @@ Use Dataland as an admin panel into Orangetheory's members and leads, synced fro
 
 See views like:
 
-- Clients with the lowest account balance by location
-- Prospective members who haven't signed a liability release
+- Active members who haven't signed their liability release
+- Prospective members sorted by their first appointment date
+- Manage member notification preferences
 
 Update client information like:
 
@@ -19,9 +20,9 @@ Update client information like:
 
 This module replicates the following objects from Mindbody into Dataland as tables:
 
-| Tables  | Sync schedule | Mindbody Documentation                                    |
-| ------- | ------------- | --------------------------------------------------------- |
-| clients | Every 15 mins | [Customers](https://stripe.com/docs/api/customers/object) |
+| Tables  | Sync schedule | Mindbody Documentation                                                                   |
+| ------- | ------------- | ---------------------------------------------------------------------------------------- |
+| clients | Every 15 mins | [Clients](https://developers.mindbodyonline.com/PublicDocumentation/V6#client-endpoints) |
 
 ## Parameter setup
 

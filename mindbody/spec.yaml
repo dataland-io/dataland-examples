@@ -1,7 +1,7 @@
 moduleId: mindbody-module
 
 info:
-  title: Mindbody
+  title: MBO for Orangetheory
   description: Sync Mindbody into Dataland
   author: Dataland Devs <devs@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
@@ -41,10 +41,29 @@ tables:
           "viewName": "Lead Management",
           "filterSpec": {
             "operator": "all",
-            "conditions": []
+            "conditions":[
+              {
+                  "type":"select",
+                  "columnUuid":"f8339ee7-83b5-5941-bacf-57bd7edee1f3",
+                  "operator":"is",
+                  "input":"Non-Member"
+              },
+              {
+                  "type":"string",
+                  "columnUuid":"d8c3d327-479c-56d0-a189-4c150c5a2246",
+                  "operator":"is not null",
+                  "input":null
+              }
+            ]
           },
           "sortSpec": {
-            "conditions": []
+            "conditions": [
+              {
+                  "type":"string",
+                  "columnUuid":"d8c3d327-479c-56d0-a189-4c150c5a2246",
+                  "order":"descending"
+              }
+            ]
           },
           "hideColumns": {
             "AppointmentGenderPreference": true,
@@ -304,10 +323,23 @@ tables:
           "viewName": "Liability Management",
           "filterSpec": {
             "operator": "all",
-            "conditions": []
+            "conditions":[
+              {
+                  "type":"select",
+                  "columnUuid":"f8339ee7-83b5-5941-bacf-57bd7edee1f3",
+                  "operator":"is",
+                  "input":"Active"
+              }
+            ]
           },
           "sortSpec": {
-            "conditions": []
+            "conditions": [
+              {
+                  "type":"checkbox",
+                  "columnUuid":"a07240f6-1031-539b-903b-0f102aec444f",
+                  "order":"ascending"
+              }
+            ]
           },
           "hideColumns": {
             "IsProspect": true,
@@ -668,6 +700,8 @@ tables:
       - columnId: creation-date
         columnName: CreationDate
         dataType: string
+        columnAnnotations:
+          is-read-only: true
       - columnId: client-credit-card---address
         columnName: ClientCreditCard/~/Address
         dataType: string
@@ -707,6 +741,8 @@ tables:
       - columnId: first-appointment-date
         columnName: FirstAppointmentDate
         dataType: string
+        columnAnnotations:
+          is-read-only: "true"
       - columnId: is-company
         columnName: IsCompany
         dataType: boolean
