@@ -1,0 +1,195 @@
+moduleId: import-csv-example-every-data-type
+
+buildCommand: npm run build
+
+tables:
+  # Defines the trigger table, which will contain a button column that triggers the import into the imported records table
+  # You can rename these tables, but make sure you update the references in the `importCsv.ts` file as well.
+  - tableId: records-trigger-table
+    tableName: "Import Trigger"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "trigger"
+        columnName: "Trigger"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Sync from CSV",
+              "theme": "blue"
+            }
+
+      - columnId: "last-pressed"
+        columnName: "Last pressed"
+        dataType: string
+
+  # Defines the imported records table, which will contain the data from the CSV file
+  # TODO: Add / delete / update columns below such that the columnNames are the same as what you are updating in the importCsv.ts function
+  - tableId: imported-records-from-csv-table
+    tableName: "Records from CSV"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "not-disabled"
+        columnName: "Text not disabled"
+        dataType: string
+
+      # Select: currentline[0],
+      - columnId: "select"
+        columnName: "Select"
+        dataType: string
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "100"
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "Apple",
+                  "theme": "ruby"
+                },
+                { 
+                  "value": "Carrot",
+                  "theme": "orange"
+                },
+                {
+                  "value": "Banana",
+                  "theme": "yellow"
+                },
+                { 
+                  "value": "Daikon",
+                  "theme": "green"
+                },
+                { 
+                  "value": "Eggplant",
+                  "theme": "purple"
+                },
+                { 
+                  "value": "Fruit",
+                  "theme": "light-blue"
+                },
+                { 
+                  "value": "Grape",
+                  "theme": "purple"
+                },
+                { 
+                  "value": "Horchata",
+                  "theme": "pink"
+                },
+                { 
+                  "value": "Igloo",
+                  "theme": "silver"
+                },
+                { 
+                  "value": "Jigglypuff",
+                  "theme": "pink"
+                }                                                                                
+              ]
+            }
+      # Button: currentline[1],
+      - columnId: "button"
+        columnName: "Button"
+        dataType: int32
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "100"
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Button text",
+              "theme": "blue"
+            }
+      # Checkbox: currentline[2],
+      - columnId: "checkbox"
+        columnName: "Checkbox"
+        dataType: boolean
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "100"
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      # Text: currentline[3],
+      - columnId: "text"
+        columnName: "Text"
+        dataType: string
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "100"
+
+      # Number: currentline[4],
+      - columnId: "number"
+        columnName: "Number"
+        dataType: float64
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "100"
+
+      # URL: currentline[5],
+      - columnId: "url"
+        columnName: "URL"
+        dataType: string
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "120"
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
+
+      # "Raw: String": currentline[6],
+      - columnId: "raw-string"
+        columnName: "Raw: String"
+        dataType: string
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "120"
+
+      # "Raw: Boolean": currentline[7],
+      - columnId: "raw-boolean"
+        columnName: "Raw: Boolean"
+        dataType: boolean
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "120"
+
+      # "Raw: int32": currentline[8],
+      - columnId: "raw-int32"
+        columnName: "Raw: int32"
+        dataType: int32
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "120"
+
+      # "Raw: int64": currentline[9],
+      - columnId: "raw-int64"
+        columnName: "Raw: int64"
+        dataType: int64
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "120"
+
+      # "Raw: float32": currentline[10],
+      - columnId: "raw-float32"
+        columnName: "Raw: float32"
+        dataType: float32
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "120"
+
+      # "Raw: float64": currentline[11],
+      - columnId: "raw-float64"
+        columnName: "Raw: float64"
+        dataType: float64
+        columnAnnotations:
+          is-read-only: true
+          dataland.io/column-width: "120"
+
+workers:
+  - workerId: csv-import
+    scriptPath: dist/importCsv.bundle.js
+    triggers:
+      transaction: {}
