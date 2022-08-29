@@ -1058,3 +1058,13 @@ tables:
       - columnId: "mbo-pushed-at"
         columnName: "MBO pushed at"
         dataType: string
+      - columnId: "mbo-pull"
+        columnName: "MBO Pull"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "MBO Pull",
+              "theme": "blue"
+            }

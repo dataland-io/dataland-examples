@@ -108,8 +108,6 @@ const transactionHandler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp - 1,
   });
 
-  console.log("tableDescriptors", tableDescriptors);
-
   const schema = new Schema(tableDescriptors);
 
   const affectedRows: Map<number, Scalar> = schema.getAffectedRows(

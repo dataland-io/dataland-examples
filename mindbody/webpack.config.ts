@@ -4,7 +4,12 @@ import type { Configuration } from "webpack";
 const config: Configuration = {
   mode: "production",
   target: "web",
-  entry: ["./src/importCron.ts", "./src/writeBack.ts", "./src/writeRow.ts"],
+  entry: [
+    "./src/importCron.ts",
+    "./src/writeBack.ts",
+    "./src/writeRow.ts",
+    "./src/fetchRow.ts",
+  ],
   module: {
     rules: [
       {
