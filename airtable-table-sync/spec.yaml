@@ -17,13 +17,14 @@ parameters:
   - airtable-view-name
   - allow-writeback-boolean
   - dataland-table-name
+  - airtable-fields-list
 
 workers:
   - workerId: airtable-table-sync-worker
     scriptPath: dist/bundle.js
     triggers:
       cron:
-        cronExpression: "0 */5 * * * * *"
+        cronExpression: "*/15 * * * * * *"
       transaction: {}
     env:
       AIRTABLE_API_KEY: airtable-api-key
@@ -32,3 +33,4 @@ workers:
       AIRTABLE_VIEW_NAME: airtable-view-name
       ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
       DATALAND_TABLE_NAME: dataland-table-name
+      AIRTABLE_FIELDS_LIST: airtable-fields-list
