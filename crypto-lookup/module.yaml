@@ -10,6 +10,8 @@ workers:
     scriptPath: dist/cryptoLookup.bundle.js
     env:
       COINMARKETCAP_API_KEY: coinmarketcap-api-key
+    triggers:
+      transaction: {}
 
 tables:
   - tableId: crypto-table

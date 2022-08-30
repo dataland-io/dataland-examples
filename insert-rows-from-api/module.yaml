@@ -5,6 +5,8 @@ buildCommand: npm run build
 workers:
   - workerId: insert-rows-from-api-worker
     scriptPath: dist/insertRowsFromApi.bundle.js
+    triggers:
+      transaction: {}
 
 tables:
   - tableId: trigger

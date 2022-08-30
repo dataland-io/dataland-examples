@@ -11,6 +11,8 @@ workers:
     scriptPath: dist/airtableSync.bundle.js
     env:
       AIRTABLE_API_KEY: airtable-api-key
+    triggers:
+      transaction: {}
 
 tables:
   # Defines the imported records table, which will contain the data from the Airtable table
