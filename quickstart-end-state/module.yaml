@@ -1,10 +1,12 @@
-moduleId: quickstart-example
+moduleId: quickstart-example # not `quickstart-end-state-example` because we want same module as the starting state
 
 buildCommand: npm run build
 
 workers:
   - workerId: hello
     scriptPath: dist/hello.bundle.js
+    triggers:
+      transaction: {}
 
 tables:
   - tableId: greetings-table
@@ -13,6 +15,9 @@ tables:
     columnDescriptors:
       - columnId: name-column
         columnName: name
+        dataType: string
+      - columnId: location-column
+        columnName: location
         dataType: string
       - columnId: greeting-column
         columnName: greeting

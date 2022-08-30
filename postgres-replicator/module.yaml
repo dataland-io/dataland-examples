@@ -20,3 +20,5 @@ workers:
       PGUSER: pguser
       PGPASSWORD: pgpassword
       PGSCHEMA: pgschema
+    triggers:
+      transaction: {}

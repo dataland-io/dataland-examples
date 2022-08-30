@@ -76,3 +76,5 @@ tables:
 workers:
   - workerId: csv-import
     scriptPath: dist/importCsv.bundle.js
+    triggers:
+      transaction: {}

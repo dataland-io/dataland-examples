@@ -46,3 +46,5 @@ tables:
 workers:
   - workerId: strapi-push-worker
     scriptPath: dist/strapiPush.bundle.js
+    triggers:
+      transaction: {}
