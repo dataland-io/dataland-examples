@@ -8,26 +8,15 @@ import {
   runMutations,
   registerTransactionHandler,
   Uuid,
+  getEnv,
 } from "@dataland-io/dataland-sdk-worker";
 import Airtable, {
   FieldSet as AirtableFieldSet,
   RecordData as AirtableRecordData,
   Table as AirtableTable,
+  Table,
 } from "airtable";
-import {
-  AIRTABLE_API_KEY,
-  AIRTABLE_BASE_ID,
-  AIRTABLE_TABLE_NAME,
-  ALLOW_WRITEBACK_BOOLEAN,
-  DATALAND_TABLE_NAME,
-  RECORD_ID,
-  SYNC_TABLES_MARKER,
-} from "./constants";
-
-const airtableBase = new Airtable({
-  apiKey: AIRTABLE_API_KEY,
-}).base(AIRTABLE_BASE_ID);
-const airtableTable = airtableBase(AIRTABLE_TABLE_NAME);
+import { RECORD_ID, SYNC_TABLES_MARKER } from "./constants";
 
 const AIRTABLE_MAX_UPDATES = 10;
 const chunkAirtablePayload = <T>(payload: T[]) => {
@@ -115,6 +104,7 @@ const airtableDestroyRows = async (
 };
 
 const insertRowsWriteback = async (
+  airtableTable: Table<AirtableFieldSet>,
   mutation: Extract<Mutation, { kind: "insert_rows" }>,
   schema: Schema,
   columnNameMap: Record<Uuid, string>,
@@ -172,15 +162,20 @@ const insertRowsWriteback = async (
 
     recordIdMap[datalandKey] = recordId;
 
-    const update = schema.makeUpdateRows(DATALAND_TABLE_NAME, datalandKey, {
-      [RECORD_ID]: recordId,
-    });
+    const update = schema.makeUpdateRows(
+      getEnv("DATALAND_TABLE_NAME"),
+      datalandKey,
+      {
+        [RECORD_ID]: recordId,
+      }
+    );
     mutations.push(update);
   }
   await runMutations({ mutations });
 };
 
 const updateRowsWriteback = async (
+  airtableTable: Table<AirtableFieldSet>,
   mutation: Extract<Mutation, { kind: "update_rows" }>,
   columnNameMap: Record<Uuid, string>,
   recordIdMap: Record<number, string>
@@ -231,6 +226,7 @@ const updateRowsWriteback = async (
 };
 
 const deleteRowsWriteback = async (
+  airtableTable: Table<AirtableFieldSet>,
   mutation: Extract<Mutation, { kind: "delete_rows" }>,
   recordIdMap: Record<number, string>
 ) => {
@@ -255,6 +251,21 @@ const deleteRowsWriteback = async (
 };
 
 const transactionHandler = async (transaction: Transaction) => {
+  const ALLOW_WRITEBACK_BOOLEAN = getEnv("ALLOW_WRITEBACK_BOOLEAN");
+  if (
+    ALLOW_WRITEBACK_BOOLEAN !== "true" &&
+    ALLOW_WRITEBACK_BOOLEAN !== "false"
+  ) {
+    console.error(
+      `Writeback - ABORTING: 'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
+    );
+    return;
+  }
+
+  if (ALLOW_WRITEBACK_BOOLEAN !== "true") {
+    return;
+  }
+
   // NOTE(gab): Updating a cell in Dataland while Airtable import cron is running would
   // cause the imported data from airtable to be outdated. When the syncTables transaction
   // finally goes through, it would set the cell to its previous value which we expect.
@@ -265,6 +276,12 @@ const transactionHandler = async (transaction: Transaction) => {
     return;
   }
 
+  const airtableBase = new Airtable({
+    apiKey: getEnv("AIRTABLE_API_KEY"),
+  }).base(getEnv("AIRTABLE_BASE_ID"));
+  const airtableTable = airtableBase(getEnv("AIRTABLE_TABLE_NAME"));
+
+  const DATALAND_TABLE_NAME = getEnv("DATALAND_TABLE_NAME");
   const response = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp - 1,
     sqlQuery: `select "_dataland_key", "${RECORD_ID}" from "${DATALAND_TABLE_NAME}"`,
@@ -312,29 +329,32 @@ const transactionHandler = async (transaction: Transaction) => {
 
     switch (mutation.kind) {
       case "insert_rows": {
-        await insertRowsWriteback(mutation, schema, columnNameMap, recordIdMap);
+        await insertRowsWriteback(
+          airtableTable,
+          mutation,
+          schema,
+          columnNameMap,
+          recordIdMap
+        );
         break;
       }
       case "update_rows": {
-        await updateRowsWriteback(mutation, columnNameMap, recordIdMap);
+        await updateRowsWriteback(
+          airtableTable,
+          mutation,
+          columnNameMap,
+          recordIdMap
+        );
         break;
       }
       case "delete_rows": {
-        await deleteRowsWriteback(mutation, recordIdMap);
+        await deleteRowsWriteback(airtableTable, mutation, recordIdMap);
         break;
       }
     }
   }
 };
 
-if (ALLOW_WRITEBACK_BOOLEAN !== "true" && ALLOW_WRITEBACK_BOOLEAN !== "false") {
-  console.error(
-    `Writeback - 'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
-  );
-}
-
-if (ALLOW_WRITEBACK_BOOLEAN === "true") {
-  registerTransactionHandler(transactionHandler, {
-    filterTransactions: "handle-all",
-  });
-}
+registerTransactionHandler(transactionHandler, {
+  filterTransactions: "handle-all",
+});

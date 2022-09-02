@@ -1,26 +1,13 @@
 import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
 import {
+  getEnv,
   registerCronHandler,
   Scalar,
   SyncTable,
   syncTables,
 } from "@dataland-io/dataland-sdk-worker";
 import Airtable, { Attachment, Collaborator } from "airtable";
-import {
-  AIRTABLE_API_KEY,
-  AIRTABLE_BASE_ID,
-  AIRTABLE_TABLE_NAME,
-  AIRTABLE_VIEW_NAME,
-  DATALAND_TABLE_NAME,
-  RECORD_ID,
-  SYNC_TABLES_MARKER,
-  AIRTABLE_FIELDS_LIST,
-} from "./constants";
-
-const airtableBase = new Airtable({
-  apiKey: AIRTABLE_API_KEY,
-}).base(AIRTABLE_BASE_ID);
-const airtableTable = airtableBase(AIRTABLE_TABLE_NAME);
+import { RECORD_ID, SYNC_TABLES_MARKER } from "./constants";
 
 type AirtableValue =
   | undefined
@@ -78,20 +65,25 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
 };
 
 const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
-  const records: Record<string, any>[] = [];
+  const AIRTABLE_FIELDS_LIST = getEnv("AIRTABLE_FIELDS_LIST");
 
-  let fields_array: (string | number)[] = [];
-  if (AIRTABLE_FIELDS_LIST == "ALL") {
-  } else {
-    fields_array = AIRTABLE_FIELDS_LIST.split(",").map((field) => field.trim());
+  let fields: string[] = [];
+  if (AIRTABLE_FIELDS_LIST !== "ALL") {
+    fields = AIRTABLE_FIELDS_LIST.split(",").map((field) => field.trim());
   }
 
+  const airtableBase = new Airtable({
+    apiKey: getEnv("AIRTABLE_API_KEY"),
+  }).base(getEnv("AIRTABLE_BASE_ID"));
+  const airtableTable = airtableBase(getEnv("AIRTABLE_TABLE_NAME"));
+
+  const records: Record<string, any>[] = [];
   await new Promise((resolve, error) => {
     airtableTable
       .select({
         pageSize: 100,
-        view: AIRTABLE_VIEW_NAME,
-        fields: fields_array,
+        view: getEnv("AIRTABLE_VIEW_NAME"),
+        fields,
       })
       .eachPage(
         (pageRecords, fetchNextPage) => {
@@ -142,13 +134,15 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
 };
 
 const cronHandler = async () => {
+  console.log("resding");
   const records = await readFromAirtable();
+  console.log("adfter read");
 
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
 
   const syncTable: SyncTable = {
-    tableName: DATALAND_TABLE_NAME,
+    tableName: getEnv("DATALAND_TABLE_NAME"),
     arrowRecordBatches: [batch],
     identityColumnNames: [RECORD_ID],
   };
