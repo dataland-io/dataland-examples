@@ -80,16 +80,18 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
 const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
   const records: Record<string, any>[] = [];
 
-  const fields_array = AIRTABLE_FIELDS_LIST.split(",");
-  const fields_array_trimmed = fields_array.map((field) => field.trim());
-  console.log("fields_array", fields_array_trimmed);
+  let fields_array: (string | number)[] = [];
+  if (AIRTABLE_FIELDS_LIST == "ALL") {
+  } else {
+    fields_array = AIRTABLE_FIELDS_LIST.split(",").map((field) => field.trim());
+  }
 
   await new Promise((resolve, error) => {
     airtableTable
       .select({
         pageSize: 100,
         view: AIRTABLE_VIEW_NAME,
-        fields: fields_array_trimmed,
+        fields: fields_array,
       })
       .eachPage(
         (pageRecords, fetchNextPage) => {
