@@ -26,15 +26,14 @@ parameters:
 # DL_PARAM_AIRTABLE_TABLE_NAME=<your-table-name>
 # DL_PARAM_AIRTABLE_VIEW_NAME=<your-view-name>
 # DL_PARAM_DATALAND_TABLE_NAME=<your-dataland-table-name>
-# DL_PARAM_AIRTABLE_FIELDS_LIST=<your-fields-list>
+# DL_PARAM_AIRTABLE_FIELDS_LIST=<"ALL" or your-fields-list>
 
 workers:
   - workerId: airtable-table-sync-worker
     scriptPath: dist/bundle.js
     triggers:
       cron:
-        # cronExpression: "0 */5 * * * * *"
-        cronExpression: "*/15 * * * * * *"
+        cronExpression: "0 */5 * * * * *"
       transaction: {}
     env:
       AIRTABLE_API_KEY: airtable-api-key

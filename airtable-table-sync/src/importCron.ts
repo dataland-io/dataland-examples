@@ -134,9 +134,7 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
 };
 
 const cronHandler = async () => {
-  console.log("resding");
   const records = await readFromAirtable();
-  console.log("adfter read");
 
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
