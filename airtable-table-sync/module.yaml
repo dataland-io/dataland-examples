@@ -15,8 +15,18 @@ parameters:
   - airtable-base-id
   - airtable-table-name
   - airtable-view-name
-  - allow-writeback-boolean
+  - airtable-allow-writeback-boolean
   - dataland-table-name
+  - airtable-fields-list
+
+# Create a .env file in the root of this folder
+# with the following contents:
+# DL_PARAM_AIRTABLE_API_KEY=<your-api-key>
+# DL_PARAM_AIRTABLE_BASE_ID=<your-base-id>
+# DL_PARAM_AIRTABLE_TABLE_NAME=<your-table-name>
+# DL_PARAM_AIRTABLE_VIEW_NAME=<your-view-name>
+# DL_PARAM_DATALAND_TABLE_NAME=<your-dataland-table-name>
+# DL_PARAM_AIRTABLE_FIELDS_LIST=<your-fields-list>
 
 workers:
   - workerId: airtable-table-sync-worker
@@ -30,5 +40,6 @@ workers:
       AIRTABLE_BASE_ID: airtable-base-id
       AIRTABLE_TABLE_NAME: airtable-table-name
       AIRTABLE_VIEW_NAME: airtable-view-name
-      ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
+      ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
       DATALAND_TABLE_NAME: dataland-table-name
+      AIRTABLE_FIELDS_LIST: airtable-fields-list

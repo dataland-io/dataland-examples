@@ -16,14 +16,15 @@ Data in the Dataland UI will be re-updated every 5 minutes by default. This cade
 
 ## Parameter setup
 
-| Name                      | About                                                                                                                                       |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `airtable-api-key`        | Your API key. This can take a service user's API key to lock down specific permissions on the Airtable side.                                |
-| `airtable-base-id`        | A base's ID                                                                                                                                 |
-| `airtable-table-name`     | A table's ID or display name                                                                                                                |
-| `airtable-view-name`      | A view's ID or display name                                                                                                                 |
-| `dataland-table-name`     | Dataland will create a table with this name, and replicate Airtable data into it                                                            |
-| `allow-writeback-boolean` | If `true`, row updates/creation/deletion in Dataland will attempt writebacks to your Airtable table. If `false`, no writeback is attempted. |
+| Name                               | About                                                                                                                                             |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `airtable-api-key`                 | Your API key. This can take a service user's API key to lock down specific permissions on the Airtable side.                                      |
+| `airtable-base-id`                 | A base's ID                                                                                                                                       |
+| `airtable-table-name`              | A table's ID or display name                                                                                                                      |
+| `airtable-view-name`               | A view's ID or display name                                                                                                                       |
+| `dataland-table-name`              | Dataland will create a table with this name, and replicate Airtable data into it                                                                  |
+| `airtable-allow-writeback-boolean` | If `true`, row updates/creation/deletion in Dataland will attempt writebacks to your Airtable table. If `false`, no writeback is attempted.       |
+| `airtable-fields-list`             | A comma separated string of the subset of fields you'd like to sync from an Airtable view. Case-sensitive. To use all fields, simply write `ALL`. |
 
 ### How to get the Airtable IDs for base, table, and view
 

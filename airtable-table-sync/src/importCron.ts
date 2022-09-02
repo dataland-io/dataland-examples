@@ -14,6 +14,7 @@ import {
   DATALAND_TABLE_NAME,
   RECORD_ID,
   SYNC_TABLES_MARKER,
+  AIRTABLE_FIELDS_LIST,
 } from "./constants";
 
 const airtableBase = new Airtable({
@@ -79,11 +80,18 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
 const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
   const records: Record<string, any>[] = [];
 
+  let fields_array: (string | number)[] = [];
+  if (AIRTABLE_FIELDS_LIST == "ALL") {
+  } else {
+    fields_array = AIRTABLE_FIELDS_LIST.split(",").map((field) => field.trim());
+  }
+
   await new Promise((resolve, error) => {
     airtableTable
       .select({
         pageSize: 100,
         view: AIRTABLE_VIEW_NAME,
+        fields: fields_array,
       })
       .eachPage(
         (pageRecords, fetchNextPage) => {
