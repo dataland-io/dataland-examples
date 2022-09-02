@@ -1,5 +1,5 @@
 import { Scalar } from "@dataland-io/dataland-sdk-worker";
-import { Client, clientT, clientPostT } from "./client";
+import { Client, clientT } from "./client";
 
 export const getClientValue = (value: unknown) => {
   // NOTE(gab): our backend returns NaN for empty number fields
@@ -10,6 +10,8 @@ export const getClientValue = (value: unknown) => {
   if (typeof value !== "string") {
     return value;
   }
+
+  // TODO(gab): better logic for identifying jsons
   const isObject = value.startsWith("{") && value.endsWith("}");
   const isArray = value.startsWith("[") && value.endsWith("]");
 
@@ -23,7 +25,7 @@ export const getClientValue = (value: unknown) => {
   return value;
 };
 
-export const getClientPost = (row: Record<string, Scalar>) => {
+export const getClient = (row: Record<string, Scalar>) => {
   const clientPost: any = {};
   for (const columnName in row) {
     const value = row[columnName];
@@ -44,7 +46,7 @@ export const getClientPost = (row: Record<string, Scalar>) => {
     }
   }
 
-  return clientPostT.safeParse(clientPost);
+  return clientPost;
 };
 
 // export const getDatalandWritebackValues = (
@@ -92,11 +94,11 @@ export const parseClients = (clients: Client[]) => {
       }
     }
   }
-  //   if (issues.length !== 0) {
-  //     throw new Error(
-  //       "Import - aborting due to incorrect data types being passed"
-  //     );
-  //   }
+  if (issues.length !== 0) {
+    throw new Error(
+      "Import - aborting due to incorrect data types being passed"
+    );
+  }
 
   const columnNames: Set<string> = new Set();
   for (const client of clients) {

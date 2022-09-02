@@ -8,7 +8,7 @@ import {
   registerTransactionHandler,
   Uuid,
 } from "@dataland-io/dataland-sdk-worker";
-import { Client, ClientPost } from "./client";
+import { Client, UpdateClient } from "./client";
 import {
   MINDBODY_ALLOW_WRITEBACK_BOOLEAN,
   CLIENT_ID,
@@ -18,6 +18,24 @@ import {
   MINDBODY_SITE_ID,
   SYNC_TABLES_MARKER,
 } from "./constants";
+
+const handleDeleteRowsMutation = () => {
+  // const deleteRows: string[] = [];
+  // for (let i = 0; i < mutation.value.keys.length; i++) {
+  //   const key = mutation.value.keys[i];
+  //   const recordId = recordIdMap[key];
+  //   if (recordId == null) {
+  //     console.error("Airtable Sync - Could not find Airtable record id", {
+  //       datalandKey: key,
+  //     });
+  //     return;
+  //   }
+  //   deleteRows.push(recordId);
+  // }
+  // if (deleteRows.length === 0) {
+  //   continue;
+  // }
+};
 
 const transactionHandler = async (transaction: Transaction) => {
   // NOTE(gab): Updating a cell in Dataland while Airtable import cron is running would

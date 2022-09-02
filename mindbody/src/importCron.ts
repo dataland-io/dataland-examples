@@ -79,6 +79,7 @@ export const fetchClients = async (opts?: { clientId?: string }) => {
       );
     }
     clients.push(...pageClients);
+    console.log("Fetched clients:", clients.length);
 
     const requestedOffset = json["PaginationResponse"]["RequestedOffset"];
     const totalResults = json["PaginationResponse"]["TotalResults"];
