@@ -1043,13 +1043,13 @@ tables:
         columnName: LockerNumber
         dataType: string
       - columnId: "mbo-push"
-        columnName: "MBO Push"
+        columnName: "MBO push"
         dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
             {
               "type": "button",
-              "label": "MBO Push",
+              "label": "MBO push",
               "theme": "blue"
             }
       - columnId: "mbo-push-status"
