@@ -1,0 +1,43 @@
+moduleId: mysql-sync-example
+
+buildCommand: npm run build
+
+info:
+  title: MySQL
+  description: Sync a MySQL database into Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: mysql-icon.svg
+
+parameters:
+  - mysql-host
+  - mysql-port
+  - mysql-user
+  - mysql-password
+  - mysql-db
+  - mysql-table-mapping
+
+# To deploy this module locally, create a .env file in the root of this folder
+# with the following contents, and add your values.
+# DL_PARAM_MYSQL_HOST=
+# DL_PARAM_MYSQL_PORT=
+# DL_PARAM_MYSQL_USER=
+# DL_PARAM_MYSQL_PASSWORD=
+# DL_PARAM_MYSQL_DB=
+# DL_PARAM_MYSQL_TABLE_MAPPING=
+
+workers:
+  - workerId: mysql-sync
+    scriptPath: dist/mysqlSync.bundle.js
+    triggers:
+      transaction: {}
+      cron:
+        cronExpression: "0 */15 * * * * *"
+    env:
+      MYSQL_HOST: mysql-host
+      MYSQL_PORT: mysql-port
+      MYSQL_USER: mysql-user
+      MYSQL_PASSWORD: mysql-password
+      MYSQL_DB: mysql-db
+      MYSQL_TABLE_MAPPING: mysql-table-mapping

@@ -1,7 +1,0 @@
-moduleId: print-transactions-example
-
-buildCommand: npm run build
-
-workers:
-  - workerId: print-transactions
-    scriptPath: dist/printTransactions.bundle.js

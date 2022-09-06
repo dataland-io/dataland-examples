@@ -1,0 +1,24 @@
+moduleId: postgres-replicator-example
+
+buildCommand: npm run build
+
+parameters:
+  - pghost
+  - pgport
+  - pgdatabase
+  - pguser
+  - pgpassword
+  - pgschema
+
+workers:
+  - workerId: postgres-replicator
+    scriptPath: dist/postgresReplicator.bundle.js
+    env:
+      PGHOST: pghost
+      PGPORT: pgport
+      PGDATABASE: pgdatabase
+      PGUSER: pguser
+      PGPASSWORD: pgpassword
+      PGSCHEMA: pgschema
+    triggers:
+      transaction: {}

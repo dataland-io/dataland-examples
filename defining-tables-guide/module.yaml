@@ -1,0 +1,62 @@
+moduleId: defining-tables-guide
+
+tables:
+  - tableId: first-table
+    tableName: first
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: first-column
+        columnName: first
+        dataType: string
+
+      - columnId: second-column
+        columnName: second
+        dataType: string
+
+  - tableId: users-table
+    tableName: users
+    autoMigrate: false
+    columnDescriptors:
+      - columnId: name-column
+        columnName: name
+        dataType: string
+
+      - columnId: age-column
+        columnName: age
+        dataType: int32
+
+      - columnId: billing-address-column
+        columnName: billing-address
+        dataType: string
+
+      - columnId: personal-website-column
+        columnName: personal-website
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
+
+      - columnId: plan-tier-column
+        columnName: plan-tier
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "free",
+                  "theme": "silver"
+                },
+                {
+                  "value": "pro",
+                  "theme": "pink"
+                },
+                {
+                  "value": "enterprise",
+                  "theme": "ruby"
+                }
+              ]
+            }
