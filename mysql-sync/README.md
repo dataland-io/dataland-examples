@@ -43,7 +43,9 @@ For example, let's say we want to sync three tables from MySQL database into Dat
 
 The stringified version of this JSON can then used as the `mysql-table-mapping` module installation form:
 
-`{"Customers": "Synced Customers","Orders": "Synced Orders","Products": "Synced Products"}`
+```
+'{"Customers": "Synced Customers","Orders": "Synced Orders","Products": "Synced Products"}'
+```
 
 Or, in the .env file:
 
