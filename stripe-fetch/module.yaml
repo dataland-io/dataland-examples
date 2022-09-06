@@ -688,6 +688,7 @@ workers:
     triggers:
       cron:
         cronExpression: "*/30 * * * * * *"
+      transaction: {}
 
   - workerId: fetch-stripe-customers
     scriptPath: dist/fetchStripeCustomers.bundle.js
@@ -696,6 +697,7 @@ workers:
     triggers:
       cron:
         cronExpression: "0 */15 * * * * *"
+      transaction: {}
 
   - workerId: fetch-stripe-invoices
     scriptPath: dist/fetchStripeInvoices.bundle.js
@@ -704,6 +706,7 @@ workers:
     triggers:
       cron:
         cronExpression: "0 */15 * * * * *"
+      transaction: {}
 
   - workerId: fetch-stripe-subscriptions
     scriptPath: dist/fetchStripeSubscriptions.bundle.js
@@ -712,6 +715,7 @@ workers:
     triggers:
       cron:
         cronExpression: "0 */15 * * * * *"
+      transaction: {}
 
   - workerId: fetch-stripe-payment-intents
     scriptPath: dist/fetchStripePaymentIntents.bundle.js
@@ -720,6 +724,7 @@ workers:
     triggers:
       cron:
         cronExpression: "0 */15 * * * * *"
+      transaction: {}
 
   - workerId: fetch-stripe-refunds
     scriptPath: dist/fetchStripeRefunds.bundle.js
@@ -728,21 +733,28 @@ workers:
     triggers:
       cron:
         cronExpression: "0 */15 * * * * *"
+      transaction: {}
 
   - workerId: post-stripe-subscription-item-quantity-increment
     scriptPath: dist/postStripeSubscriptionItemQuantityIncrement.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
+    triggers:
+      transaction: {}
 
   - workerId: post-stripe-subscription-item-quantity-decrement
     scriptPath: dist/postStripeSubscriptionItemQuantityDecrement.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
+    triggers:
+      transaction: {}
 
   - workerId: post-stripe-payment-intent-refund
     scriptPath: dist/postStripePaymentIntentRefund.bundle.js
     env:
       STRIPE_API_KEY: stripe-api-key
+    triggers:
+      transaction: {}
 
   - workerId: view-stripe-customers-and-active-subscriptions
     scriptPath: dist/viewStripeSubscriptionsWithCustomers.bundle.js
@@ -751,3 +763,4 @@ workers:
     triggers:
       cron:
         cronExpression: "0 */5 * * * * *"
+      transaction: {}
