@@ -2,6 +2,14 @@ moduleId: mysql-sync-example
 
 buildCommand: npm run build
 
+info:
+  title: MySQL
+  description: Sync a MySQL database into Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: mysql-icon.svg
+
 parameters:
   - mysql-host
   - mysql-port
@@ -25,7 +33,7 @@ workers:
     triggers:
       transaction: {}
       cron:
-        cronExpression: "*/30 * * * * * *"
+        cronExpression: "0 */15 * * * * *"
     env:
       MYSQL_HOST: mysql-host
       MYSQL_PORT: mysql-port
