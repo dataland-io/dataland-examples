@@ -1,0 +1,9 @@
+moduleId: print-db-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: print-db
+    scriptPath: dist/printDb.bundle.js
+    triggers:
+      transaction: {}
