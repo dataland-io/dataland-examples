@@ -1,17 +1,19 @@
 import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
 import {
+  CronHandler,
+  getCatalogMirror,
+  getEnv,
+  Mutation,
   registerCronHandler,
+  runMutations,
+  Schema,
   SyncTable,
   syncTables,
 } from "@dataland-io/dataland-sdk-worker";
 import { Client } from "./client";
 import {
   CLIENT_ID,
-  DATALAND_CLIENTS_TABLE_NAME,
-  MINDBODY_API_KEY,
-  MINDBODY_AUTHORIZATION,
   MINDBODY_REQUEST_LIMIT,
-  MINDBODY_SITE_ID,
   SYNC_TABLES_MARKER,
 } from "./constants";
 import createFetchRetry from "fetch-retry-ts";
@@ -48,9 +50,9 @@ const fetchRetry = createFetchRetry(fetch, {
 export const fetchClients = async (opts?: { clientId?: string }) => {
   const myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/json");
-  myHeaders.append("API-Key", MINDBODY_API_KEY);
-  myHeaders.append("SiteId", MINDBODY_SITE_ID);
-  myHeaders.append("Authorization", MINDBODY_AUTHORIZATION);
+  myHeaders.append("API-Key", getEnv("MINDBODY_API_KEY"));
+  myHeaders.append("SiteId", getEnv("MINDBODY_SITE_ID"));
+  myHeaders.append("Authorization", getEnv("MINDBODY_AUTHORIZATION"));
 
   const requestOptions: RequestInit = {
     method: "GET",
@@ -62,7 +64,7 @@ export const fetchClients = async (opts?: { clientId?: string }) => {
     let url = `https://api.mindbodyonline.com/public/v6/client/clients?limit=${MINDBODY_REQUEST_LIMIT}&offset=${offset}`;
     const clientId = opts?.clientId;
     if (clientId != null) {
-      url = `${url}&clientIDs=${clientId}`;
+      url = `${url}&clientIDs=${encodeURIComponent(clientId)}`;
     }
     return url;
   };
@@ -74,10 +76,12 @@ export const fetchClients = async (opts?: { clientId?: string }) => {
     const json = await resp.json();
     const pageClients = json.Clients;
     if (pageClients == null) {
-      throw new Error(
+      console.error(
         `Failed to fetch clients - ${resp.status}: ${resp.statusText}`
       );
+      throw new Error("err");
     }
+
     clients.push(...pageClients);
     console.log("Fetched clients:", clients.length);
 
@@ -94,8 +98,9 @@ export const fetchClients = async (opts?: { clientId?: string }) => {
   return parseClients(clients);
 };
 
-const cronHandler = async () => {
-  console.log("cron");
+const cronHandler: CronHandler = async (t) => {
+  console.log("cron started");
+
   const records = await fetchClients();
   if (records == null) {
     return;
@@ -109,23 +114,40 @@ const cronHandler = async () => {
   const batch = tableToIPC(table);
 
   const syncTable: SyncTable = {
-    tableName: DATALAND_CLIENTS_TABLE_NAME,
+    tableName: getEnv("DATALAND_CLIENTS_TABLE_NAME"),
     arrowRecordBatches: [batch],
     identityColumnNames: [CLIENT_ID],
     keepExtraColumns: true,
   };
 
-  console.log("befoere sync");
-  const transaction = await syncTables({
+  const { transactions } = await syncTables({
     syncTables: [syncTable],
-
     transactionAnnotations: {
       [SYNC_TABLES_MARKER]: "true",
     },
   });
 
-  console.log("Transaction from sync", transaction.transactions);
+  console.log("Transaction from sync", transactions);
+  const { tableDescriptors } = await getCatalogMirror();
+  const schema = new Schema(tableDescriptors);
+
+  const logicalTimestampMutations: Mutation[] = [];
+  for (const transaction of transactions) {
+    for (const mutation of transaction.mutations) {
+      if (mutation.kind === "update_rows" || mutation.kind === "insert_rows") {
+        for (const row of mutation.value.rows) {
+          const mut = schema.makeUpdateRows(
+            getEnv("DATALAND_CLIENTS_TABLE_NAME"),
+            row.key,
+            { "MBO data logical timestamp": transaction.logicalTimestamp }
+          );
+          logicalTimestampMutations.push(mut);
+        }
+      }
+    }
+  }
+  await runMutations({ mutations: logicalTimestampMutations });
 };
 
-console.log("ref");
+console.log("registering cron handler");
 registerCronHandler(cronHandler);

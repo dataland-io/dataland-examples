@@ -1,6 +1,19 @@
 import { Scalar } from "@dataland-io/dataland-sdk-worker";
 import { Client, clientT } from "./client";
 
+export const parseRow = (row: Record<string, Scalar>) => {
+  const parsedRow: Record<string, Scalar> = {};
+  for (const key in row) {
+    const value = row[key];
+    if (typeof value === "number" && isNaN(value)) {
+      parsedRow[key] = null;
+    } else {
+      parsedRow[key] = value;
+    }
+  }
+  return parsedRow;
+};
+
 export const getClientValue = (value: unknown) => {
   // NOTE(gab): our backend returns NaN for empty number fields
   if (typeof value === "number" && isNaN(value)) {
@@ -25,8 +38,8 @@ export const getClientValue = (value: unknown) => {
   return value;
 };
 
-export const getClient = (row: Record<string, Scalar>) => {
-  const clientPost: any = {};
+export const clientToMboRepresentation = (row: Record<string, Scalar>) => {
+  const client: any = {};
   for (const columnName in row) {
     const value = row[columnName];
     const mboValue = getClientValue(value);
@@ -34,19 +47,18 @@ export const getClient = (row: Record<string, Scalar>) => {
     if (columnName.includes("/~/")) {
       const [parentPropertyKey, propertyKey] = columnName.split("/~/");
 
-      let parentProperty = clientPost[parentPropertyKey];
+      let parentProperty = client[parentPropertyKey];
       if (parentProperty == null) {
         parentProperty = {};
       }
       parentProperty[propertyKey] = mboValue;
 
-      clientPost[parentPropertyKey] = parentProperty;
+      client[parentPropertyKey] = parentProperty;
     } else {
-      clientPost[columnName] = mboValue;
+      client[columnName] = mboValue;
     }
   }
-
-  return clientPost;
+  return client;
 };
 
 // export const getDatalandWritebackValues = (

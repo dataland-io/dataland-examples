@@ -977,9 +977,22 @@ tables:
               "label": "MBO push",
               "theme": "blue"
             }
+      - columnId: "mbo-pull"
+        columnName: "MBO pull"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "MBO pull",
+              "theme": "blue"
+            }
       - columnId: "mbo-push-status"
         columnName: "MBO push status"
         dataType: string
       - columnId: "mbo-pushed-at"
         columnName: "MBO pushed at"
         dataType: string
+      - columnId: "mbo-data-logical-timestamp"
+        columnName: "MBO data logical timestamp"
+        dataType: int64
