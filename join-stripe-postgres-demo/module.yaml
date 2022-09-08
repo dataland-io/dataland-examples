@@ -6,7 +6,7 @@ parameters:
   - stripe-api-key
 
 info:
-  title: Custom Order Refund Panel
+  title: Custom Order Refund Workflow
   description: Issue refunds to high LTV customers
   author: Acme Corp
 
