@@ -9,7 +9,7 @@
   "dependencies": {
     "@dataland-io/dataland-sdk-worker": "0.16.0",
     "@dataland-io/dataland-state-sync": "0.16.0",
-    "@dataland-workerlibs/postgres": "0.16.0",
+    "@dataland-workerlibs/postgres": "0.16.101",
     "lodash-es": "4.17.21"
   },
   "devDependencies": {

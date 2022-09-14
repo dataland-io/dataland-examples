@@ -10,7 +10,7 @@
     "@dataland-io/dataland-sdk-worker": "0.16.0",
     "@apache-arrow/es2015-esm": "9.0.0",
     "@dataland-io/dataland-state-sync": "0.16.0",
-    "@dataland-workerlibs/postgres": "0.16.0",
+    "@dataland-workerlibs/postgres": "0.16.101",
     "common-tags": "1.8.2",
     "io-ts": "2.2.16",
     "lodash-es": "4.17.21"
