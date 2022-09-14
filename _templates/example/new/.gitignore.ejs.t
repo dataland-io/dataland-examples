@@ -14,3 +14,5 @@ tmp/
 .env
 .env.*
 !.env.template
+
+module.tar.gz

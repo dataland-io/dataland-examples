@@ -14,7 +14,7 @@ This example uses the CoinMarketCap API to look up the current prices for any cr
 
 3. Create a Secret Access Key for your account:
 
-   ![Create secret access key](../assets/create-secret-access-key-22-05-17.gif)
+   ![Create secret access key](assets/create-secret-access-key-22-05-17.gif)
 
 4. Configure the Dataland CLI with your Secret Access Key:
 
@@ -49,4 +49,4 @@ This example uses the CoinMarketCap API to look up the current prices for any cr
 
    Go to the Dataland UI, open the newly created `crypto` table, and add a row with an example coin ticker like `ETH`. You should see a price respond back in the second column:
 
-   ![Crypto lookup end state](../assets/crypto-lookup-end-state-2022-08-05.gif)
+   ![Crypto lookup end state](assets/crypto-lookup-end-state-2022-08-05.gif)

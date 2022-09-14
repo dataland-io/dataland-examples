@@ -7,9 +7,9 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
-    "@dataland-io/dataland-sdk-worker": "0.13.0",
-    "@dataland-io/dataland-state-sync": "0.13.0",
-    "@dataland-workerlibs/postgres": "0.15.0",
+    "@dataland-io/dataland-sdk-worker": "0.16.0",
+    "@dataland-io/dataland-state-sync": "0.16.0",
+    "@dataland-workerlibs/postgres": "0.16.0",
     "lodash-es": "4.17.21"
   },
   "devDependencies": {
