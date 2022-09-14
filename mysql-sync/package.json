@@ -7,9 +7,9 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
-    "@dataland-io/dataland-sdk-worker": "0.15.0",
+    "@dataland-io/dataland-sdk-worker": "0.16.0",
     "@apache-arrow/es2015-esm": "9.0.0",
-    "@dataland-io/dataland-state-sync": "0.15.0",
+    "@dataland-io/dataland-state-sync": "0.16.0",
     "@dataland-workerlibs/mysql": "2.10.201",
     "common-tags": "1.8.2",
     "io-ts": "2.2.16",
