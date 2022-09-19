@@ -1,7 +1,6 @@
 import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
 import {
   AddColumn,
-  assertNever,
   ChangeColumnNullable,
   ColumnDescriptor,
   CreateTable,
@@ -10,29 +9,30 @@ import {
   DeleteRows,
   DropColumn,
   DropTable,
-  getCatalogSnapshot,
-  getEnv,
   InsertRows,
-  invariant,
   Mutation,
-  registerCronHandler,
-  registerTransactionHandler,
   RenameColumn,
   RenameTable,
-  strictParseInt,
   SyncTable,
-  syncTables,
   TaggedScalar,
   Transaction,
-  tryGetEnv,
   UpdateRows,
+  assertNever,
+  getCatalogSnapshot,
+  getEnv,
+  invariant,
+  registerCronHandler,
+  registerTransactionHandler,
+  strictParseInt,
+  syncTables,
+  tryGetEnv,
 } from "@dataland-io/dataland-sdk-worker";
 import {
   DatabaseSchema,
   transitionDatabaseSchema_mutations,
 } from "@dataland-io/dataland-state-sync";
-import { oneLine } from "common-tags";
 import { Client } from "@dataland-workerlibs/postgres";
+import { oneLine } from "common-tags";
 import { keyBy } from "lodash-es";
 
 const CRON_SYNC_MARKER = "postgres-sync.workers.dataland.io/cron-sync-marker";
@@ -126,6 +126,7 @@ const cronHandler = async (cronEvent: CronEvent) => {
     console.log("completed table sync", tableName);
   }
 
+  // Disconnect from the database to avoid hogging connections.
   await client.end();
 
   console.log("completed cron sync", cronEvent);
@@ -136,19 +137,6 @@ registerCronHandler(cronHandler);
 const transactionHandler = async (transaction: Transaction) => {
   if (CRON_SYNC_MARKER in transaction.transactionAnnotations) {
     console.log("skipping own cron sync transactions from writeback");
-  }
-
-  // TODO(awu): This is configurable by the allow-drop-tables-boolean flag.
-  const allow_writeback_boolean = getEnv(
-    "ALLOW_WRITEBACK_BOOLEAN"
-  ).toLowerCase();
-  if (allow_writeback_boolean == null) {
-    throw new Error("Missing environment variable - ALLOW_WRITEBACK_BOOLEAN");
-  }
-
-  if (allow_writeback_boolean == "false") {
-    console.log("skipping writeback due to ALLOW_WRITEBACK_BOOLEAN=false");
-    return;
   }
 
   const { tableDescriptors } = await getCatalogSnapshot({
@@ -192,12 +180,6 @@ const transactionHandler = async (transaction: Transaction) => {
   await tx.queryArray(`set local search_path to ${quoteIdentifier(pgSchema)}`);
 
   for (const sqlStatement of sqlStatements) {
-    // Skip statement if it doesn't include the token "postgres-"
-    if (!sqlStatement.includes("postgres")) {
-      console.log("non-postgres source table -- skipping");
-      continue;
-    }
-
     console.log("running statement", transactionUuid, sqlStatement);
     const result = await tx.queryArray(sqlStatement);
     console.log("completed statement", transactionUuid, result);
@@ -508,25 +490,11 @@ export const mutationToSqlStatements = (
       return [`create table ${tableName} (${columnInfos.join(",")})`];
     }
     case "drop_table": {
-      // TODO(awu): This is configurable by the allow-drop-tables-boolean flag.
-      const allow_drop_tables_boolean = getEnv(
-        "ALLOW_DROP_TABLES_BOOLEAN"
-      ).toLowerCase();
-      if (allow_drop_tables_boolean == null) {
-        throw new Error(
-          "Missing environment variable - ALLOW_DROP_TABLES_BOOLEAN"
-        );
-      }
-      if (allow_drop_tables_boolean == "true") {
-        const dropTable: DropTable = mutation.value;
-        const tableDescriptor = databaseSchema[dropTable.tableUuid];
-        invariant(tableDescriptor != null);
-        const tableName = quoteIdentifier(tableDescriptor.tableName);
-        return [`drop table ${tableName}`];
-      } else if (allow_drop_tables_boolean == "false") {
-        return [];
-      }
-      return [];
+      const dropTable: DropTable = mutation.value;
+      const tableDescriptor = databaseSchema[dropTable.tableUuid];
+      invariant(tableDescriptor != null);
+      const tableName = quoteIdentifier(tableDescriptor.tableName);
+      return [`drop table ${tableName}`];
     }
     case "rename_table": {
       const renameTable: RenameTable = mutation.value;
