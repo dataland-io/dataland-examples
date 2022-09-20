@@ -33,7 +33,7 @@ workers:
     triggers:
       transaction: {}
       cron:
-        cronExpression: "0 */15 * * * * *"
+        cronExpression: "0 0 * * * * *"
     env:
       MYSQL_HOST: mysql-host
       MYSQL_PORT: mysql-port
@@ -49,13 +49,17 @@ tables:
     columnDescriptors:
       - columnId: order-id
         columnName: order_id
-        dataType: string
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "100"
       - columnId: customer-id
         columnName: customer_id
         dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
       # delivery-status
       - columnId: "delivery-status"
-        columnName: Ddelivery_status"
+        columnName: delivery_status
         dataType: string
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -83,15 +87,25 @@ tables:
       - columnId: "order-placed-at"
         columnName: "order_placed_at"
         dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "140"
       - columnId: "delivery-time"
         columnName: "delivery_time"
-        dataType: int32
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "140"
       - columnId: "rating"
         columnName: "rating"
-        dataType: int32
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
       - columnId: "user-rating-comment"
         columnName: "user_rating_comment"
         dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "200"
       - columnId: "order-value"
         columnName: "order_value"
-        dataType: int32
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
