@@ -14,6 +14,9 @@ import { isString, isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
+// --------------------------------------------------------
+// (awu): Define the post Stripe credit function
+// --------------------------------------------------------
 const postStripeCredit = async (stripe_customer_id: string) => {
   var myHeaders = new Headers();
   myHeaders.append("Content-Type", "application/x-www-form-urlencoded");
@@ -40,8 +43,12 @@ const postStripeCredit = async (stripe_customer_id: string) => {
   return result;
 };
 
-// TODO: function is defined, now need to call it from a button
+// ------------------------------------------------------------
+// (awu): Function is invoked by transactions in the Dataland.
 
+// When users click a button in the Dataland, a transaction is
+// created that invokes this function.
+// ------------------------------------------------------------
 const handler = async (transaction: Transaction) => {
   const { tableDescriptors } = await getCatalogSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
@@ -50,7 +57,7 @@ const handler = async (transaction: Transaction) => {
   const schema = new Schema(tableDescriptors);
 
   const affectedRows = schema.getAffectedRows(
-    "Alerts on Orders",
+    "Orders Credit Workflow",
     "Issue credit",
     transaction
   );
@@ -70,12 +77,15 @@ const handler = async (transaction: Transaction) => {
   const keyList = `(${lookupKeys.join(",")})`;
   console.log("keyList: ", keyList);
 
-  // fetch stripe_customer_id from Alerts on Orders
+  // -------------------------------------------------------------------
+  // (awu): Use Dataland SDK to read the Stripe Customer ID value,
+  //        and pass into postStripeCredit function
+  // -------------------------------------------------------------------
   const order_response = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key, "Stripe Customer ID"
-    from "Alerts on Orders" 
+    from "Orders Credit Workflow" 
     where _dataland_key in ${keyList}`,
   });
 
@@ -104,7 +114,7 @@ const handler = async (transaction: Transaction) => {
       continue;
     } else {
       const sentTimestamp = new Date().toISOString();
-      const update = schema.makeUpdateRows("Alerts on Orders", key, {
+      const update = schema.makeUpdateRows("Orders Credit Workflow", key, {
         "Credit processed at": sentTimestamp,
       });
 

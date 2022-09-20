@@ -11,11 +11,11 @@ info:
   author: Acme Corp
 
 workers:
-  - workerId: join-stripe-postgres-demo
-    scriptPath: dist/joinStripePostgresDemo.bundle.js
+  - workerId: join-stripe-mysql-demo
+    scriptPath: dist/joinStripeMySQLDemo.bundle.js
     triggers:
       cron:
-        cronExpression: "*/15 * * * * * *"
+        cronExpression: "0 */30 * * * * *"
 
   - workerId: post-stripe-credit
     scriptPath: dist/postStripeCredit.bundle.js
@@ -25,19 +25,23 @@ workers:
       transaction: {}
 
 tables:
-  - tableId: alerts-on-orders
-    tableName: "Alerts on Orders"
+  - tableId: orders-refund-workflow
+    tableName: "Orders Credit Workflow"
     autoMigrate: true
     columnDescriptors:
       # id
       - columnId: "id"
         columnName: "Order ID"
-        dataType: string
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
 
       # customer_id
       - columnId: "customer-id"
         columnName: "Customer ID"
         dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
 
       # delivery-status
       - columnId: "delivery-status"
@@ -71,47 +75,60 @@ tables:
       - columnId: "order-placed-at"
         columnName: "Order Placed At"
         dataType: string
-
-      # order_delivered_at
-      - columnId: "order-delivered-at"
-        columnName: "Order Delivered At"
-        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "180"
 
       # delivery_time
       - columnId: "delivery-time"
         columnName: "Delivery Time (mins)"
-        dataType: int64
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
 
       # rating
       - columnId: rating
         columnName: "User Rating"
-        dataType: int64
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
 
       # user_rating_comment
       - columnId: "user-rating-comment"
         columnName: "User Rating Comment"
         dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "180"
 
       # order_value
       - columnId: "order-value"
         columnName: "Order Value"
-        dataType: int64
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
 
       - columnId: phone
         columnName: "Phone"
         dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "150"
 
       - columnId: email
         columnName: "Email"
         dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "150"
 
       - columnId: name
         columnName: "Name"
         dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "150"
 
       - columnId: total-order-value
         columnName: "Lifetime Order Value"
-        dataType: int64
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "150"
 
       - columnId: "stripe-url"
         columnName: "Stripe URL"
@@ -125,11 +142,6 @@ tables:
       - columnId: "stripe-customer-id"
         columnName: "Stripe Customer ID"
         dataType: string
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "url"
-            }
 
       - columnId: "issue-credit"
         columnName: "Issue credit"

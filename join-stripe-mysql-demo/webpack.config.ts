@@ -5,7 +5,7 @@ const config: Configuration = {
   mode: "production",
   target: "web",
   entry: {
-    joinStripePostgresDemo: "./src/joinStripePostgresDemo.ts",
+    joinStripeMySQLDemo: "./src/joinStripeMySQLDemo.ts",
     postStripeCredit: "./src/postStripeCredit.ts",
   },
   module: {
