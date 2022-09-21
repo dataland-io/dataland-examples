@@ -23,6 +23,7 @@ const postStripeCredit = async (stripe_customer_id: string) => {
   myHeaders.append("Authorization", `Bearer ${stripe_key}`);
 
   var urlencoded = new URLSearchParams();
+  // Issues a $25 credit to the customer
   urlencoded.append("amount", "2500");
   urlencoded.append("currency", "usd");
 
@@ -39,15 +40,13 @@ const postStripeCredit = async (stripe_customer_id: string) => {
   );
 
   const result = await response.json();
-  console.log("yy - result: ", result);
   return result;
 };
 
 // ------------------------------------------------------------
-// (awu): Function is invoked by transactions in the Dataland.
-
-// When users click a button in the Dataland, a transaction is
-// created that invokes this function.
+// (awu): This function is invoked by transactions in the Dataland.
+//        When users click a button titled "Issue credit" in the Dataland,
+//        a transaction is created that invokes this function.
 // ------------------------------------------------------------
 const handler = async (transaction: Transaction) => {
   const { tableDescriptors } = await getCatalogSnapshot({
