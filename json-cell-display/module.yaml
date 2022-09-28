@@ -1,0 +1,63 @@
+moduleId: json-cell-display-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: json-cell-display
+    scriptPath: dist/jsonCellDisplay.bundle.js
+    triggers:
+      transaction:
+        enabled: true
+
+tables:
+  - tableId: json-table
+    tableName: Table with JSON cell display
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: grocery-basket-id
+        columnName: Grocery List ID
+        dataType: string
+
+      - columnId: grocery-list-contents
+        columnName: Grocery List Contents
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "json",
+              "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "Notes": {
+                    "type": "string"
+                  },
+                  "Grocery Items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "Item Name": {
+                          "type": "string"
+                        },
+                        "Quantity": {
+                          "type": "number"
+                        }
+                      },
+                      "required": ["Item Name", "Quantity"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "Notes"
+                ],
+                "additionalProperties": false
+              },
+              "uiSchema": {
+                "Notes": {
+                  "ui:widget": "textarea",
+                  "ui:rows": 2
+                }
+              }
+            }
