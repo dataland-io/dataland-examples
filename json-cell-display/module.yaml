@@ -1,0 +1,361 @@
+moduleId: json-cell-display-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: json-cell-display
+    scriptPath: dist/jsonCellDisplay.bundle.js
+    triggers:
+      transaction:
+        enabled: true
+
+tables:
+  - tableId: exercises
+    tableName: exercises
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: firestore-document-id
+        columnName: _firestore_document_id
+        dataType: string
+
+      - columnId: myworkouts-seo-id
+        columnName: myworkouts_seo_id
+        dataType: int64
+
+      - columnId: title
+        columnName: title
+        dataType: string
+
+      - columnId: myworkouts-url
+        columnName: myworkouts_url
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
+  - tableId: equipment
+    tableName: equipment
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: firestore-document-id
+        columnName: _firestore_document_id
+        dataType: string
+
+      - columnId: equipment
+        columnName: equipment
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "json",
+              "schema":
+                {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "myworkouts_mongo_id": {
+                      "type": "string"
+                    },
+                    "myworkouts_mongo_id_list": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "title": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "myworkouts_mongo_id",
+                    "myworkouts_mongo_id_list",
+                    "title"
+                  ],
+                  "additionalProperties": false
+                }
+            }
+  - tableId: sports
+    tableName: sports
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: firestore-document-id
+        columnName: _firestore_document_id
+        dataType: string
+
+      - columnId: sport
+        columnName: sport
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "json",
+              "schema":
+                {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "order": {
+                      "type": "integer"
+                    },
+                    "imageUrl": {
+                      "type": "string"
+                    },
+                    "isLive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "order",
+                    "imageUrl"
+                  ],
+                  "additionalProperties": false
+                }
+            }
+  - tableId: reps-type
+    tableName: reps_type
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: firestore-document-id
+        columnName: _firestore_document_id
+        dataType: string
+
+      - columnId: reps-type
+        columnName: reps_type
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "json",
+              "schema":
+                {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "shorthand": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "shorthand"
+                  ],
+                  "additionalProperties": false
+                }
+            }
+  - tableId: sets-type
+    tableName: sets_type
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: firestore-document-id
+        columnName: _firestore_document_id
+        dataType: string
+
+      - columnId: sets-type
+        columnName: sets_type
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "json",
+              "schema":
+                {
+                  "$schema": "http://json-schema.org/draft-07/schema#",
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "shorthand": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "shorthand"
+                  ],
+                  "additionalProperties": false
+                }
+            }
+  - tableId: strength-plans
+    tableName: strength_plans
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: firestore-document-id
+        columnName: _firestore_document_id
+        dataType: string
+
+      - columnId: strength-plan
+        columnName: strength_plan
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "json",
+              "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "myworkouts_seo_id": {
+                    "type": "integer"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "thumbnail": {
+                    "type": "string"
+                  },
+                  "imageUrl": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "days_per_week": {
+                    "type": "integer"
+                  },
+                  "equipment": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "equipment_list": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "sports": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "sports_list": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "days": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string"
+                        },
+                        "circuits": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "circuit_length": {
+                                "type": "integer"
+                              },
+                              "rest_between_sets": {
+                                "type": "integer"
+                              },
+                              "circuit_length_label": {
+                                "type": "string"
+                              },
+                              "order": {
+                                "type": "integer"
+                              },
+                              "sets_label": {
+                                "type": "string"
+                              },
+                              "sets": {
+                                "type": "number"
+                              },
+                              "exercises": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "reps": {
+                                      "type": "integer"
+                                    },
+                                    "rest_after_exercise": {
+                                      "type": "integer"
+                                    },
+                                    "exercise_notes": {
+                                      "type": "string"
+                                    },
+                                    "equipment": {
+                                      "type": "string"
+                                    },
+                                    "title": {
+                                      "type": "string"
+                                    },
+                                    "myworkouts_seo_id": {
+                                      "type": "integer"
+                                    },
+                                    "myworkouts_url": {
+                                      "type": "string"
+                                    },
+                                    "reps_label": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "reps",
+                                    "rest_after_exercise",
+                                    "equipment",
+                                    "title",
+                                    "myworkouts_seo_id",
+                                    "myworkouts_url",
+                                    "reps_label"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              }
+                            },
+                            "required": [
+                              "circuit_length",
+                              "rest_between_sets",
+                              "circuit_length_label",
+                              "order",
+                              "sets_label",
+                              "sets",
+                              "exercises"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": ["title", "circuits"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "myworkouts_seo_id",
+                  "title",
+                  "thumbnail",
+                  "imageUrl",
+                  "notes",
+                  "days_per_week",
+                  "equipment",
+                  "equipment_list",
+                  "sports",
+                  "sports_list",
+                  "days"
+                ],
+                "additionalProperties": false
+              },
+              "uiSchema": {
+                "notes": {
+                  "ui:widget": "textarea",
+                  "ui:rows": 10
+                }
+              }
+            }
