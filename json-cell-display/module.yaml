@@ -2,13 +2,6 @@ moduleId: json-cell-display-example
 
 buildCommand: npm run build
 
-workers:
-  - workerId: json-cell-display
-    scriptPath: dist/jsonCellDisplay.bundle.js
-    triggers:
-      transaction:
-        enabled: true
-
 tables:
   - tableId: json-table
     tableName: Table with JSON cell display
