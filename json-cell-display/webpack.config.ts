@@ -4,9 +4,7 @@ import type { Configuration } from "webpack";
 const config: Configuration = {
   mode: "production",
   target: "web",
-  entry: {
-    jsonCellDisplay: "./src/jsonCellDisplay.ts",
-  },
+  entry: {},
   module: {
     rules: [
       {
