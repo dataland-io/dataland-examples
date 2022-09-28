@@ -15,7 +15,7 @@ workers:
     scriptPath: dist/joinStripeMySQLDemo.bundle.js
     triggers:
       cron:
-        cronExpression: "0 */30 * * * * *"
+        cronExpression: "*/30 * * * * * *"
 
   - workerId: post-stripe-credit
     scriptPath: dist/postStripeCredit.bundle.js
