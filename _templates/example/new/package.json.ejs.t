@@ -11,7 +11,7 @@ to: <%= h.changeCase.param(name) %>/package.json
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
-    "@dataland-io/dataland-sdk-worker": "0.13.0"
+    "@dataland-io/dataland-sdk-worker": "0.16.0"
   },
   "devDependencies": {
     "@types/webpack": "5.28.0",

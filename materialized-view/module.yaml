@@ -1,0 +1,37 @@
+moduleId: materialized-view-example
+
+info:
+  title: Custom SQL Query
+  description: Define a SQL query to be used as a materialized view
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: sql-icon.svg
+
+buildCommand: npm run build
+
+parameters:
+  - sql-query
+  - materialized-view-dataland-table-name
+  - materialized-view-identity-column-name
+  - keep-extra-columns-boolean
+
+# If deploying with the Dataland CLI, you must first create an .env file
+# in the root of the project with the following variables:
+# DL_PARAM_SQL_QUERY={your-sql-query}
+# DL_PARAM_MATERIALIZED_VIEW_DATALAND_TABLE_NAME={your-dataland-table-name}
+# DL_PARAM_MATERIALIZED_VIEW_IDENTITY_COLUMN_NAME={your-identity-column-name}
+# DL_PARAM_KEEP_EXTRA_COLUMNS_BOOLEAN={true|false}
+
+workers:
+  - workerId: materialized-view
+    scriptPath: dist/materializedView.bundle.js
+    env:
+      SQL_QUERY: sql-query
+      MATERIALIZED_VIEW_DATALAND_TABLE_NAME: materialized-view-dataland-table-name
+      MATERIALIZED_VIEW_IDENTITY_COLUMN_NAME: materialized-view-identity-column-name
+      KEEP_EXTRA_COLUMNS_BOOLEAN: keep-extra-columns-boolean
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
+      transaction: {}
