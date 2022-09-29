@@ -7,8 +7,6 @@ import {
 
 import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
 
-import { isNumber } from "lodash-es";
-
 const stripe_key = getEnv("STRIPE_API_KEY");
 
 const fetchStripeInvoices = async () => {
