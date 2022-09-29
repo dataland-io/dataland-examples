@@ -157,3 +157,18 @@ tables:
       - columnId: "credit-processed-at"
         columnName: "Credit processed at"
         dataType: string
+
+      - columnId: "send-email"
+        columnName: "Send Email"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Send notification email",
+              "theme": "blue"
+            }
+
+      - columnId: "email-sent-at"
+        columnName: "Email sent at"
+        dataType: string

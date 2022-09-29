@@ -1,0 +1,21 @@
+moduleId: sendgrid-send-email-example
+
+buildCommand: npm run build
+
+parameters:
+  - sendgrid-api-key
+
+info:
+  title: SendGrid - Send Email
+  description: Send someone an email using SendGrid
+  author: Dataland Devs
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  iconPath: icon-sendgrid.svg
+
+workers:
+  - workerId: send-email
+    scriptPath: dist/sendEmail.bundle.js
+    env:
+      SENDGRID_API_KEY: sendgrid-api-key
+    triggers:
+      transaction: {}
