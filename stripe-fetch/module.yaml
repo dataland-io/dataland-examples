@@ -483,7 +483,7 @@ tables:
             }
       - columnId: "issue-refund"
         columnName: "Issue refund"
-        dataType: float64
+        dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
             {
@@ -567,7 +567,7 @@ tables:
         dataType: string
       - columnId: increment
         columnName: "Increment quantity"
-        dataType: float64
+        dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
             {
@@ -577,7 +577,7 @@ tables:
             }
       - columnId: decrement
         columnName: "Decrement quantity"
-        dataType: float64
+        dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
             {
