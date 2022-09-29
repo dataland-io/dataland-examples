@@ -14,7 +14,6 @@ const fetchStripeCustomers = async () => {
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
-  let total_counter = 0;
   const full_results = [];
 
   let url = "https://api.stripe.com//v1/customers?limit=100";
@@ -33,10 +32,29 @@ const fetchStripeCustomers = async () => {
 
     if (results) {
       for (const result of results) {
-        result["metadata"] = JSON.stringify(result["metadata"]);
-        full_results.push(result);
-        total_counter++;
-        console.log("id: ", result.id, " – total_counter: ", total_counter);
+        const stripeCustomer = {
+          id: result.id,
+          object: result.object,
+          address: result.address,
+          balance: result.balance,
+          created: result.created,
+          currency: result.currency,
+          default_currency: result.default_currency,
+          default_source: result.default_source,
+          delinquent: result.delinquent,
+          description: result.description,
+          discount: result.discount,
+          email: result.email,
+          invoice_prefix: result.invoice_prefix,
+          livemode: result.livemode,
+          metadata: JSON.stringify(result.metadata),
+          name: result.name,
+          next_invoice_sequence: result.next_invoice_sequence,
+          phone: result.phone,
+          shipping: result.shipping,
+          tax_exempt: result.tax_exempt,
+        };
+        full_results.push(stripeCustomer);
       }
     }
   } while (has_more);
@@ -45,23 +63,21 @@ const fetchStripeCustomers = async () => {
 };
 
 const handler = async () => {
+  console.log("fetching Stripe customers...");
   const records = await fetchStripeCustomers();
+  console.log("fetched ", records.length, " Stripe customers");
 
-  console.log("xx records done", records.length);
   const table = tableFromJSON(records);
-  console.log("xx table done", table);
   const batch = tableToIPC(table);
-  console.log("xx batch done", batch);
 
   const syncTable: SyncTable = {
-    tableName: "stripe-customers",
+    tableName: "stripe_customers",
     arrowRecordBatches: [batch],
     identityColumnNames: ["id"],
   };
-  console.log("xx syncTable done", syncTable);
 
   await syncTables({ syncTables: [syncTable] });
-  console.log("Sync done");
+  console.log("synced Stripe customers to Dataland");
 };
 
 registerCronHandler(handler);

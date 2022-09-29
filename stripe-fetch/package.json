@@ -7,7 +7,7 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
-    "@dataland-io/dataland-sdk-worker": "0.15.0",
+    "@dataland-io/dataland-sdk-worker": "0.16.0",
     "@apache-arrow/es2015-esm": "9.0.0",
     "lodash-es": "4.17.21"
   },

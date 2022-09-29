@@ -11,12 +11,11 @@ import { isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const fetchStripeinvoices = async () => {
+const fetchStripeInvoices = async () => {
   var headers = new Headers();
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
-  let total_counter = 0;
   const full_results = [];
 
   let url = "https://api.stripe.com//v1/invoices?limit=100";
@@ -35,9 +34,24 @@ const fetchStripeinvoices = async () => {
 
     if (results) {
       for (const result of results) {
-        full_results.push(result);
-        total_counter++;
-        console.log("id: ", result.id, " – total_counter: ", total_counter);
+        const stripeInvoice = {
+          id: result.id,
+          auto_advance: result.auto_advance,
+          charge: result.charge,
+          collection_method: result.collection_method,
+          currency: result.currency,
+          customer: result.customer,
+          description: result.description,
+          hosted_invoice_url: result.hosted_invoice_url,
+          metadata: JSON.stringify(result.metadata),
+          payment_intent: result.payment_intent,
+          period_end: result.period_end,
+          period_start: result.period_start,
+          status: result.status,
+          subscription: result.subscription,
+          total: result.total,
+        };
+        full_results.push(stripeInvoice);
       }
     }
   } while (has_more);
@@ -46,23 +60,20 @@ const fetchStripeinvoices = async () => {
 };
 
 const handler = async () => {
-  // fetch Stripe invoices from Stripe
-  const records = await fetchStripeinvoices();
-  console.log("xx records done", records.length);
+  console.log("fetching Stripe invoices...");
+  const records = await fetchStripeInvoices();
+  console.log("fetched ", records.length, " Stripe invoices");
   const table = tableFromJSON(records);
-  console.log("xx table done", table);
   const batch = tableToIPC(table);
-  console.log("xx batch done", batch);
 
   const syncTable: SyncTable = {
-    tableName: "stripe-invoices",
+    tableName: "stripe_invoices",
     arrowRecordBatches: [batch],
     identityColumnNames: ["id"],
   };
-  console.log("xx syncTable done", syncTable);
 
   await syncTables({ syncTables: [syncTable] });
-  console.log("Sync done");
+  console.log("synced Stripe invoices to Dataland");
 };
 
 registerCronHandler(handler);

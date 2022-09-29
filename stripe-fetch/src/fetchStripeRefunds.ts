@@ -14,7 +14,6 @@ const fetchStripeRefunds = async () => {
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
-  let total_counter = 0;
   const full_results = [];
 
   let url = "https://api.stripe.com//v1/refunds?limit=100";
@@ -33,10 +32,18 @@ const fetchStripeRefunds = async () => {
 
     if (results) {
       for (const result of results) {
-        result["metadata"] = JSON.stringify(result["metadata"]);
-        full_results.push(result);
-        total_counter++;
-        console.log("id: ", result.id, " – total_counter: ", total_counter);
+        const stripeRefund = {
+          id: result.id,
+          amount: result.amount,
+          charge: result.charge,
+          currency: result.currency,
+          description: result.description,
+          metadata: JSON.stringify(result.metadata),
+          payment_intent: result.payment_intent,
+          reason: result.reason,
+          status: result.status,
+        };
+        full_results.push(stripeRefund);
       }
     }
   } while (has_more);
@@ -45,23 +52,20 @@ const fetchStripeRefunds = async () => {
 };
 
 const handler = async () => {
+  console.log("fetching Stripe refunds...");
   const records = await fetchStripeRefunds();
-  console.log("xx records done", records.length);
-  console.log(records);
+  console.log("fetched ", records.length, " Stripe refunds");
   const table = tableFromJSON(records);
-  console.log("xx table done", table);
   const batch = tableToIPC(table);
-  console.log("xx batch done", batch);
 
   const syncTable: SyncTable = {
-    tableName: "stripe-refunds",
+    tableName: "stripe_refunds",
     arrowRecordBatches: [batch],
     identityColumnNames: ["id"],
   };
-  console.log("xx syncTable done", syncTable);
 
   await syncTables({ syncTables: [syncTable] });
-  console.log("Sync done");
+  console.log("synced Stripe refunds to Dataland");
 };
 
 registerCronHandler(handler);

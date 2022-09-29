@@ -14,7 +14,6 @@ const fetchStripePaymentIntents = async () => {
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
-  let total_counter = 0;
   const full_results = [];
 
   let url = "https://api.stripe.com//v1/payment_intents?limit=100";
@@ -33,9 +32,27 @@ const fetchStripePaymentIntents = async () => {
 
     if (results) {
       for (const result of results) {
-        full_results.push(result);
-        total_counter++;
-        console.log("id: ", result.id, " – total_counter: ", total_counter);
+        const stripePaymentIntent = {
+          id: result.id,
+          amount: result.amount,
+          automatic_payment_methods: result.automatic_payment_methods,
+          client_secret: result.client_secret,
+          currency: result.currency,
+          customer: result.customer,
+          description: result.description,
+          last_payment_error: result.last_payment_error,
+          metadata: JSON.stringify(result.metadata),
+          next_action: result.next_action,
+          payment_method: result.payment_method,
+          payment_method_types: result.payment_method_types.join(","),
+          receipt_email: result.receipt_email,
+          setup_future_usage: result.setup_future_usage,
+          shipping: result.shipping,
+          statement_descriptor: result.statement_descriptor,
+          statement_descriptor_suffix: result.statement_descriptor_suffix,
+          status: result.status,
+        };
+        full_results.push(stripePaymentIntent);
       }
     }
   } while (has_more);
@@ -44,22 +61,20 @@ const fetchStripePaymentIntents = async () => {
 };
 
 const handler = async () => {
+  console.log("Fetching Stripe payment intents...");
   const records = await fetchStripePaymentIntents();
-  console.log("xx records done", records.length);
+  console.log("Fetched ", records.length, " Stripe payment intents");
   const table = tableFromJSON(records);
-  console.log("xx table done", table);
   const batch = tableToIPC(table);
-  console.log("xx batch done", batch);
 
   const syncTable: SyncTable = {
-    tableName: "stripe-payment-intents",
+    tableName: "stripe_payment_intents",
     arrowRecordBatches: [batch],
     identityColumnNames: ["id"],
   };
-  console.log("xx syncTable done", syncTable);
 
   await syncTables({ syncTables: [syncTable] });
-  console.log("Sync done");
+  console.log("Synced Stripe payment intents to Dataland");
 };
 
 registerCronHandler(handler);
