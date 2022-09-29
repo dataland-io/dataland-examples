@@ -62,7 +62,7 @@ const handler = async (transaction: Transaction) => {
   const schema = new Schema(tableDescriptors);
 
   const affectedRows = schema.getAffectedRows(
-    "stripe-subscription-items",
+    "stripe_subscription_items",
     "Decrement quantity",
     transaction
   );
@@ -87,7 +87,7 @@ const handler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key, id
-    from "stripe-subscription-items" 
+    from "stripe_subscription_items"
     where _dataland_key in ${keyList}`,
   });
 
@@ -118,7 +118,7 @@ const handler = async (transaction: Transaction) => {
       continue;
     } else {
       const sentTimestamp = new Date().toISOString();
-      const update = schema.makeUpdateRows("stripe-subscription-items", key, {
+      const update = schema.makeUpdateRows("stripe_subscription_items", key, {
         "Processed at": sentTimestamp,
         quantity: stripe_response.quantity,
       });
