@@ -1,9 +1,5 @@
 {
-<<<<<<<< HEAD:join-stripe-mysql-demo/package.json
   "name": "@dataland-examples/join-stripe-postgres-demo",
-========
-  "name": "@dataland-examples/airtable-table-sync",
->>>>>>>> main:airtable-table-sync/package.json
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
@@ -11,13 +7,8 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
-<<<<<<<< HEAD:join-stripe-mysql-demo/package.json
     "@dataland-io/dataland-sdk-worker": "0.15.0",
     "lodash-es": "4.17.21"
-========
-    "@dataland-io/dataland-sdk-worker": "0.16.0",
-    "airtable": "0.11.4"
->>>>>>>> main:airtable-table-sync/package.json
   },
   "devDependencies": {
     "@types/webpack": "5.28.0",
