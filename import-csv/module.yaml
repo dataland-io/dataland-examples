@@ -1,0 +1,80 @@
+moduleId: import-csv-example
+
+buildCommand: npm run build
+
+tables:
+  # Defines the trigger table, which will contain a button column that triggers the import into the imported records table
+  # You can rename these tables, but make sure you update the references in the `importCsv.ts` file as well.
+  - tableId: records-trigger-table
+    tableName: "Import Trigger"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "trigger"
+        columnName: "Trigger"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Sync from CSV",
+              "theme": "blue"
+            }
+
+      - columnId: "last-pressed"
+        columnName: "Last pressed"
+        dataType: string
+
+  # Defines the imported records table, which will contain the data from the CSV file
+  # TODO: Add / delete / update columns below such that the columnNames are the same as what you are updating in the importCsv.ts function
+  - tableId: imported-records-from-csv-table
+    tableName: "Records from CSV"
+    autoMigrate: true
+    columnDescriptors:
+      - columnId: "region"
+        columnName: "Region"
+        dataType: string
+      - columnId: "country"
+        columnName: "Country"
+        dataType: string
+      - columnId: "item-type"
+        columnName: "Item Type"
+        dataType: string
+      - columnId: "sales-channel"
+        columnName: "Sales Channel"
+        dataType: string
+      - columnId: "order-priority"
+        columnName: "Order Priority"
+        dataType: string
+      - columnId: "order-date"
+        columnName: "Order Date"
+        dataType: string
+      - columnId: "order-id"
+        columnName: "Order ID"
+        dataType: string
+      - columnId: "ship-date"
+        columnName: "Ship Date"
+        dataType: string
+      - columnId: "units-sold"
+        columnName: "Units Sold"
+        dataType: string
+      - columnId: "unit-price"
+        columnName: "Unit Price"
+        dataType: string
+      - columnId: "unit-cost"
+        columnName: "Unit Cost"
+        dataType: string
+      - columnId: "total-revenue"
+        columnName: "Total Revenue"
+        dataType: string
+      - columnId: "total-cost"
+        columnName: "Total Cost"
+        dataType: string
+      - columnId: "total-profit"
+        columnName: "Total Profit"
+        dataType: string
+
+workers:
+  - workerId: csv-import
+    scriptPath: dist/importCsv.bundle.js
+    triggers:
+      transaction: {}

@@ -5,8 +5,12 @@ const config: Configuration = {
   mode: "production",
   target: "web",
   entry: {
+<<<<<<<< HEAD:join-stripe-mysql-demo/webpack.config.ts
     joinStripeMySQLDemo: "./src/joinStripeMySQLDemo.ts",
     postStripeCredit: "./src/postStripeCredit.ts",
+========
+    mysqlSync: "./src/mysqlSync.ts",
+>>>>>>>> main:mysql-sync/webpack.config.ts
   },
   module: {
     rules: [
@@ -31,6 +35,9 @@ const config: Configuration = {
   optimization: {
     // for pretty stacktraces
     minimize: false,
+  },
+  experiments: {
+    futureDefaults: true,
   },
 };
 

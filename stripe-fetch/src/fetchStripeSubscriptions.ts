@@ -1,17 +1,11 @@
 import {
-  getCatalogMirror,
   getEnv,
-  Mutation,
-  querySqlMirror,
-  KeyGenerator,
-  OrdinalGenerator,
+  syncTables,
+  SyncTable,
   registerCronHandler,
-  runMutations,
-  Schema,
-  unpackRows,
 } from "@dataland-io/dataland-sdk-worker";
 
-import { isNumber } from "lodash-es";
+import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
@@ -20,7 +14,6 @@ const fetchStripeSubscriptions = async () => {
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
-  let total_counter = 0;
   const full_results = [];
 
   let url = "https://api.stripe.com//v1/subscriptions?limit=100";
@@ -39,14 +32,21 @@ const fetchStripeSubscriptions = async () => {
 
     if (results) {
       for (const result of results) {
-        full_results.push(result);
-        total_counter++;
-        console.log(
-          "Subscription id: ",
-          result.id,
-          " – total_counter: ",
-          total_counter
-        );
+        const stripeSubscription = {
+          id: result.id,
+          created: result.created,
+          cancel_at_period_end: result.cancel_at_period_end,
+          current_period_end: result.current_period_end,
+          current_period_start: result.current_period_start,
+          customer: result.customer,
+          default_payment_method: result.default_payment_method,
+          description: result.description,
+          items: JSON.stringify(result.items),
+          latest_invoice: result.latest_invoice,
+          metadata: JSON.stringify(result.metadata),
+          status: result.status,
+        };
+        full_results.push(stripeSubscription);
       }
     }
   } while (has_more);
@@ -60,7 +60,6 @@ const fetchStripeSubscriptionItems = async (subscription_id: string) => {
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
-  let total_counter = 0;
   const full_results = [];
 
   let url = `https://api.stripe.com//v1/subscription_items?subscription=${subscription_id}&limit=100`;
@@ -80,14 +79,18 @@ const fetchStripeSubscriptionItems = async (subscription_id: string) => {
 
     if (results) {
       for (const result of results) {
-        full_results.push(result);
-        total_counter++;
-        console.log(
-          "Subscription item id: ",
-          result.id,
-          " – total_counter: ",
-          total_counter
-        );
+        const stripeSubscriptionItem = {
+          id: result.id,
+          metadata: JSON.stringify(result.metadata),
+          price_obj: JSON.stringify(result.price),
+          quantity: result.quantity,
+          subscription: result.subscription,
+          price_id: result.price.id,
+          price_currency: result.price.currency,
+          price_unit_amount: result.price.unit_amount,
+          product_id: result.price.product,
+        };
+        full_results.push(stripeSubscriptionItem);
       }
     }
   } while (has_more);
@@ -96,253 +99,54 @@ const fetchStripeSubscriptionItems = async (subscription_id: string) => {
 };
 
 const handler = async () => {
-  const { tableDescriptors } = await getCatalogMirror();
+  console.log("fetching Stripe subscriptions...");
+  const subscriptions_records = await fetchStripeSubscriptions();
+  console.log(
+    "fetched ",
+    subscriptions_records.length,
+    " Stripe subscriptions"
+  );
+  const subscriptions_table = tableFromJSON(subscriptions_records);
+  const subscriptions_batch = tableToIPC(subscriptions_table);
 
-  const schema = new Schema(tableDescriptors);
+  const subscriptions_syncTable: SyncTable = {
+    tableName: "stripe_subscriptions",
+    arrowRecordBatches: [subscriptions_batch],
+    identityColumnNames: ["id"],
+  };
 
-  const keyGeneratorSubscriptions = new KeyGenerator();
-  const ordinalGeneratorSubscriptions = new OrdinalGenerator();
+  await syncTables({ syncTables: [subscriptions_syncTable] });
+  console.log("synced Stripe subscriptions to Dataland");
 
-  const keyGeneratorSubscriptionItems = new KeyGenerator();
-  const ordinalGeneratorSubscriptionItems = new OrdinalGenerator();
+  const subscription_items_records = [];
 
-  // fetch Stripe subscriptions from Stripe
-  const stripeSubscriptions = await fetchStripeSubscriptions();
-
-  if (stripeSubscriptions == null) {
-    return;
+  console.log("fetching Stripe subscription items...");
+  for (const record of subscriptions_records) {
+    const subscription_id = record.id;
+    const subscription_items = await fetchStripeSubscriptionItems(
+      subscription_id
+    );
+    for (const subscription_item of subscription_items) {
+      subscription_items_records.push(subscription_item);
+    }
   }
-
-  // fetch existing Stripe subscriptions
-  const existing_stripe_subscriptions = await querySqlMirror({
-    sqlQuery: `select
-      _dataland_key, id
-    from "stripe-subscriptions"`,
-  });
-
-  const existing_stripe_subscriptions_rows = unpackRows(
-    existing_stripe_subscriptions
+  console.log(
+    "fetched ",
+    subscription_items_records.length,
+    " Stripe subscription items"
   );
 
-  const existing_stripe_subscriptions_ids = [];
-  const existing_stripe_subscriptions_keys = [];
+  const subscription_items_table = tableFromJSON(subscription_items_records);
+  const subscription_items_batch = tableToIPC(subscription_items_table);
 
-  for (const existing_stripe_subscriptions_row of existing_stripe_subscriptions_rows) {
-    existing_stripe_subscriptions_keys.push(
-      existing_stripe_subscriptions_row._dataland_key
-    );
-    existing_stripe_subscriptions_ids.push(
-      existing_stripe_subscriptions_row.id
-    );
-  }
+  const subscription_items_syncTable: SyncTable = {
+    tableName: "stripe_subscription_items",
+    arrowRecordBatches: [subscription_items_batch],
+    identityColumnNames: ["id"],
+  };
 
-  // fetch existing Stripe subscriptions items
-  const existing_stripe_subscriptions_items = await querySqlMirror({
-    sqlQuery: `select
-        _dataland_key, id
-      from "stripe-subscription-items"`,
-  });
-
-  const existing_stripe_subscriptions_item_rows = unpackRows(
-    existing_stripe_subscriptions_items
-  );
-
-  const existing_stripe_subscriptions_item_ids = [];
-  const existing_stripe_subscriptions_item_keys = [];
-
-  for (const existing_stripe_subscriptions_item_row of existing_stripe_subscriptions_item_rows) {
-    existing_stripe_subscriptions_item_keys.push(
-      existing_stripe_subscriptions_item_row._dataland_key
-    );
-    existing_stripe_subscriptions_item_ids.push(
-      existing_stripe_subscriptions_item_row.id
-    );
-  }
-
-  let mutations_batch: Mutation[] = [];
-  let batch_counter = 0;
-  let batch_size = 100; // push 100 updates/inserts at a time
-  let total_counter = 0;
-
-  for (const stripeSubscription of stripeSubscriptions) {
-    // Generate a new _dataland_key and _dataland_ordinal value
-    const id = await keyGeneratorSubscriptions.nextKey();
-    const ordinal = await ordinalGeneratorSubscriptions.nextOrdinal();
-
-    const stripe_subscription_id = String(stripeSubscription.id);
-
-    if (stripe_subscription_id == null) {
-      continue;
-    }
-
-    // check if the Stripe subscription already exists
-    if (existing_stripe_subscriptions_ids.includes(stripe_subscription_id)) {
-      const position = existing_stripe_subscriptions_ids.indexOf(
-        stripe_subscription_id
-      );
-      const existing_key = existing_stripe_subscriptions_keys[position];
-
-      if (!isNumber(existing_key)) {
-        continue;
-      }
-
-      const update = schema.makeUpdateRows(
-        "stripe-subscriptions",
-        existing_key,
-        {
-          id: stripeSubscription.id,
-          created: stripeSubscription.created,
-          cancel_at_period_end: stripeSubscription.cancel_at_period_end,
-          current_period_end: stripeSubscription.current_period_end,
-          current_period_start: stripeSubscription.current_period_start,
-          customer: stripeSubscription.customer,
-          default_payment_method: stripeSubscription.default_payment_method,
-          description: stripeSubscription.description,
-          items: JSON.stringify(stripeSubscription.items),
-          latest_invoice: stripeSubscription.latest_invoice,
-          metadata: JSON.stringify(stripeSubscription.metadata),
-          status: stripeSubscription.status,
-        }
-      );
-
-      if (update == null) {
-        continue;
-      }
-      mutations_batch.push(update);
-
-      batch_counter++;
-      total_counter++;
-    } else {
-      const insert = schema.makeInsertRows("stripe-subscriptions", id, {
-        _dataland_ordinal: ordinal,
-        id: stripeSubscription.id,
-        created: stripeSubscription.created,
-        cancel_at_period_end: stripeSubscription.cancel_at_period_end,
-        current_period_end: stripeSubscription.current_period_end,
-        current_period_start: stripeSubscription.current_period_start,
-        customer: stripeSubscription.customer,
-        default_payment_method: stripeSubscription.default_payment_method,
-        description: stripeSubscription.description,
-        items: JSON.stringify(stripeSubscription.items),
-        latest_invoice: stripeSubscription.latest_invoice,
-        metadata: JSON.stringify(stripeSubscription.metadata),
-        status: stripeSubscription.status,
-      });
-
-      if (insert == null) {
-        continue;
-      }
-
-      mutations_batch.push(insert);
-
-      batch_counter++;
-      total_counter++;
-    }
-
-    // fetch and loop through each subscription item
-    const stripeSubscriptionItems = await fetchStripeSubscriptionItems(
-      stripe_subscription_id
-    );
-
-    for (const stripeSubscriptionItem of stripeSubscriptionItems) {
-      const stripe_subscription_item_id = String(stripeSubscriptionItem.id);
-      const stripe_subscription_item_price_obj = stripeSubscriptionItem.price;
-      const stripe_subscription_item_price_id =
-        stripe_subscription_item_price_obj.id;
-
-      const stripe_subscription_item_price_currency =
-        stripe_subscription_item_price_obj.currency;
-
-      const stripe_subscription_item_price_unit_amount =
-        stripe_subscription_item_price_obj.unit_amount;
-
-      const stripe_subscription_item_product_id =
-        stripe_subscription_item_price_obj.product;
-
-      const generated_subscription_item_key =
-        await keyGeneratorSubscriptionItems.nextKey();
-      const generated_subscription_item_ordinal =
-        await ordinalGeneratorSubscriptionItems.nextOrdinal();
-
-      if (stripe_subscription_item_id == null) {
-        continue;
-      }
-
-      // check if id already exists
-      if (
-        existing_stripe_subscriptions_item_ids.includes(
-          stripe_subscription_item_id
-        )
-      ) {
-        const position = existing_stripe_subscriptions_item_ids.indexOf(
-          stripe_subscription_item_id
-        );
-        const existing_item_key =
-          existing_stripe_subscriptions_item_keys[position];
-
-        if (!isNumber(existing_item_key)) {
-          continue;
-        }
-
-        const update = schema.makeUpdateRows(
-          "stripe-subscription-items",
-          existing_item_key,
-          {
-            id: stripeSubscriptionItem.id,
-            metadata: JSON.stringify(stripeSubscriptionItem.metadata),
-            price_obj: JSON.stringify(stripeSubscriptionItem.price),
-            quantity: stripeSubscriptionItem.quantity,
-            subscription: stripeSubscriptionItem.subscription,
-            customer: stripeSubscription.customer,
-            price_id: stripe_subscription_item_price_id,
-            price_currency: stripe_subscription_item_price_currency,
-            price_unit_amount: stripe_subscription_item_price_unit_amount,
-            product_id: stripe_subscription_item_product_id,
-          }
-        );
-
-        if (update == null) {
-          continue;
-        }
-        mutations_batch.push(update);
-      } else {
-        const insert = schema.makeInsertRows(
-          "stripe-subscription-items",
-          generated_subscription_item_key,
-          {
-            _dataland_ordinal: generated_subscription_item_ordinal,
-            id: stripeSubscriptionItem.id,
-            metadata: JSON.stringify(stripeSubscriptionItem.metadata),
-            price_obj: JSON.stringify(stripeSubscriptionItem.price),
-            quantity: stripeSubscriptionItem.quantity,
-            subscription: stripeSubscriptionItem.subscription,
-            customer: stripeSubscription.customer,
-            price_id: stripe_subscription_item_price_id,
-            price_currency: stripe_subscription_item_price_currency,
-            price_unit_amount: stripe_subscription_item_price_unit_amount,
-            product_id: stripe_subscription_item_product_id,
-          }
-        );
-
-        if (insert == null) {
-          continue;
-        }
-        mutations_batch.push(insert);
-      }
-    }
-
-    if (batch_counter >= batch_size) {
-      await runMutations({ mutations: mutations_batch });
-      mutations_batch = [];
-      batch_counter = 0;
-      console.log("total processed: ", total_counter);
-    } else if (total_counter + batch_size > stripeSubscriptions.length) {
-      await runMutations({ mutations: mutations_batch });
-      mutations_batch = [];
-      batch_counter = 0;
-      console.log("total processed: ", total_counter);
-    }
-  }
+  await syncTables({ syncTables: [subscription_items_syncTable] });
+  console.log("synced Stripe subscription items to Dataland");
 };
 
 registerCronHandler(handler);

@@ -1,0 +1,29 @@
+{
+<<<<<<<< HEAD:airtable-table-sync/package.json
+  "name": "@dataland-examples/airtable-table-sync",
+========
+  "name": "@dataland-examples/json-cell-display",
+>>>>>>>> main:json-cell-display/package.json
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "webpack --config webpack.config.ts"
+  },
+  "dependencies": {
+<<<<<<<< HEAD:airtable-table-sync/package.json
+    "@dataland-io/dataland-sdk-worker": "0.15.0",
+    "airtable": "0.11.4"
+========
+    "@dataland-io/dataland-sdk-worker": "0.16.0"
+>>>>>>>> main:json-cell-display/package.json
+  },
+  "devDependencies": {
+    "@types/webpack": "5.28.0",
+    "ts-loader": "9.2.8",
+    "ts-node": "10.7.0",
+    "typescript": "4.6.3",
+    "webpack": "5.70.0",
+    "webpack-cli": "4.9.2"
+  }
+}

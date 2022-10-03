@@ -45,7 +45,7 @@ const handler = async (transaction: Transaction) => {
   const schema = new Schema(tableDescriptors);
 
   const affectedRows = schema.getAffectedRows(
-    "stripe-payment-intents",
+    "stripe_payment_intents",
     "Issue refund",
     transaction
   );
@@ -70,7 +70,7 @@ const handler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key, id
-    from "stripe-payment-intents" 
+    from "stripe_payment_intents"
     where _dataland_key in ${keyList}`,
   });
 
@@ -99,7 +99,7 @@ const handler = async (transaction: Transaction) => {
       continue;
     } else {
       const sentTimestamp = new Date().toISOString();
-      const update = schema.makeUpdateRows("stripe-payment-intents", key, {
+      const update = schema.makeUpdateRows("stripe_payment_intents", key, {
         "Processed at": sentTimestamp,
         refund_status: stripe_response.status,
       });

@@ -1,7 +1,0 @@
-moduleId: shippo-track-shipment-example
-
-buildCommand: npm run build
-
-workers:
-  - workerId: shippo-track-shipment
-    scriptPath: dist/shippoTrackShipment.bundle.js
