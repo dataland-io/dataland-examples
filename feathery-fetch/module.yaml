@@ -1,0 +1,10 @@
+moduleId: feathery-fetch-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: feathery-fetch
+    scriptPath: dist/featheryFetch.bundle.js
+    triggers:
+      transaction:
+        enabled: true
