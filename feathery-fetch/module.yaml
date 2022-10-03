@@ -2,9 +2,18 @@ moduleId: feathery-fetch-example
 
 buildCommand: npm run build
 
+parameters:
+  - feathery-api-key
+  - feathery-dataland-table-name
+
 workers:
   - workerId: feathery-fetch
     scriptPath: dist/featheryFetch.bundle.js
     triggers:
       transaction:
         enabled: true
+      cron:
+        cronExpression: "*/15 * * * * * *"
+    env:
+      FEATHERY_API_KEY: feathery-api-key
+      FEATHERY_DATALAND_TABLE_NAME: feathery-dataland-table-name
