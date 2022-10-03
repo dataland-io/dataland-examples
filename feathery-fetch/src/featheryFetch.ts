@@ -51,13 +51,9 @@ const fetchFeatheryData = async () => {
 
     user_data_obj["User ID"] = user_id;
     for (const field of user_result) {
-      console.log("field: ", field);
-      console.log("field id: ", field.id);
-      console.log("field value: ", field.value);
       user_data_obj[field.id] = field.value;
     }
     user_data.push(user_data_obj);
-    console.log("user_data_obj: ", user_data_obj);
   }
 
   return user_data;
@@ -66,7 +62,7 @@ const fetchFeatheryData = async () => {
 const cronHandler = async () => {
   const feathery_data = await fetchFeatheryData();
 
-  console.log("Feathery read successful: ", feathery_data);
+  console.log("Feathery read successful.");
 
   const table = tableFromJSON(feathery_data);
   const batch = tableToIPC(table);
