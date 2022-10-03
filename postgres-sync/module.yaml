@@ -34,5 +34,5 @@ workers:
       ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
     triggers:
       cron:
-        cronExpression: "*/30 * * * * * *"
+        cronExpression: "0 */15 * * * * *"
       transaction: {}
