@@ -2,6 +2,14 @@ moduleId: feathery-fetch-example
 
 buildCommand: npm run build
 
+info:
+  title: Feathery
+  description: See all users and form data from Feathery
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: feathery-icon.png
+
 parameters:
   - feathery-api-key
   - feathery-dataland-table-name
