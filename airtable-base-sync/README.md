@@ -2,7 +2,7 @@
 
 Set up a two-way sync for your Airtable table in Dataland.
 
-If the `ALLOW_WRITEBACK_BOOLEAN` is set to `true`, any changes done in the Dataland UI will execute a transaction that writes back to your Airtable.
+If the `AIRTABLE_ALLOW_WRITEBACK_BOOLEAN` is set to `true`, any changes done in the Dataland UI will execute a transaction that writes back to your Airtable.
 
 This includes:
 
