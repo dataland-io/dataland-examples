@@ -1,7 +1,7 @@
 moduleId: airtable-base-sync
 
 info:
-  title: Airtable
+  title: Airtable Whole Base Sync
   description: Sync an Airtable table to Dataland
   author: Dataland Devs <support@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
@@ -21,18 +21,45 @@ parameters:
   - airtable-base-json
 
 workers:
-  - workerId: airtable-table-sync-worker
-    scriptPath: dist/bundle.js
+  - workerId: airtable-import-cron
+    scriptPath: dist/importCron.bundle.js
     triggers:
       cron:
-        cronExpression: "0 */5 * * * * *"
+        cronExpression: "*/30 * * * * * *"
       transaction: {}
     env:
       AIRTABLE_API_KEY: airtable-api-key
       # AIRTABLE_BASE_ID: airtable-base-id
       # AIRTABLE_TABLE_NAME: airtable-table-name
       # AIRTABLE_VIEW_NAME: airtable-view-name
-      ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
+      AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
       # DATALAND_TABLE_NAME: dataland-table-name
-      AIRTABLE_FIELDS_LIST: airtable-fields-list
+      AIRTABLE_BASE_JSON: airtable-base-json
+
+  - workerId: cron-logger
+    scriptPath: dist/cronLogger.bundle.js
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
+      transaction: {}
+    env:
+      AIRTABLE_API_KEY: airtable-api-key
+      # AIRTABLE_BASE_ID: airtable-base-id
+      # AIRTABLE_TABLE_NAME: airtable-table-name
+      # AIRTABLE_VIEW_NAME: airtable-view-name
+      AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
+      # DATALAND_TABLE_NAME: dataland-table-name
+      AIRTABLE_BASE_JSON: airtable-base-json
+
+  - workerId: airtable-writeback
+    scriptPath: dist/writeback.bundle.js
+    triggers:
+      transaction: {}
+    env:
+      AIRTABLE_API_KEY: airtable-api-key
+      # AIRTABLE_BASE_ID: airtable-base-id
+      # AIRTABLE_TABLE_NAME: airtable-table-name
+      # AIRTABLE_VIEW_NAME: airtable-view-name
+      AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
+      # DATALAND_TABLE_NAME: dataland-table-name
       AIRTABLE_BASE_JSON: airtable-base-json

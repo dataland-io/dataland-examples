@@ -11,7 +11,6 @@ import {
   RECORD_ID,
   SYNC_TABLES_MARKER,
   AIRTABLE_BASE_JSON,
-  AIRTABLE_FIELDS_LIST,
 } from "./constants";
 
 const airtable_base_json_parsed = JSON.parse(AIRTABLE_BASE_JSON);
@@ -19,8 +18,6 @@ const airtable_base_json_parsed = JSON.parse(AIRTABLE_BASE_JSON);
 const airtableBase = new Airtable({
   apiKey: AIRTABLE_API_KEY,
 }).base(airtable_base_json_parsed.id);
-
-const airtableTable = airtableBase(airtable_base_json_parsed.tables[0].id);
 
 type AirtableValue =
   | undefined
@@ -77,20 +74,27 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
   return null;
 };
 
-const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
+const readFromAirtable = async (
+  table_id: string,
+  view_id: string,
+  fields_list: string
+): Promise<Record<string, Scalar>[]> => {
   const records: Record<string, any>[] = [];
 
   let fields_array: (string | number)[] = [];
-  if (AIRTABLE_FIELDS_LIST == "ALL") {
+  if (fields_list == "ALL") {
+    // if no fields_list is provided, get all fields
   } else {
-    fields_array = AIRTABLE_FIELDS_LIST.split(",").map((field) => field.trim());
+    fields_array = fields_list.split(",").map((field) => field.trim());
   }
+
+  const airtableTable = airtableBase(table_id);
 
   await new Promise((resolve, error) => {
     airtableTable
       .select({
         pageSize: 100,
-        view: airtable_base_json_parsed.tables[0].views[0].id,
+        view: view_id,
         fields: fields_array,
       })
       .eachPage(
@@ -142,23 +146,50 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
 };
 
 const cronHandler = async () => {
-  const records = await readFromAirtable();
+  console.log("Airtable starting");
 
-  const table = tableFromJSON(records);
-  const batch = tableToIPC(table);
+  // construct an iterable array of objects which has table id, view id, and fields list
 
-  const syncTable: SyncTable = {
-    tableName: "Airtable " + airtable_base_json_parsed.tables[0].id,
-    arrowRecordBatches: [batch],
-    identityColumnNames: [RECORD_ID],
-  };
+  const table_array = airtable_base_json_parsed.tables;
 
-  await syncTables({
-    syncTables: [syncTable],
-    transactionAnnotations: {
-      [SYNC_TABLES_MARKER]: "true",
-    },
-  });
+  const table_obj_array = [];
+  for (const table of table_array) {
+    const table_id = table.id;
+    const table_name = table.name;
+    const view_id = table.views[0].id;
+    const fields_list = table.fields.map((field: any) => field.name);
+    const table_obj = {
+      table_id: table_id,
+      table_name: table_name,
+      view_id: view_id,
+      fields_list: fields_list.join(","),
+    };
+    table_obj_array.push(table_obj);
+  }
+
+  for (const table_obj of table_obj_array) {
+    const records = await readFromAirtable(
+      table_obj.table_id,
+      table_obj.view_id,
+      table_obj.fields_list
+    );
+
+    const table = tableFromJSON(records);
+    const batch = tableToIPC(table);
+
+    const syncTable: SyncTable = {
+      tableName: "Airtable - " + table_obj.table_name,
+      arrowRecordBatches: [batch],
+      identityColumnNames: [RECORD_ID],
+    };
+
+    await syncTables({
+      syncTables: [syncTable],
+      transactionAnnotations: {
+        [SYNC_TABLES_MARKER]: "true",
+      },
+    });
+  }
 };
 
 registerCronHandler(cronHandler);

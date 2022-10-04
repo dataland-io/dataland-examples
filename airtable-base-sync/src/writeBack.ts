@@ -16,18 +16,21 @@ import Airtable, {
 } from "airtable";
 import {
   AIRTABLE_API_KEY,
-  AIRTABLE_BASE_ID,
-  AIRTABLE_TABLE_NAME,
-  ALLOW_WRITEBACK_BOOLEAN,
-  DATALAND_TABLE_NAME,
+  AIRTABLE_ALLOW_WRITEBACK_BOOLEAN,
+  AIRTABLE_BASE_JSON,
   RECORD_ID,
   SYNC_TABLES_MARKER,
 } from "./constants";
 
+const airtable_base_json_parsed = JSON.parse(AIRTABLE_BASE_JSON);
+const airtable_base_id = airtable_base_json_parsed.id;
+const airtable_table_name = airtable_base_json_parsed.tables[0].id;
+const airtable_dataland_table_name = "Airtable - " + airtable_table_name;
+
 const airtableBase = new Airtable({
   apiKey: AIRTABLE_API_KEY,
-}).base(AIRTABLE_BASE_ID);
-const airtableTable = airtableBase(AIRTABLE_TABLE_NAME);
+}).base(airtable_base_id);
+const airtableTable = airtableBase(airtable_table_name);
 
 const AIRTABLE_MAX_UPDATES = 10;
 const chunkAirtablePayload = <T>(payload: T[]) => {
@@ -172,9 +175,13 @@ const insertRowsWriteback = async (
 
     recordIdMap[datalandKey] = recordId;
 
-    const update = schema.makeUpdateRows(DATALAND_TABLE_NAME, datalandKey, {
-      [RECORD_ID]: recordId,
-    });
+    const update = schema.makeUpdateRows(
+      airtable_dataland_table_name,
+      datalandKey,
+      {
+        [RECORD_ID]: recordId,
+      }
+    );
     mutations.push(update);
   }
   await runMutations({ mutations });
@@ -261,13 +268,14 @@ const transactionHandler = async (transaction: Transaction) => {
   // The discrepancy would then be reconciled in the next sync. But if the transaction handler
   // is triggered on syncTables, the outdated cell change would propagate to Airtable again,
   // permanently reverting the cell update.
+
   if (SYNC_TABLES_MARKER in transaction.transactionAnnotations) {
     return;
   }
 
   const response = await querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp - 1,
-    sqlQuery: `select "_dataland_key", "${RECORD_ID}" from "${DATALAND_TABLE_NAME}"`,
+    sqlQuery: `select "_dataland_key", "${RECORD_ID}" from "${airtable_dataland_table_name}"`,
   });
   const rows = unpackRows(response);
 
@@ -275,11 +283,11 @@ const transactionHandler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp - 1,
   });
   const tableDescriptor = tableDescriptors.find(
-    (descriptor) => descriptor.tableName === DATALAND_TABLE_NAME
+    (descriptor) => descriptor.tableName === airtable_dataland_table_name
   );
   if (tableDescriptor == null) {
     console.error("Writeback - Could not find table descriptor by table name", {
-      tableName: DATALAND_TABLE_NAME,
+      tableName: airtable_dataland_table_name,
     });
     return;
   }
@@ -327,13 +335,16 @@ const transactionHandler = async (transaction: Transaction) => {
   }
 };
 
-if (ALLOW_WRITEBACK_BOOLEAN !== "true" && ALLOW_WRITEBACK_BOOLEAN !== "false") {
+if (
+  AIRTABLE_ALLOW_WRITEBACK_BOOLEAN !== "true" &&
+  AIRTABLE_ALLOW_WRITEBACK_BOOLEAN !== "false"
+) {
   console.error(
-    `Writeback - 'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
+    `Writeback - 'AIRTABLE_ALLOW_WRITEBACK_BOOLEAN' invalid value '${AIRTABLE_ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
   );
 }
 
-if (ALLOW_WRITEBACK_BOOLEAN === "true") {
+if (AIRTABLE_ALLOW_WRITEBACK_BOOLEAN === "true") {
   registerTransactionHandler(transactionHandler, {
     filterTransactions: "handle-all",
   });
