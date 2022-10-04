@@ -2,7 +2,7 @@ moduleId: airtable-base-sync
 
 info:
   title: Airtable Whole Base Sync
-  description: Sync an Airtable table to Dataland
+  description: Sync a whole Airtable base to Dataland
   author: Dataland Devs <support@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
   readmePath: README.md
@@ -12,12 +12,7 @@ buildCommand: npm run build
 
 parameters:
   - airtable-api-key
-  # - airtable-base-id
-  # - airtable-table-name
-  # - airtable-view-name
   - airtable-allow-writeback-boolean
-  # - dataland-table-name
-  - airtable-fields-list
   - airtable-base-json
 
 workers:
@@ -29,26 +24,7 @@ workers:
       transaction: {}
     env:
       AIRTABLE_API_KEY: airtable-api-key
-      # AIRTABLE_BASE_ID: airtable-base-id
-      # AIRTABLE_TABLE_NAME: airtable-table-name
-      # AIRTABLE_VIEW_NAME: airtable-view-name
       AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
-      # DATALAND_TABLE_NAME: dataland-table-name
-      AIRTABLE_BASE_JSON: airtable-base-json
-
-  - workerId: cron-logger
-    scriptPath: dist/cronLogger.bundle.js
-    triggers:
-      cron:
-        cronExpression: "*/30 * * * * * *"
-      transaction: {}
-    env:
-      AIRTABLE_API_KEY: airtable-api-key
-      # AIRTABLE_BASE_ID: airtable-base-id
-      # AIRTABLE_TABLE_NAME: airtable-table-name
-      # AIRTABLE_VIEW_NAME: airtable-view-name
-      AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
-      # DATALAND_TABLE_NAME: dataland-table-name
       AIRTABLE_BASE_JSON: airtable-base-json
 
   - workerId: airtable-writeback
@@ -57,9 +33,5 @@ workers:
       transaction: {}
     env:
       AIRTABLE_API_KEY: airtable-api-key
-      # AIRTABLE_BASE_ID: airtable-base-id
-      # AIRTABLE_TABLE_NAME: airtable-table-name
-      # AIRTABLE_VIEW_NAME: airtable-view-name
       AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
-      # DATALAND_TABLE_NAME: dataland-table-name
       AIRTABLE_BASE_JSON: airtable-base-json

@@ -7,7 +7,6 @@ const config: Configuration = {
   entry: {
     importCron: "./src/importCron.ts",
     writeback: "./src/writeback.ts",
-    cronLogger: "./src/cronLogger.ts",
   },
   module: {
     rules: [
