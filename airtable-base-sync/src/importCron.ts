@@ -8,19 +8,19 @@ import {
 import Airtable, { Attachment, Collaborator } from "airtable";
 import {
   AIRTABLE_API_KEY,
-  AIRTABLE_BASE_ID,
-  AIRTABLE_TABLE_NAME,
-  AIRTABLE_VIEW_NAME,
-  DATALAND_TABLE_NAME,
   RECORD_ID,
   SYNC_TABLES_MARKER,
+  AIRTABLE_BASE_JSON,
   AIRTABLE_FIELDS_LIST,
 } from "./constants";
 
+const airtable_base_json_parsed = JSON.parse(AIRTABLE_BASE_JSON);
+
 const airtableBase = new Airtable({
   apiKey: AIRTABLE_API_KEY,
-}).base(AIRTABLE_BASE_ID);
-const airtableTable = airtableBase(AIRTABLE_TABLE_NAME);
+}).base(airtable_base_json_parsed.id);
+
+const airtableTable = airtableBase(airtable_base_json_parsed.tables[0].id);
 
 type AirtableValue =
   | undefined
@@ -90,7 +90,7 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
     airtableTable
       .select({
         pageSize: 100,
-        view: AIRTABLE_VIEW_NAME,
+        view: airtable_base_json_parsed.tables[0].views[0].id,
         fields: fields_array,
       })
       .eachPage(
@@ -148,7 +148,7 @@ const cronHandler = async () => {
   const batch = tableToIPC(table);
 
   const syncTable: SyncTable = {
-    tableName: DATALAND_TABLE_NAME,
+    tableName: "Airtable " + airtable_base_json_parsed.tables[0].id,
     arrowRecordBatches: [batch],
     identityColumnNames: [RECORD_ID],
   };
