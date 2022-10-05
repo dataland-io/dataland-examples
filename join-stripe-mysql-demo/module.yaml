@@ -17,7 +17,7 @@ workers:
     scriptPath: dist/joinStripeMySQLDemo.bundle.js
     triggers:
       cron:
-        cronExpression: "*/30 * * * * * *"
+        cronExpression: "*/15 * * * * * *"
 
   # Worker to handle the Stripe credit on button click
   - workerId: post-stripe-credit
