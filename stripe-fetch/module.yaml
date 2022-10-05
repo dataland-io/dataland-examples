@@ -748,12 +748,3 @@ workers:
       STRIPE_API_KEY: stripe-api-key
     triggers:
       transaction: {}
-
-  - workerId: view-stripe-customers-and-active-subscriptions
-    scriptPath: dist/viewStripeSubscriptionsWithCustomers.bundle.js
-    env:
-      STRIPE_API_KEY: stripe-api-key
-    triggers:
-      cron:
-        cronExpression: "0 */5 * * * * *"
-      transaction: {}
