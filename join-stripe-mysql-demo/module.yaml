@@ -1,3 +1,4 @@
+## Single source of truth to declare new functions (aka workers) + tables
 moduleId: join-stripe-postgres-demo-example
 
 buildCommand: npm run build
@@ -11,12 +12,14 @@ info:
   author: Acme Corp
 
 workers:
+  # Worker to handle the join every 30 seconds
   - workerId: join-stripe-mysql-demo
     scriptPath: dist/joinStripeMySQLDemo.bundle.js
     triggers:
       cron:
         cronExpression: "*/30 * * * * * *"
 
+  # Worker to handle the Stripe credit on button click
   - workerId: post-stripe-credit
     scriptPath: dist/postStripeCredit.bundle.js
     env:
