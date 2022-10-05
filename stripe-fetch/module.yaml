@@ -131,15 +131,15 @@ tables:
                 {
                   "value": "incomplete",
                   "theme": "ruby"
-                },                
+                },
                 {
                   "value": "cancelled",
                   "theme": "ruby"
-                },     
+                },
                 {
                   "value": "unpaid",
                   "theme": "ruby"
-                },                                                
+                },
                 {
                   "value": "trialing",
                   "theme": "pink"
@@ -147,7 +147,7 @@ tables:
                 {
                   "value": "past_due",
                   "theme": "yellow"
-                },                
+                },
                 {
                   "value": "active",
                   "theme": "green"
@@ -291,11 +291,11 @@ tables:
                 {
                   "value": "requires_confirmation",
                   "theme": "ruby"
-                },                
+                },
                 {
                   "value": "requires_action",
                   "theme": "ruby"
-                },                                                 
+                },
                 {
                   "value": "processing",
                   "theme": "pink"
@@ -303,7 +303,7 @@ tables:
                 {
                   "value": "requires_capture",
                   "theme": "yellow"
-                },                
+                },
                 {
                   "value": "succeeded",
                   "theme": "green"
@@ -311,7 +311,7 @@ tables:
                 {
                   "value": "incomplete",
                   "theme": "silver"
-                }               
+                }
               ]
             }
       - columnId: "issue-refund"
@@ -340,7 +340,7 @@ tables:
                 {
                   "value": "failed",
                   "theme": "ruby"
-                },                
+                },
                 {
                   "value": "requires_action",
                   "theme": "yellow"
@@ -348,7 +348,7 @@ tables:
                 {
                   "value": "pending",
                   "theme": "yellow"
-                },                
+                },
                 {
                   "value": "succeeded",
                   "theme": "green"
@@ -683,13 +683,6 @@ tables:
         dataType: string
 
 workers:
-  - workerId: cron-logger
-    scriptPath: dist/cronLogger.bundle.js
-    triggers:
-      cron:
-        cronExpression: "*/30 * * * * * *"
-      transaction: {}
-
   - workerId: fetch-stripe-customers
     scriptPath: dist/fetchStripeCustomers.bundle.js
     env:
