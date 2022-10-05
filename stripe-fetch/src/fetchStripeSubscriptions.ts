@@ -113,6 +113,7 @@ const handler = async () => {
     tableName: "stripe_subscriptions",
     arrowRecordBatches: [subscriptions_batch],
     identityColumnNames: ["id"],
+    keepExtraColumns: true,
   };
 
   await syncTables({ syncTables: [subscriptions_syncTable] });
@@ -143,6 +144,7 @@ const handler = async () => {
     tableName: "stripe_subscription_items",
     arrowRecordBatches: [subscription_items_batch],
     identityColumnNames: ["id"],
+    keepExtraColumns: true,
   };
 
   await syncTables({ syncTables: [subscription_items_syncTable] });

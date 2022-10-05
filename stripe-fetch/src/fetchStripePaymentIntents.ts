@@ -71,6 +71,7 @@ const handler = async () => {
     tableName: "stripe_payment_intents",
     arrowRecordBatches: [batch],
     identityColumnNames: ["id"],
+    keepExtraColumns: true,
   };
 
   await syncTables({ syncTables: [syncTable] });
