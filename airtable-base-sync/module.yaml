@@ -13,7 +13,7 @@ buildCommand: npm run build
 parameters:
   - airtable-api-key
   - airtable-allow-writeback-boolean
-  - airtable-base-json
+  - airtable-sync-mapping-json
 
 workers:
   - workerId: airtable-import-cron
@@ -34,4 +34,4 @@ workers:
     env:
       AIRTABLE_API_KEY: airtable-api-key
       AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
-      AIRTABLE_BASE_JSON: airtable-base-json
+      AIRTABLE_SYNC_MAPPING_JSON: airtable-sync-mapping-json

@@ -17,13 +17,10 @@ import Airtable, {
 import {
   AIRTABLE_API_KEY,
   AIRTABLE_ALLOW_WRITEBACK_BOOLEAN,
-  AIRTABLE_BASE_JSON,
+  AIRTABLE_SYNC_MAPPING_JSON,
   RECORD_ID,
   SYNC_TABLES_MARKER,
 } from "./constants";
-
-const airtable_base_json_parsed = JSON.parse(AIRTABLE_BASE_JSON);
-const airtable_base_id = airtable_base_json_parsed.id;
 
 const transactionHandler = async (transaction: Transaction) => {
   // NOTE(gab): Updating a cell in Dataland while Airtable import cron is running would
@@ -37,27 +34,18 @@ const transactionHandler = async (transaction: Transaction) => {
     return;
   }
 
-  // AWU: Get all tables + view IDs in the Airtable base
-  const table_array = airtable_base_json_parsed.tables;
-  const table_obj_array = [];
-  for (const table of table_array) {
-    const table_id = table.id;
-    const table_name = table.name;
-    const view_id = table.views[0].id;
-    const fields_list = table.fields.map((field: any) => field.name);
-    const table_obj = {
-      table_id: table_id,
-      table_name: table_name,
-      view_id: view_id,
-      fields_list: fields_list.join(","),
-    };
-    table_obj_array.push(table_obj);
-  }
+  const airtable_sync_mapping_json_parsed = JSON.parse(
+    AIRTABLE_SYNC_MAPPING_JSON
+  );
+
+  const sync_targets_array = airtable_sync_mapping_json_parsed.sync_targets;
 
   // AWU: Iterate through each table. Catch any transaction found on Airtable tables, and write back.
 
-  for (const table_obj of table_obj_array) {
-    const airtable_dataland_table_name = "Airtable - " + table_obj.table_name;
+  for (const sync_target of sync_targets_array) {
+    const airtable_dataland_table_name = "Airtable - " + sync_target.table_name;
+    const airtable_allowed_writeback_field_list =
+      sync_target.allowed_writeback_fields_list;
 
     const response = await querySqlSnapshot({
       logicalTimestamp: transaction.logicalTimestamp - 1,
@@ -65,12 +53,14 @@ const transactionHandler = async (transaction: Transaction) => {
     });
     const rows = unpackRows(response);
 
+    const airtable_base_id = sync_target.base_id;
+
     // AWU: Put all inside the transaction handler ------------------------------------------------------------------------//
     const airtableBase = new Airtable({
       apiKey: AIRTABLE_API_KEY,
     }).base(airtable_base_id);
 
-    const airtableTable = airtableBase(table_obj.table_name);
+    const airtableTable = airtableBase(sync_target.table_name);
 
     const AIRTABLE_MAX_UPDATES = 10;
     const chunkAirtablePayload = <T>(payload: T[]) => {
@@ -362,6 +352,14 @@ const transactionHandler = async (transaction: Transaction) => {
       if (tableDescriptor.tableUuid !== mutation.value.tableUuid) {
         continue;
       }
+
+      // if mutation was on a column that is not in the allowed_writeback_fields_list, skip it
+      console.log("xx - schema: ", schema);
+
+      // Need to map column uuid to column name
+      // if (mutation.columName nOT IN airtable_allowed_writeback_field_list) {
+      //   continue;
+      // }
 
       switch (mutation.kind) {
         case "insert_rows": {
