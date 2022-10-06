@@ -6,6 +6,7 @@ import {
   Schema,
   Mutation,
   runMutations,
+  getEnv,
   registerTransactionHandler,
   Uuid,
 } from "@dataland-io/dataland-sdk-worker";
@@ -14,13 +15,7 @@ import Airtable, {
   RecordData as AirtableRecordData,
   Table as AirtableTable,
 } from "airtable";
-import {
-  AIRTABLE_API_KEY,
-  AIRTABLE_ALLOW_WRITEBACK_BOOLEAN,
-  AIRTABLE_SYNC_MAPPING_JSON,
-  RECORD_ID,
-  SYNC_TABLES_MARKER,
-} from "./constants";
+import { RECORD_ID, SYNC_TABLES_MARKER } from "./constants";
 
 const transactionHandler = async (transaction: Transaction) => {
   // NOTE(gab): Updating a cell in Dataland while Airtable import cron is running would
@@ -34,6 +29,10 @@ const transactionHandler = async (transaction: Transaction) => {
     return;
   }
 
+  const AIRTABLE_API_KEY = getEnv("AIRTABLE_API_KEY");
+
+  const AIRTABLE_SYNC_MAPPING_JSON = getEnv("AIRTABLE_SYNC_MAPPING_JSON");
+
   const airtable_sync_mapping_json_parsed = JSON.parse(
     AIRTABLE_SYNC_MAPPING_JSON
   );
@@ -45,7 +44,7 @@ const transactionHandler = async (transaction: Transaction) => {
   for (const sync_target of sync_targets_array) {
     const airtable_dataland_table_name = "Airtable - " + sync_target.table_name;
     const airtable_allowed_writeback_field_list =
-      sync_target.allowed_writeback_fields_list;
+      sync_target.allowed_writeback_field_list;
 
     const response = await querySqlSnapshot({
       logicalTimestamp: transaction.logicalTimestamp - 1,
@@ -170,6 +169,16 @@ const transactionHandler = async (transaction: Transaction) => {
           const taggedScalar = values[j];
           const columnUuid = columnMapping[j]!;
           const columnName = columnNameMap[columnUuid];
+
+          // skip if column is not allowed to writeback
+          if (!airtable_allowed_writeback_field_list.includes(columnName)) {
+            console.log(
+              "Attempted writeback on not allowed column: ",
+              columnName
+            );
+            continue;
+          }
+
           if (columnName == null) {
             console.error(
               "Writeback - Could not find column name by column uuid",
@@ -247,6 +256,15 @@ const transactionHandler = async (transaction: Transaction) => {
               {
                 columnUuid,
               }
+            );
+            continue;
+          }
+
+          // skip if column is not allowed to writeback
+          if (!airtable_allowed_writeback_field_list.includes(columnName)) {
+            console.log(
+              "Attempted writeback on not allowed column: ",
+              columnName
             );
             continue;
           }
@@ -353,46 +371,6 @@ const transactionHandler = async (transaction: Transaction) => {
         continue;
       }
 
-      // if mutation was on a column that is not in the allowed_writeback_fields_list, skip it
-      console.log("xx - schema: ", schema);
-      console.log("xx- columndescriptors", tableDescriptor.columnDescriptors);
-
-      // get list of allowed_column_uuids
-      const column_descriptors = tableDescriptor.columnDescriptors;
-      const allowed_column_uuids: String[] = [];
-      for (const column_descriptor of column_descriptors) {
-        if (
-          airtable_allowed_writeback_field_list.includes(
-            column_descriptor.columnName
-          )
-        ) {
-          allowed_column_uuids.push(column_descriptor.columnUuid);
-        }
-      }
-
-      // get list of affected column_uuids by writeback attempt
-      const affected_column_uuids = [];
-      for (const column_uuid of mutation.value.columnMapping) {
-        if (column_uuid != null) {
-          affected_column_uuids.push(column_uuid);
-        }
-      }
-
-      // check if any of the affected column_uuids are not in the allowed_column_uuids
-      const is_allowed = affected_column_uuids.every((column_uuid) =>
-        allowed_column_uuids.includes(column_uuid)
-      );
-
-      if (!is_allowed) {
-        console.log(
-          "Writeback - Mutation is not allowed because it is not in the allowed_writeback_fields_list",
-          {
-            mutation,
-          }
-        );
-        continue;
-      }
-
       switch (mutation.kind) {
         case "insert_rows": {
           await insertRowsWriteback(
@@ -415,6 +393,10 @@ const transactionHandler = async (transaction: Transaction) => {
     }
   }
 };
+
+const AIRTABLE_ALLOW_WRITEBACK_BOOLEAN = getEnv(
+  "AIRTABLE_ALLOW_WRITEBACK_BOOLEAN"
+);
 
 if (
   AIRTABLE_ALLOW_WRITEBACK_BOOLEAN !== "true" &&

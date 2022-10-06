@@ -4,18 +4,10 @@ import {
   Scalar,
   SyncTable,
   syncTables,
+  getEnv,
 } from "@dataland-io/dataland-sdk-worker";
 import Airtable, { Attachment, Collaborator } from "airtable";
-import {
-  AIRTABLE_API_KEY,
-  RECORD_ID,
-  SYNC_TABLES_MARKER,
-  AIRTABLE_SYNC_MAPPING_JSON,
-} from "./constants";
-
-const airtable_sync_mapping_json_parsed = JSON.parse(
-  AIRTABLE_SYNC_MAPPING_JSON
-);
+import { RECORD_ID, SYNC_TABLES_MARKER } from "./constants";
 
 type AirtableValue =
   | undefined
@@ -76,7 +68,8 @@ const readFromAirtable = async (
   base_id: string,
   table_id: string,
   view_id: string,
-  read_fields_list: string
+  read_fields_list: string,
+  airtable_api_key: string
 ): Promise<Record<string, Scalar>[]> => {
   const records: Record<string, any>[] = [];
 
@@ -88,7 +81,7 @@ const readFromAirtable = async (
   }
 
   const airtableBase = new Airtable({
-    apiKey: AIRTABLE_API_KEY,
+    apiKey: airtable_api_key,
   }).base(base_id);
 
   const airtableTable = airtableBase(table_id);
@@ -149,6 +142,13 @@ const readFromAirtable = async (
 };
 
 const cronHandler = async () => {
+  const AIRTABLE_API_KEY = getEnv("AIRTABLE_API_KEY");
+
+  const AIRTABLE_SYNC_MAPPING_JSON = getEnv("AIRTABLE_SYNC_MAPPING_JSON");
+
+  const airtable_sync_mapping_json_parsed = JSON.parse(
+    AIRTABLE_SYNC_MAPPING_JSON
+  );
   console.log("Airtable sync starting");
 
   // construct an iterable array of objects which has table id, view id, and fields list
@@ -160,7 +160,8 @@ const cronHandler = async () => {
       sync_target.base_id,
       sync_target.table_id,
       sync_target.view_id,
-      sync_target.read_field_list.join(",")
+      sync_target.read_field_list.join(","),
+      AIRTABLE_API_KEY
     );
 
     const table = tableFromJSON(records);
