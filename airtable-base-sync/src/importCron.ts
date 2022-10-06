@@ -160,7 +160,7 @@ const cronHandler = async () => {
       sync_target.base_id,
       sync_target.table_id,
       sync_target.view_id,
-      sync_target.read_fields_list.join(",")
+      sync_target.read_field_list.join(",")
     );
 
     const table = tableFromJSON(records);

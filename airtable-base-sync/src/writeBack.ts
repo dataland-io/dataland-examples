@@ -355,11 +355,43 @@ const transactionHandler = async (transaction: Transaction) => {
 
       // if mutation was on a column that is not in the allowed_writeback_fields_list, skip it
       console.log("xx - schema: ", schema);
+      console.log("xx- columndescriptors", tableDescriptor.columnDescriptors);
 
-      // Need to map column uuid to column name
-      // if (mutation.columName nOT IN airtable_allowed_writeback_field_list) {
-      //   continue;
-      // }
+      // get list of allowed_column_uuids
+      const column_descriptors = tableDescriptor.columnDescriptors;
+      const allowed_column_uuids: String[] = [];
+      for (const column_descriptor of column_descriptors) {
+        if (
+          airtable_allowed_writeback_field_list.includes(
+            column_descriptor.columnName
+          )
+        ) {
+          allowed_column_uuids.push(column_descriptor.columnUuid);
+        }
+      }
+
+      // get list of affected column_uuids by writeback attempt
+      const affected_column_uuids = [];
+      for (const column_uuid of mutation.value.columnMapping) {
+        if (column_uuid != null) {
+          affected_column_uuids.push(column_uuid);
+        }
+      }
+
+      // check if any of the affected column_uuids are not in the allowed_column_uuids
+      const is_allowed = affected_column_uuids.every((column_uuid) =>
+        allowed_column_uuids.includes(column_uuid)
+      );
+
+      if (!is_allowed) {
+        console.log(
+          "Writeback - Mutation is not allowed because it is not in the allowed_writeback_fields_list",
+          {
+            mutation,
+          }
+        );
+        continue;
+      }
 
       switch (mutation.kind) {
         case "insert_rows": {
