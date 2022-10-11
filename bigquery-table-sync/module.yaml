@@ -2,6 +2,14 @@ moduleId: bigquery-table-sync-example
 
 buildCommand: npm run build
 
+info:
+  title: BigQuery Table Sync
+  description: Sync a specified BigQuery table into Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: bigquery-icon.png
+
 parameters:
   - gcp-access-token
   - gcp-project-id

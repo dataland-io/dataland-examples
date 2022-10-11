@@ -54,7 +54,6 @@ const fetchFromBigQuery = async () => {
   }
 
   const schema_result = await schema_response.json();
-  console.log(schema_result);
   const field_name_array = schema_result.schema.fields.map((field: any) => {
     return field.name;
   });
@@ -82,7 +81,6 @@ const fetchFromBigQuery = async () => {
     }
     formatted_rows.push(row_object);
   }
-  console.log("xx - formatted_rows:", formatted_rows[0]);
   return formatted_rows;
 };
 
@@ -110,7 +108,9 @@ const handler = async () => {
   };
 
   await syncTables({ syncTables: [syncTable] });
-  console.log("Synced Bigquery to Dataland");
+  console.log(
+    "Synced " + bigquery_records.length + " records from BigQuery to Dataland"
+  );
 };
 
 registerCronHandler(handler);
