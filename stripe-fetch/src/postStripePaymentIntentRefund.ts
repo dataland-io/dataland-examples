@@ -1,14 +1,12 @@
 import {
-  getCatalogSnapshot,
   getEnv,
-  Mutation,
-  querySqlSnapshot,
+  getHistoryClient,
+  getDbClient,
+  MutationsBuilder,
   registerTransactionHandler,
-  runMutations,
-  Schema,
   Transaction,
   unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+} from "@dataland-io/dataland-sdk";
 
 import { isString, isNumber } from "lodash-es";
 
@@ -30,49 +28,37 @@ const postStripeRefund = async (payment_intent_id: string) => {
   const response = await fetch(url, options);
   const result = await response.json();
 
-  console.log("xx - result: ", result);
-
   return result;
 };
 
 // TODO: function is defined, now need to call it from a button
-
 const handler = async (transaction: Transaction) => {
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
+  const affected_row_ids = [];
 
-  const schema = new Schema(tableDescriptors);
-
-  const affectedRows = schema.getAffectedRows(
-    "stripe-payment-intents",
-    "Issue refund",
-    transaction
-  );
-
-  const lookupKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number") {
-      lookupKeys.push(key);
-      console.log("key noticed: ", key);
+  for (const mutation of transaction.mutations) {
+    if (mutation.kind.oneofKind == "updateRows") {
+      if (
+        mutation.kind.updateRows.columnNames.includes("issue_refund") &&
+        mutation.kind.updateRows.tableName === "stripe_payment_intents"
+      ) {
+        for (const row of mutation.kind.updateRows.rows) {
+          affected_row_ids.push(row.rowId);
+        }
+      } else {
+        return;
+      }
+    } else {
+      return;
     }
   }
 
-  if (lookupKeys.length === 0) {
-    console.log("No lookup keys found");
-    return;
-  }
-  const keyList = `(${lookupKeys.join(",")})`;
-  console.log("keyList: ", keyList);
+  const affected_row_ids_key_list = affected_row_ids.join(",");
 
-  // fetch payment_intent_id from stripe_subscription_items
-  const stripe_response = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `select
-      _dataland_key, id
-    from "stripe-payment-intents" 
-    where _dataland_key in ${keyList}`,
-  });
+  // get all rows where issue_refund was incremented
+  const history = await getHistoryClient();
+  const stripe_response = await history.querySqlMirror({
+    sqlQuery: `select _row_id, id from "stripe_payment_intents" where _row_id in (${affected_row_ids_key_list})`,
+  }).response;
 
   const stripe_rows = unpackRows(stripe_response);
 
@@ -80,16 +66,10 @@ const handler = async (transaction: Transaction) => {
     return;
   }
 
-  const mutations: Mutation[] = [];
   for (const stripe_row of stripe_rows) {
     const payment_intent_id = stripe_row.id;
-    const key = stripe_row._dataland_key;
 
-    if (!isString(payment_intent_id)) {
-      continue;
-    }
-
-    if (!isNumber(key)) {
+    if (!isString(payment_intent_id) || !isNumber(stripe_row._row_id)) {
       continue;
     }
 
@@ -98,19 +78,15 @@ const handler = async (transaction: Transaction) => {
     if (stripe_response.id == null) {
       continue;
     } else {
-      const sentTimestamp = new Date().toISOString();
-      const update = schema.makeUpdateRows("stripe-payment-intents", key, {
-        "Processed at": sentTimestamp,
-        refund_status: stripe_response.status,
-      });
-
-      if (update == null) {
-        continue;
-      }
-      mutations.push(update);
+      const db = await getDbClient();
+      await new MutationsBuilder()
+        .updateRow("stripe_payment_intents", stripe_row._row_id, {
+          processed_at: new Date().toISOString(),
+          refund_status: stripe_response.status,
+        })
+        .run(db);
     }
   }
-  await runMutations({ mutations });
 };
 
 registerTransactionHandler(handler);

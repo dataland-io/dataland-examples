@@ -1,0 +1,27 @@
+moduleId: feathery-fetch-example
+
+buildCommand: npm run build
+
+info:
+  title: Feathery
+  description: See all users and form data from Feathery
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: feathery-icon.png
+
+parameters:
+  - feathery-api-key
+  - feathery-dataland-table-name
+
+workers:
+  - workerId: feathery-fetch
+    scriptPath: dist/featheryFetch.bundle.js
+    triggers:
+      transaction:
+        enabled: true
+      cron:
+        cronExpression: "*/15 * * * * * *"
+    env:
+      FEATHERY_API_KEY: feathery-api-key
+      FEATHERY_DATALAND_TABLE_NAME: feathery-dataland-table-name

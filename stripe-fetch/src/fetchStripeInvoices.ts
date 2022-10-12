@@ -1,26 +1,18 @@
+import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-cjs";
 import {
-  getCatalogMirror,
+  TableSyncRequest,
+  getDbClient,
   getEnv,
-  Mutation,
-  querySqlMirror,
-  KeyGenerator,
-  OrdinalGenerator,
   registerCronHandler,
-  runMutations,
-  Schema,
-  unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
-
-import { isNumber } from "lodash-es";
+} from "@dataland-io/dataland-sdk";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const fetchStripeinvoices = async () => {
-  var headers = new Headers();
+const fetchStripeInvoices = async () => {
+  const headers = new Headers();
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
-  let total_counter = 0;
   const full_results = [];
 
   let url = "https://api.stripe.com//v1/invoices?limit=100";
@@ -39,9 +31,24 @@ const fetchStripeinvoices = async () => {
 
     if (results) {
       for (const result of results) {
-        full_results.push(result);
-        total_counter++;
-        console.log("id: ", result.id, " – total_counter: ", total_counter);
+        const stripeInvoice = {
+          id: result.id,
+          auto_advance: result.auto_advance ?? "",
+          charge: result.charge ?? "",
+          collection_method: result.collection_method ?? "",
+          currency: result.currency ?? "",
+          customer: result.customer ?? "",
+          description: result.description ?? "",
+          hosted_invoice_url: result.hosted_invoice_url ?? "",
+          metadata: JSON.stringify(result.metadata) ?? "",
+          payment_intent: result.payment_intent ?? "",
+          period_end: result.period_end,
+          period_start: result.period_start,
+          status: result.status ?? "",
+          subscription: result.subscription ?? "",
+          total: result.total ?? 0,
+        };
+        full_results.push(stripeInvoice);
       }
     }
   } while (has_more);
@@ -50,130 +57,27 @@ const fetchStripeinvoices = async () => {
 };
 
 const handler = async () => {
-  const { tableDescriptors } = await getCatalogMirror();
+  console.log("fetching Stripe invoices...");
+  const records = await fetchStripeInvoices();
+  console.log("fetched ", records.length, " Stripe invoices");
 
-  const schema = new Schema(tableDescriptors);
+  const table = tableFromJSON(records);
+  const batch = tableToIPC(table);
 
-  const keyGenerator = new KeyGenerator();
-  const ordinalGenerator = new OrdinalGenerator();
+  const tableSyncRequest: TableSyncRequest = {
+    tableName: "stripe_invoices",
+    arrowRecordBatches: [batch],
+    primaryKeyColumnNames: ["id"],
+    dropExtraColumns: false,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
+  };
 
-  // fetch Stripe invoices from Stripe
-  const stripeinvoices = await fetchStripeinvoices();
-
-  if (stripeinvoices == null) {
-    return;
-  }
-
-  // fetch existing Stripe invoices
-  const existing_stripe_data = await querySqlMirror({
-    sqlQuery: `select
-      _dataland_key, id
-    from "stripe-invoices"`,
-  });
-
-  const existing_stripe_rows = unpackRows(existing_stripe_data);
-
-  const existing_stripe_ids = [];
-  const existing_stripe_keys = [];
-
-  for (const existing_stripe_row of existing_stripe_rows) {
-    existing_stripe_keys.push(existing_stripe_row._dataland_key);
-    existing_stripe_ids.push(existing_stripe_row.id);
-  }
-
-  let mutations_batch: Mutation[] = [];
-  let batch_counter = 0;
-  let batch_size = 100; // push 100 at a time
-  let total_counter = 0;
-
-  for (const stripeInvoice of stripeinvoices) {
-    // Generate a new _dataland_key and _dataland_ordinal value
-    const id = await keyGenerator.nextKey();
-    const ordinal = await ordinalGenerator.nextOrdinal();
-
-    const stripe_invoice_id = String(stripeInvoice.id);
-
-    if (stripe_invoice_id == null) {
-      continue;
-    }
-
-    // check if the Stripe invoice already exists
-    if (existing_stripe_ids.includes(stripe_invoice_id)) {
-      const position = existing_stripe_ids.indexOf(stripe_invoice_id);
-      const existing_key = existing_stripe_keys[position];
-
-      if (!isNumber(existing_key)) {
-        continue;
-      }
-
-      const update = schema.makeUpdateRows("stripe-invoices", existing_key, {
-        id: stripeInvoice.id,
-        auto_advance: stripeInvoice.auto_advance,
-        charge: stripeInvoice.charge,
-        collection_method: stripeInvoice.collection_method,
-        currency: stripeInvoice.currency,
-        customer: stripeInvoice.customer,
-        description: stripeInvoice.description,
-        hosted_invoice_url: stripeInvoice.hosted_invoice_url,
-        lines: stripeInvoice.lines,
-        metadata: JSON.stringify(stripeInvoice.metadata),
-        payment_intent: stripeInvoice.payment_intent,
-        period_end: stripeInvoice.period_end,
-        period_start: stripeInvoice.period_start,
-        status: stripeInvoice.status,
-        subscription: stripeInvoice.subscription,
-        total: stripeInvoice.total,
-      });
-
-      if (update == null) {
-        continue;
-      }
-      mutations_batch.push(update);
-
-      batch_counter++;
-      total_counter++;
-    } else {
-      const insert = schema.makeInsertRows("stripe-invoices", id, {
-        _dataland_ordinal: ordinal,
-        id: stripeInvoice.id,
-        auto_advance: stripeInvoice.auto_advance,
-        charge: stripeInvoice.charge,
-        collection_method: stripeInvoice.collection_method,
-        currency: stripeInvoice.currency,
-        customer: stripeInvoice.customer,
-        description: stripeInvoice.description,
-        hosted_invoice_url: stripeInvoice.hosted_invoice_url,
-        lines: stripeInvoice.lines,
-        metadata: JSON.stringify(stripeInvoice.metadata),
-        payment_intent: stripeInvoice.payment_intent,
-        period_end: stripeInvoice.period_end,
-        period_start: stripeInvoice.period_start,
-        status: stripeInvoice.status,
-        subscription: stripeInvoice.subscription,
-        total: stripeInvoice.total,
-      });
-
-      if (insert == null) {
-        continue;
-      }
-      mutations_batch.push(insert);
-
-      batch_counter++;
-      total_counter++;
-    }
-
-    if (batch_counter >= batch_size) {
-      await runMutations({ mutations: mutations_batch });
-      mutations_batch = [];
-      batch_counter = 0;
-      console.log("total_counter: ", total_counter);
-    } else if (total_counter + batch_size > stripeinvoices.length) {
-      await runMutations({ mutations: mutations_batch });
-      mutations_batch = [];
-      batch_counter = 0;
-      console.log("total_counter: ", total_counter);
-    }
-  }
+  const db = getDbClient();
+  await db.tableSync(tableSyncRequest);
+  console.log("synced Stripe invoices to Dataland");
 };
 
 registerCronHandler(handler);

@@ -1,26 +1,18 @@
+import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-cjs";
 import {
-  getCatalogMirror,
+  TableSyncRequest,
+  getDbClient,
   getEnv,
-  Mutation,
-  querySqlMirror,
-  KeyGenerator,
-  OrdinalGenerator,
   registerCronHandler,
-  runMutations,
-  Schema,
-  unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
-
-import { isNumber } from "lodash-es";
+} from "@dataland-io/dataland-sdk";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
 const fetchStripeRefunds = async () => {
-  var headers = new Headers();
+  const headers = new Headers();
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
-  let total_counter = 0;
   const full_results = [];
 
   let url = "https://api.stripe.com//v1/refunds?limit=100";
@@ -39,9 +31,18 @@ const fetchStripeRefunds = async () => {
 
     if (results) {
       for (const result of results) {
-        full_results.push(result);
-        total_counter++;
-        console.log("id: ", result.id, " – total_counter: ", total_counter);
+        const stripeRefund = {
+          id: result.id,
+          amount: result.amount,
+          charge: result.charge,
+          currency: result.currency,
+          description: result.description,
+          metadata: JSON.stringify(result.metadata),
+          payment_intent: result.payment_intent,
+          reason: result.reason,
+          status: result.status,
+        };
+        full_results.push(stripeRefund);
       }
     }
   } while (has_more);
@@ -50,116 +51,26 @@ const fetchStripeRefunds = async () => {
 };
 
 const handler = async () => {
-  const { tableDescriptors } = await getCatalogMirror();
+  console.log("fetching Stripe refunds...");
+  const records = await fetchStripeRefunds();
+  console.log("fetched ", records.length, " Stripe refunds");
+  const table = tableFromJSON(records);
+  const batch = tableToIPC(table);
 
-  const schema = new Schema(tableDescriptors);
+  const tableSyncRequest: TableSyncRequest = {
+    tableName: "stripe_refunds",
+    arrowRecordBatches: [batch],
+    primaryKeyColumnNames: ["id"],
+    dropExtraColumns: false,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
+  };
 
-  const keyGenerator = new KeyGenerator();
-  const ordinalGenerator = new OrdinalGenerator();
-
-  // fetch Stripe refunds from Stripe
-  const stripeRefunds = await fetchStripeRefunds();
-
-  if (stripeRefunds == null) {
-    return;
-  }
-
-  // fetch existing Stripe refunds
-  const existing_stripe_data = await querySqlMirror({
-    sqlQuery: `select
-      _dataland_key, id
-    from "stripe-refunds"`,
-  });
-
-  const existing_stripe_rows = unpackRows(existing_stripe_data);
-
-  const existing_stripe_ids = [];
-  const existing_stripe_keys = [];
-
-  for (const existing_stripe_row of existing_stripe_rows) {
-    existing_stripe_keys.push(existing_stripe_row._dataland_key);
-    existing_stripe_ids.push(existing_stripe_row.id);
-  }
-
-  let mutations_batch: Mutation[] = [];
-  let batch_counter = 0;
-  let batch_size = 100; // push 100 at a time
-  let total_counter = 0;
-
-  for (const stripeRefund of stripeRefunds) {
-    // Generate a new _dataland_key and _dataland_ordinal value
-    const id = await keyGenerator.nextKey();
-    const ordinal = await ordinalGenerator.nextOrdinal();
-
-    const stripe_refund_id = String(stripeRefund.id);
-
-    if (stripe_refund_id == null) {
-      continue;
-    }
-
-    // check if the Stripe refund already exists
-    if (existing_stripe_ids.includes(stripe_refund_id)) {
-      const position = existing_stripe_ids.indexOf(stripe_refund_id);
-      const existing_key = existing_stripe_keys[position];
-
-      if (!isNumber(existing_key)) {
-        continue;
-      }
-
-      const update = schema.makeUpdateRows("stripe-refunds", existing_key, {
-        id: stripeRefund.id,
-        amount: stripeRefund.amount,
-        charge: stripeRefund.charge,
-        currency: stripeRefund.currency,
-        description: stripeRefund.description,
-        metadata: JSON.stringify(stripeRefund.metadata),
-        payment_intent: stripeRefund.payment_intent,
-        reason: stripeRefund.reason,
-        status: stripeRefund.status,
-      });
-
-      if (update == null) {
-        continue;
-      }
-      mutations_batch.push(update);
-
-      batch_counter++;
-      total_counter++;
-    } else {
-      const insert = schema.makeInsertRows("stripe-refunds", id, {
-        _dataland_ordinal: ordinal,
-        id: stripeRefund.id,
-        amount: stripeRefund.amount,
-        charge: stripeRefund.charge,
-        currency: stripeRefund.currency,
-        description: stripeRefund.description,
-        metadata: JSON.stringify(stripeRefund.metadata),
-        payment_intent: stripeRefund.payment_intent,
-        reason: stripeRefund.reason,
-        status: stripeRefund.status,
-      });
-
-      if (insert == null) {
-        continue;
-      }
-      mutations_batch.push(insert);
-
-      batch_counter++;
-      total_counter++;
-    }
-
-    if (batch_counter >= batch_size) {
-      await runMutations({ mutations: mutations_batch });
-      mutations_batch = [];
-      batch_counter = 0;
-      console.log("total_counter: ", total_counter);
-    } else if (total_counter + batch_size > stripeRefunds.length) {
-      await runMutations({ mutations: mutations_batch });
-      mutations_batch = [];
-      batch_counter = 0;
-      console.log("total_counter: ", total_counter);
-    }
-  }
+  const db = getDbClient();
+  await db.tableSync(tableSyncRequest);
+  console.log("synced Stripe refunds to Dataland");
 };
 
 registerCronHandler(handler);

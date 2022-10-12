@@ -23,8 +23,5 @@
     }
   },
 
-  "include": [
-    "../import-csv-every-data-type/src",
-    "../import-csv-every-data-type/webpack.config.ts"
-  ]
+  "include": ["src", "webpack.config.ts"]
 }
