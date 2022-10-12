@@ -9,16 +9,12 @@ workers:
       transaction: {}
 
 tables:
-  - tableId: greetings-table
-    tableName: greetings
+  - tableName: greetings
     autoMigrate: true
     columnDescriptors:
-      - columnId: name-column
-        columnName: name
+      - columnName: name
         dataType: string
-      - columnId: location-column
-        columnName: location
+      - columnName: location
         dataType: string
-      - columnId: greeting-column
-        columnName: greeting
+      - columnName: greeting
         dataType: string
