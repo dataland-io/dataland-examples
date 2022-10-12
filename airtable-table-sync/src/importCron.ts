@@ -36,7 +36,6 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
   if (value == null) {
     return null;
   }
-
   if (
     typeof value === "string" ||
     typeof value === "number" ||

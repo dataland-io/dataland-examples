@@ -16,6 +16,7 @@ import Airtable, {
   Table as AirtableTable,
 } from "airtable";
 import { RECORD_ID, SYNC_TABLES_MARKER } from "./constants";
+import { syncMappingJsonT, syncTargetsT } from "./typings";
 
 const transactionHandler = async (transaction: Transaction) => {
   // NOTE(gab): Updating a cell in Dataland while Airtable import cron is running would
@@ -33,33 +34,37 @@ const transactionHandler = async (transaction: Transaction) => {
 
   const AIRTABLE_SYNC_MAPPING_JSON = getEnv("AIRTABLE_SYNC_MAPPING_JSON");
 
-  const airtable_sync_mapping_json_parsed = JSON.parse(
-    AIRTABLE_SYNC_MAPPING_JSON
-  );
+  let syncMapping;
+  try {
+    syncMapping = JSON.parse(AIRTABLE_SYNC_MAPPING_JSON);
+  } catch (e) {
+    console.error(
+      `Failed to parse json of AIRTABLE_SYNC_MAPPING_JSON: ${AIRTABLE_SYNC_MAPPING_JSON}`
+    );
+  }
 
-  const sync_targets_array = airtable_sync_mapping_json_parsed.sync_targets;
+  const syncTargets = syncMappingJsonT.parse(syncMapping).sync_targets;
 
   // AWU: Iterate through each table. Catch any transaction found on Airtable tables, and write back.
 
-  for (const sync_target of sync_targets_array) {
-    const airtable_dataland_table_name = "Airtable - " + sync_target.table_name;
-    const airtable_allowed_writeback_field_list =
-      sync_target.allowed_writeback_field_list;
+  for (const syncTarget of syncTargets) {
+    const tableName = "Airtable_" + syncTarget.table_name;
+    const allowedWritebackFieldList = syncTarget.allowed_writeback_field_list;
 
     const response = await querySqlSnapshot({
       logicalTimestamp: transaction.logicalTimestamp - 1,
-      sqlQuery: `select "_dataland_key", "${RECORD_ID}" from "${airtable_dataland_table_name}"`,
+      sqlQuery: `select "_dataland_key", "${RECORD_ID}" from "${tableName}"`,
     });
     const rows = unpackRows(response);
 
-    const airtable_base_id = sync_target.base_id;
+    const baseId = syncTarget.base_id;
 
     // AWU: Put all inside the transaction handler ------------------------------------------------------------------------//
     const airtableBase = new Airtable({
       apiKey: AIRTABLE_API_KEY,
-    }).base(airtable_base_id);
+    }).base(baseId);
 
-    const airtableTable = airtableBase(sync_target.table_name);
+    const airtableTable = airtableBase(syncTarget.table_name);
 
     const AIRTABLE_MAX_UPDATES = 10;
     const chunkAirtablePayload = <T>(payload: T[]) => {
@@ -171,7 +176,7 @@ const transactionHandler = async (transaction: Transaction) => {
           const columnName = columnNameMap[columnUuid];
 
           // skip if column is not allowed to writeback
-          if (!airtable_allowed_writeback_field_list.includes(columnName)) {
+          if (!allowedWritebackFieldList.includes(columnName)) {
             console.log(
               "Attempted writeback on not allowed column: ",
               columnName
@@ -223,13 +228,9 @@ const transactionHandler = async (transaction: Transaction) => {
 
         recordIdMap[datalandKey] = recordId;
 
-        const update = schema.makeUpdateRows(
-          airtable_dataland_table_name,
-          datalandKey,
-          {
-            [RECORD_ID]: recordId,
-          }
-        );
+        const update = schema.makeUpdateRows(tableName, datalandKey, {
+          [RECORD_ID]: recordId,
+        });
         mutations.push(update);
       }
       await runMutations({ mutations });
@@ -261,7 +262,7 @@ const transactionHandler = async (transaction: Transaction) => {
           }
 
           // skip if column is not allowed to writeback
-          if (!airtable_allowed_writeback_field_list.includes(columnName)) {
+          if (!allowedWritebackFieldList.includes(columnName)) {
             console.log(
               "Attempted writeback on not allowed column: ",
               columnName
@@ -333,13 +334,13 @@ const transactionHandler = async (transaction: Transaction) => {
       logicalTimestamp: transaction.logicalTimestamp - 1,
     });
     const tableDescriptor = tableDescriptors.find(
-      (descriptor) => descriptor.tableName === airtable_dataland_table_name
+      (descriptor) => descriptor.tableName === tableName
     );
     if (tableDescriptor == null) {
       console.error(
         "Writeback - Could not find table descriptor by table name",
         {
-          tableName: airtable_dataland_table_name,
+          tableName: tableName,
         }
       );
       return;
