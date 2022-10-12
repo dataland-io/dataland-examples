@@ -1,50 +1,43 @@
 import {
-  getCatalogSnapshot,
-  Mutation,
-  querySqlSnapshot,
+  getDbClient,
+  getHistoryClient,
+  MutationsBuilder,
   registerTransactionHandler,
-  runMutations,
-  Schema,
   Transaction,
   unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+} from "@dataland-io/dataland-sdk";
 
 // This handler function runs after every database transaction
 const handler = async (transaction: Transaction) => {
-  // Get the schema
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
-  const schema = new Schema(tableDescriptors);
+  // Initialize Db and History clients
+  const db = getDbClient();
+  const history = getHistoryClient();
 
   // Query the "greetings" table with arbitrary SQL
-  const queryResponse = await querySqlSnapshot({
+  const queryResponse = await history.querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: "select _dataland_key, name from greetings",
-  });
+    sqlQuery: "select _row_id, name from greetings",
+  }).response;
+
   // Unpack the query result into plain JS objects
   const rows = unpackRows(queryResponse);
 
   // Iterate over the rows
-  const mutations: Mutation[] = [];
   for (const row of rows) {
-    const key = row["_dataland_key"] as number;
+    const key = row._row_id as number;
 
     // Construct the appropriate greeting message based on the name.
-    const name = row["name"];
+    const name = row.name;
     const message = name != null && name !== "" ? `Hello, ${name}!` : null;
 
-    // Create an "update row" mutation, using the row key to specify which row is to be updated,
+    // Create and run an "update row" mutation, using the row key to specify which row is to be updated,
     // and setting the greeting column to the message we constructed.
-    const update = schema.makeUpdateRows("greetings", key, {
-      greeting: message,
-    });
-
-    mutations.push(update);
+    await new MutationsBuilder()
+      .updateRow("greetings", key, {
+        greeting: message,
+      })
+      .run(db);
   }
-
-  // Perform the mutations in one atomic transaction
-  await runMutations({ mutations });
 };
 
 // Register the handler function
