@@ -1,16 +1,15 @@
+import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-cjs";
 import {
+  TableSyncRequest,
+  getDbClient,
   getEnv,
-  syncTables,
-  SyncTable,
   registerCronHandler,
-} from "@dataland-io/dataland-sdk-worker";
-
-import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
+} from "@dataland-io/dataland-sdk";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
 const fetchStripeSubscriptions = async () => {
-  var headers = new Headers();
+  const headers = new Headers();
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
@@ -55,7 +54,7 @@ const fetchStripeSubscriptions = async () => {
 };
 
 const fetchStripeSubscriptionItems = async (subscription_id: string) => {
-  var headers = new Headers();
+  const headers = new Headers();
 
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
@@ -109,13 +108,19 @@ const handler = async () => {
   const subscriptions_table = tableFromJSON(subscriptions_records);
   const subscriptions_batch = tableToIPC(subscriptions_table);
 
-  const subscriptions_syncTable: SyncTable = {
+  const subscription_tableSyncRequest: TableSyncRequest = {
     tableName: "stripe_subscriptions",
     arrowRecordBatches: [subscriptions_batch],
-    identityColumnNames: ["id"],
+    primaryKeyColumnNames: ["id"],
+    dropExtraColumns: false,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
   };
 
-  await syncTables({ syncTables: [subscriptions_syncTable] });
+  const db = getDbClient();
+  await db.tableSync(subscription_tableSyncRequest);
   console.log("synced Stripe subscriptions to Dataland");
 
   const subscription_items_records = [];
@@ -139,13 +144,18 @@ const handler = async () => {
   const subscription_items_table = tableFromJSON(subscription_items_records);
   const subscription_items_batch = tableToIPC(subscription_items_table);
 
-  const subscription_items_syncTable: SyncTable = {
+  const subscription_items_tableSyncRequest: TableSyncRequest = {
     tableName: "stripe_subscription_items",
     arrowRecordBatches: [subscription_items_batch],
-    identityColumnNames: ["id"],
+    primaryKeyColumnNames: ["id"],
+    dropExtraColumns: false,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
   };
 
-  await syncTables({ syncTables: [subscription_items_syncTable] });
+  await db.tableSync(subscription_items_tableSyncRequest);
   console.log("synced Stripe subscription items to Dataland");
 };
 
