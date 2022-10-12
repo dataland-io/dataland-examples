@@ -7,6 +7,7 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
+    "@dataland-io/dataland-api-proto": "^0.17.0",
     "@dataland-io/dataland-sdk": "0.17.0",
     "airtable": "0.11.4"
   },

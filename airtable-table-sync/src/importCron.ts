@@ -7,7 +7,7 @@ import {
   getDbClient,
 } from "@dataland-io/dataland-sdk";
 import Airtable, { Attachment, Collaborator } from "airtable";
-import { RECORD_ID, SYNC_TABLES_MARKER } from "./constants";
+import { RECORD_ID } from "./constants";
 
 type AirtableValue =
   | undefined
@@ -64,7 +64,12 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
   return null;
 };
 
-const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
+type ColumnName = string;
+type FieldName = string;
+const readFromAirtable = async (): Promise<{
+  records: Record<string, Scalar>[];
+  fieldNameMapping: Record<ColumnName, FieldName>;
+}> => {
   const AIRTABLE_FIELDS_LIST = getEnv("AIRTABLE_FIELDS_LIST");
 
   let fields: string[] = [];
@@ -77,7 +82,8 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
   }).base(getEnv("AIRTABLE_BASE_ID"));
   const airtableTable = airtableBase(getEnv("AIRTABLE_TABLE_NAME"));
 
-  const fieldNameMapping: Record<string, string> = {};
+  const columnNameMapping: Record<FieldName, ColumnName> = {};
+  const fieldNameMapping: Record<ColumnName, FieldName> = {};
   const records: Record<string, any>[] = [];
   await new Promise((resolve, error) => {
     airtableTable
@@ -90,14 +96,28 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
         (pageRecords, fetchNextPage) => {
           for (const record of pageRecords) {
             for (const fieldName in record.fields) {
-              if (fieldName in fieldNameMapping) {
+              if (fieldName in columnNameMapping) {
                 continue;
               }
-              fieldNameMapping[fieldName] = fieldName
+              const columnName = fieldName
                 .toLowerCase()
                 .replace(/[\s-]/g, "_")
                 .replace(/[^0-9a-z_]/g, "")
                 .slice(0, 20);
+              if (columnName in fieldNameMapping) {
+                console.error(
+                  "Dataland column name collision - contact the Dataland Team",
+                  {
+                    datalandColumnName: columnName,
+                    duplicateAirtableFieldNames: [
+                      fieldName,
+                      fieldNameMapping[columnName],
+                    ],
+                  }
+                );
+              }
+              columnNameMapping[fieldName] = columnName;
+              fieldNameMapping[columnName] = fieldName;
             }
           }
 
@@ -106,7 +126,7 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
               [RECORD_ID]: record.id,
             };
             for (const fieldName in record.fields) {
-              const columnName = fieldNameMapping[fieldName]!;
+              const columnName = columnNameMapping[fieldName]!;
               const columnValue = record.fields[columnName];
               const parsedColumnValue = parseAirtableValue(columnValue);
               parsedRecord[columnName] = parsedColumnValue;
@@ -132,14 +152,14 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
   // This is due to syncTables having an issue of setting number cells to
   // NaN if the column name is excluded from the row.
   for (const record of records) {
-    for (const columnName of Object.values(fieldNameMapping)) {
+    for (const columnName of Object.values(columnNameMapping)) {
       if (columnName in record) {
         continue;
       }
       record[columnName] = null;
     }
   }
-  return records;
+  return { records, fieldNameMapping };
 };
 
 export const validateSqlIdentifier = (sqlIdentifier: string): boolean => {
@@ -147,7 +167,7 @@ export const validateSqlIdentifier = (sqlIdentifier: string): boolean => {
 };
 
 const cronHandler = async () => {
-  const records = await readFromAirtable();
+  const { records, fieldNameMapping } = await readFromAirtable();
 
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
@@ -160,15 +180,26 @@ const cronHandler = async () => {
     return;
   }
 
+  const columnAnnotations: Record<
+    string,
+    { columnAnnotations: Record<string, string> }
+  > = {};
+  for (const columnName in fieldNameMapping) {
+    const fieldName = fieldNameMapping[columnName]!;
+    columnAnnotations[columnName] = {
+      columnAnnotations: {
+        "dataland.io/airtable-field-name": fieldName,
+      },
+    };
+  }
+
   const tableSyncRequest: TableSyncRequest = {
     tableName: DATALAND_TABLE_NAME,
     arrowRecordBatches: [batch],
     primaryKeyColumnNames: [RECORD_ID],
-    transactionAnnotations: {
-      [SYNC_TABLES_MARKER]: "true",
-    },
+    transactionAnnotations: {},
     tableAnnotations: {},
-    columnAnnotations: {},
+    columnAnnotations,
     dropExtraColumns: true,
     deleteExtraRows: true,
   };
