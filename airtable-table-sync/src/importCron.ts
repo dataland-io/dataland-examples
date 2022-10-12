@@ -3,9 +3,9 @@ import {
   getEnv,
   registerCronHandler,
   Scalar,
-  SyncTable,
-  syncTables,
-} from "@dataland-io/dataland-sdk-worker";
+  TableSyncRequest,
+  getDbClient,
+} from "@dataland-io/dataland-sdk";
 import Airtable, { Attachment, Collaborator } from "airtable";
 import { RECORD_ID, SYNC_TABLES_MARKER } from "./constants";
 
@@ -77,6 +77,7 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
   }).base(getEnv("AIRTABLE_BASE_ID"));
   const airtableTable = airtableBase(getEnv("AIRTABLE_TABLE_NAME"));
 
+  const fieldNameMapping: Record<string, string> = {};
   const records: Record<string, any>[] = [];
   await new Promise((resolve, error) => {
     airtableTable
@@ -87,10 +88,16 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
       })
       .eachPage(
         (pageRecords, fetchNextPage) => {
-          const fieldNames: Set<string> = new Set();
           for (const record of pageRecords) {
             for (const fieldName in record.fields) {
-              fieldNames.add(fieldName);
+              if (fieldName in fieldNameMapping) {
+                continue;
+              }
+              fieldNameMapping[fieldName] = fieldName
+                .toLowerCase()
+                .replace(/[\s-]/g, "_")
+                .replace(/[^0-9a-z_]/g, "")
+                .slice(0, 20);
             }
           }
 
@@ -98,23 +105,12 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
             const parsedRecord: Record<string, Scalar> = {
               [RECORD_ID]: record.id,
             };
-            for (const columnName in record.fields) {
+            for (const fieldName in record.fields) {
+              const columnName = fieldNameMapping[fieldName]!;
               const columnValue = record.fields[columnName];
               const parsedColumnValue = parseAirtableValue(columnValue);
               parsedRecord[columnName] = parsedColumnValue;
             }
-
-            // NOTE(gab): Fields containing empty values (false, "", [], {}) are
-            // never sent from Airtable. These fields are added as null explicitly.
-            // This is due to syncTables having an issue of setting number cells to
-            // NaN if the column name is excluded from the row.
-            for (const columnName of fieldNames) {
-              if (columnName in parsedRecord) {
-                continue;
-              }
-              parsedRecord[columnName] = null;
-            }
-
             records.push(parsedRecord);
           }
 
@@ -130,7 +126,24 @@ const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
         }
       );
   });
+
+  // NOTE(gab): Fields containing empty values (false, "", [], {}) are
+  // never sent from Airtable. These fields are added as null explicitly.
+  // This is due to syncTables having an issue of setting number cells to
+  // NaN if the column name is excluded from the row.
+  for (const record of records) {
+    for (const columnName of Object.values(fieldNameMapping)) {
+      if (columnName in record) {
+        continue;
+      }
+      record[columnName] = null;
+    }
+  }
   return records;
+};
+
+export const validateSqlIdentifier = (sqlIdentifier: string): boolean => {
+  return /^[a-z][_a-z0-9]{0,62}$/.test(sqlIdentifier);
 };
 
 const cronHandler = async () => {
@@ -139,18 +152,29 @@ const cronHandler = async () => {
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
 
-  const syncTable: SyncTable = {
-    tableName: getEnv("DATALAND_TABLE_NAME"),
-    arrowRecordBatches: [batch],
-    identityColumnNames: [RECORD_ID],
-  };
+  const DATALAND_TABLE_NAME = getEnv("DATALAND_TABLE_NAME");
+  if (!validateSqlIdentifier(DATALAND_TABLE_NAME)) {
+    console.error(
+      `Aborting: Invalid table name: "${DATALAND_TABLE_NAME}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
+    );
+    return;
+  }
 
-  await syncTables({
-    syncTables: [syncTable],
+  const tableSyncRequest: TableSyncRequest = {
+    tableName: DATALAND_TABLE_NAME,
+    arrowRecordBatches: [batch],
+    primaryKeyColumnNames: [RECORD_ID],
     transactionAnnotations: {
       [SYNC_TABLES_MARKER]: "true",
     },
-  });
+    tableAnnotations: {},
+    columnAnnotations: {},
+    dropExtraColumns: true,
+    deleteExtraRows: true,
+  };
+
+  const db = getDbClient();
+  await db.tableSync(tableSyncRequest);
 };
 
 registerCronHandler(cronHandler);
