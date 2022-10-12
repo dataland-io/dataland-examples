@@ -11,21 +11,16 @@ workers:
       transaction: {}
 
 tables:
-  - tableId: random-users
-    tableName: Random Users
+  - tableName: random_users
     autoMigrate: true
     columnDescriptors:
-      - columnId: name
-        columnName: "Name"
+      - columnName: "name"
         dataType: string
-      - columnId: email
-        columnName: "Email"
+      - columnName: "email"
         dataType: string
-      - columnId: phone
-        columnName: "Phone"
+      - columnName: "phone"
         dataType: string
-      - columnId: "picture"
-        columnName: "Picture Link"
+      - columnName: "picture_link"
         dataType: string
         columnAnnotations:
           dataland.io/column-display-config: |
