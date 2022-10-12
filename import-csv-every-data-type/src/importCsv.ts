@@ -67,11 +67,11 @@ const handler = async (transaction: Transaction) => {
   const schema = new Schema(tableDescriptors);
 
   // This function will only get triggered if a user presses a button in a button column named "Trigger",
-  // that's part of a table called "Import Trigger".
+  // that's part of a table called "import_trigger".
 
   // TODO: If you're using a different name for the trigger table or its column, change it here.
   const affectedRows = schema.getAffectedRows(
-    "Import Trigger",
+    "import_trigger",
     "Trigger",
     transaction
   );
@@ -95,7 +95,7 @@ const handler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp,
     sqlQuery: `select
       _dataland_key
-    from "Import Trigger"
+    from "import_trigger"
     where _dataland_key in ${keyList}`,
   });
 
@@ -109,7 +109,7 @@ const handler = async (transaction: Transaction) => {
     const key = Number(trigger_row["_dataland_key"]);
     console.log("key: ", key);
 
-    const update = schema.makeUpdateRows("Import Trigger", key, {
+    const update = schema.makeUpdateRows("import_trigger", key, {
       "Last pressed": new Date().toISOString(),
     });
 
@@ -169,8 +169,8 @@ const handler = async (transaction: Transaction) => {
       const id = await keyGenerator.nextKey();
       const ordinal = await ordinalGenerator.nextOrdinal();
 
-      // TODO: Update the table name (currently "Records from CSV") to the actual name of the imported rows table.
-      const insert = schema.makeInsertRows("Records from CSV", id, {
+      // TODO: Update the table name (currently "records_from_csv") to the actual name of the imported rows table.
+      const insert = schema.makeInsertRows("records_from_csv", id, {
         _dataland_ordinal: ordinal,
 
         // TODO: Update the keys below to correspond to the column names in the imported rows table.

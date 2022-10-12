@@ -6,7 +6,7 @@ tables:
   # Defines the trigger table, which will contain a button column that triggers the import into the imported records table
   # You can rename these tables, but make sure you update the references in the `importCsv.ts` file as well.
   - tableId: records-trigger-table
-    tableName: "Import Trigger"
+    tableName: "import_trigger"
     autoMigrate: true
     columnDescriptors:
       - columnId: "trigger"
@@ -27,7 +27,7 @@ tables:
   # Defines the imported records table, which will contain the data from the CSV file
   # TODO: Add / delete / update columns below such that the columnNames are the same as what you are updating in the importCsv.ts function
   - tableId: imported-records-from-csv-table
-    tableName: "Records from CSV"
+    tableName: "records_from_csv"
     autoMigrate: true
     columnDescriptors:
       - columnId: "not-disabled"
@@ -49,7 +49,7 @@ tables:
                   "value": "Apple",
                   "theme": "ruby"
                 },
-                { 
+                {
                   "value": "Carrot",
                   "theme": "orange"
                 },
@@ -57,34 +57,34 @@ tables:
                   "value": "Banana",
                   "theme": "yellow"
                 },
-                { 
+                {
                   "value": "Daikon",
                   "theme": "green"
                 },
-                { 
+                {
                   "value": "Eggplant",
                   "theme": "purple"
                 },
-                { 
+                {
                   "value": "Fruit",
                   "theme": "light-blue"
                 },
-                { 
+                {
                   "value": "Grape",
                   "theme": "purple"
                 },
-                { 
+                {
                   "value": "Horchata",
                   "theme": "pink"
                 },
-                { 
+                {
                   "value": "Igloo",
                   "theme": "silver"
                 },
-                { 
+                {
                   "value": "Jigglypuff",
                   "theme": "pink"
-                }                                                                                
+                }
               ]
             }
       # Button: currentline[1],

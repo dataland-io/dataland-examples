@@ -23,5 +23,5 @@ To customize this to import your own CSV:
 2. Follow each of the "TODO"s in the `spec.yaml` file.
 3. Authenticate to your workspace with `dataland config init` and your access key. You can get an access key by navigating to Settings > Access keys.
 4. Run `dataland deploy`, then `dataland tail` to start streaming logs.
-5. Go to the Dataland app, add a row to the Import Trigger table, and click the Trigger button to kick off the import process
-6. Rows of data will start to appear in your Records from CSV table.
+5. Go to the Dataland app, add a row to the import_trigger table, and click the Trigger button to kick off the import process
+6. Rows of data will start to appear in your records_from_csv table.
