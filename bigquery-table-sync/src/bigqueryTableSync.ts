@@ -1,10 +1,9 @@
 import {
   registerCronHandler,
   getEnv,
-  Transaction,
-  SyncTable,
-  syncTables,
-} from "@dataland-io/dataland-sdk-worker";
+  getDbClient,
+  TableSyncRequest,
+} from "@dataland-io/dataland-sdk";
 
 import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
 
@@ -100,14 +99,20 @@ const handler = async () => {
   const table = tableFromJSON(bigquery_records);
   const batch = tableToIPC(table);
 
-  const syncTable: SyncTable = {
+  const tableSyncRequest: TableSyncRequest = {
     tableName: "bigquery_" + gcp_table_id,
     arrowRecordBatches: [batch],
-    identityColumnNames: [gcp_table_identity_column],
-    keepExtraColumns: true,
+    primaryKeyColumnNames: [gcp_table_identity_column],
+    dropExtraColumns: false,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
   };
 
-  await syncTables({ syncTables: [syncTable] });
+  const db = getDbClient();
+  await db.tableSync(tableSyncRequest);
+
   console.log(
     "Synced " + bigquery_records.length + " records from BigQuery to Dataland"
   );
