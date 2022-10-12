@@ -1,42 +1,23 @@
-moduleId: import-csv-example-every-data-type
+moduleId: import-csv-example-all-data-types
 
 buildCommand: npm run build
 
+workers:
+  - workerId: import-csv-every-data-type
+    scriptPath: dist/importCsv.bundle.js
+    triggers:
+      cron:
+        enabled: true
+        # Syncs every day at 12:00 AM UTC
+        cronExpression: "0 0 0 * * * *"
+        runOnInitialDeployment: true
 tables:
-  # Defines the trigger table, which will contain a button column that triggers the import into the imported records table
-  # You can rename these tables, but make sure you update the references in the `importCsv.ts` file as well.
-  - tableId: records-trigger-table
-    tableName: "import_trigger"
+  - tableName: every_data_type_table
     autoMigrate: true
     columnDescriptors:
-      - columnId: "trigger"
-        columnName: "Trigger"
-        dataType: int32
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "button",
-              "label": "Sync from CSV",
-              "theme": "blue"
-            }
-
-      - columnId: "last-pressed"
-        columnName: "Last pressed"
+      - columnName: id
         dataType: string
-
-  # Defines the imported records table, which will contain the data from the CSV file
-  # TODO: Add / delete / update columns below such that the columnNames are the same as what you are updating in the importCsv.ts function
-  - tableId: imported-records-from-csv-table
-    tableName: "records_from_csv"
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: "not-disabled"
-        columnName: "Text not disabled"
-        dataType: string
-
-      # Select: currentline[0],
-      - columnId: "select"
-        columnName: "Select"
+      - columnName: select
         dataType: string
         columnAnnotations:
           is-read-only: true
