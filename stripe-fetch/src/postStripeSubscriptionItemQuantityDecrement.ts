@@ -54,13 +54,18 @@ const handler = async (transaction: Transaction) => {
 
   for (const mutation of transaction.mutations) {
     if (mutation.kind.oneofKind == "updateRows") {
-      if (mutation.kind.updateRows.columnNames.includes("decrement_quantity")) {
+      if (
+        mutation.kind.updateRows.columnNames.includes("decrement_quantity") &&
+        mutation.kind.updateRows.tableName === "stripe_subscription_items"
+      ) {
         for (const row of mutation.kind.updateRows.rows) {
           affected_row_ids.push(row.rowId);
         }
       } else {
         return;
       }
+    } else {
+      return;
     }
   }
 

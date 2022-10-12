@@ -13,8 +13,8 @@ const config: Configuration = {
     postStripePaymentIntentRefund: "./src/postStripePaymentIntentRefund.ts",
     postStripeSubscriptionItemQuantityDecrement:
       "./src/postStripeSubscriptionItemQuantityDecrement.ts",
-    // postStripeSubscriptionItemQuantityIncrement:
-    //   "./src/postStripeSubscriptionItemQuantityIncrement.ts",
+    postStripeSubscriptionItemQuantityIncrement:
+      "./src/postStripeSubscriptionItemQuantityIncrement.ts",
   },
   module: {
     rules: [

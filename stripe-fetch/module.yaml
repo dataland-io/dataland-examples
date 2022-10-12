@@ -54,12 +54,12 @@ workers:
       cron:
         cronExpression: "0 */15 * * * * *"
 
-  # - workerId: post-stripe-subscription-item-quantity-increment
-  #   scriptPath: dist/postStripeSubscriptionItemQuantityIncrement.bundle.js
-  #   env:
-  #     STRIPE_API_KEY: stripe-api-key
-  #   triggers:
-  #     transaction: {}
+  - workerId: post-stripe-subscription-item-quantity-increment
+    scriptPath: dist/postStripeSubscriptionItemQuantityIncrement.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      transaction: {}
 
   - workerId: post-stripe-subscription-item-quantity-decrement
     scriptPath: dist/postStripeSubscriptionItemQuantityDecrement.bundle.js
@@ -430,7 +430,6 @@ tables:
         dataType: string
       - columnName: quantity
         dataType: float64
-      # subscription: stripeSubscriptionItem.subscription,
       - columnName: subscription
         dataType: string
       - columnName: customer

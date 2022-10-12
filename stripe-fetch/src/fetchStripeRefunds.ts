@@ -61,7 +61,7 @@ const handler = async () => {
     tableName: "stripe_refunds",
     arrowRecordBatches: [batch],
     primaryKeyColumnNames: ["id"],
-    dropExtraColumns: true,
+    dropExtraColumns: false,
     deleteExtraRows: true,
     transactionAnnotations: {},
     tableAnnotations: {},

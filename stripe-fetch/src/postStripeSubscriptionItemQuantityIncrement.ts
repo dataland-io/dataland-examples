@@ -12,23 +12,40 @@ import { isString, isNumber } from "lodash-es";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
-const postStripeRefund = async (payment_intent_id: string) => {
+const incrementStripeSubscriptionItemQuantity = async (
+  subscription_item_id: string
+) => {
   var headers = new Headers();
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
-  const url =
-    "https://api.stripe.com/v1/refunds?payment_intent=" + payment_intent_id;
+  const subscription_item_url =
+    "https://api.stripe.com/v1/subscription_items/" + subscription_item_id;
 
-  const options = {
+  const get_options = {
+    method: "GET",
+    headers: headers,
+  };
+
+  const get_response = await fetch(subscription_item_url, get_options);
+  const subscriptionItem = await get_response.json();
+  const quantity = subscriptionItem.quantity;
+
+  const new_quantity = quantity + 1;
+  const subscription_item_url_with_qty =
+    subscription_item_url + "?quantity=" + new_quantity;
+  const post_options = {
     method: "POST",
     headers: headers,
   };
 
-  const response = await fetch(url, options);
-  const result = await response.json();
+  const post_response = await fetch(
+    subscription_item_url_with_qty,
+    post_options
+  );
+  const post_response_json = await post_response.json();
 
-  return result;
+  return post_response_json;
 };
 
 // TODO: function is defined, now need to call it from a button
@@ -38,8 +55,8 @@ const handler = async (transaction: Transaction) => {
   for (const mutation of transaction.mutations) {
     if (mutation.kind.oneofKind == "updateRows") {
       if (
-        mutation.kind.updateRows.columnNames.includes("issue_refund") &&
-        mutation.kind.updateRows.tableName === "stripe_payment_intents"
+        mutation.kind.updateRows.columnNames.includes("increment_quantity") &&
+        mutation.kind.updateRows.tableName === "stripe_subscription_items"
       ) {
         for (const row of mutation.kind.updateRows.rows) {
           affected_row_ids.push(row.rowId);
@@ -57,7 +74,7 @@ const handler = async (transaction: Transaction) => {
   // get all rows where issue_refund was incremented
   const history = await getHistoryClient();
   const stripe_response = await history.querySqlMirror({
-    sqlQuery: `select _row_id, id from "stripe_payment_intents" where _row_id in (${affected_row_ids_key_list})`,
+    sqlQuery: `select _row_id, id from "stripe_subscription_items" where _row_id in (${affected_row_ids_key_list})`,
   }).response;
 
   const stripe_rows = unpackRows(stripe_response);
@@ -73,16 +90,18 @@ const handler = async (transaction: Transaction) => {
       continue;
     }
 
-    const stripe_response = await postStripeRefund(payment_intent_id);
+    const stripe_response = await incrementStripeSubscriptionItemQuantity(
+      payment_intent_id
+    );
 
     if (stripe_response.id == null) {
       continue;
     } else {
       const db = await getDbClient();
       await new MutationsBuilder()
-        .updateRow("stripe_payment_intents", stripe_row._row_id, {
+        .updateRow("stripe_subscription_items", stripe_row._row_id, {
           processed_at: new Date().toISOString(),
-          refund_status: stripe_response.status,
+          quantity: stripe_response.quantity,
         })
         .run(db);
     }

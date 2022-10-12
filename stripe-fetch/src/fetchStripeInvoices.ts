@@ -68,7 +68,7 @@ const handler = async () => {
     tableName: "stripe_invoices",
     arrowRecordBatches: [batch],
     primaryKeyColumnNames: ["id"],
-    dropExtraColumns: true,
+    dropExtraColumns: false,
     deleteExtraRows: true,
     transactionAnnotations: {},
     tableAnnotations: {},
