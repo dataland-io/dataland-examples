@@ -16,7 +16,7 @@ const handler = async (transaction: Transaction) => {
   // Query the "greetings" table with arbitrary SQL
   const queryResponse = await history.querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: "select _row_id, name, location from greetings",
+    sqlQuery: "select _row_id, location, name from greetings",
   }).response;
 
   // Unpack the query result into plain JS objects
