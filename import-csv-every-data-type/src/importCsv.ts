@@ -1,11 +1,9 @@
 // This is a template.
 // To use it, search for `TODO` and follow the steps for your use case.
-
-import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-cjs";
 import {
-  TableSyncRequest,
   getDbClient,
   registerCronHandler,
+  MutationsBuilder,
 } from "@dataland-io/dataland-sdk";
 
 // TODO: First, replace the following URL with a URL that has the plain-text CSV content of your file.
@@ -34,19 +32,19 @@ function csvToRowArray(csv: string) {
     // TODO: Change the keys of this object to your column names here.
     // For example below, the first column will be stored with object key "region", and there are 14 columns total.
     let row = {
-      id: currentline[0],
+      id: Number(currentline[0]),
       select: currentline[1],
-      button: currentline[2],
-      checkbox: currentline[3],
+      button: Number(currentline[2]),
+      checkbox: Boolean(currentline[3]),
       text: currentline[4],
-      number: currentline[5],
+      number: Number(currentline[5]),
       url: currentline[6],
       raw_string: currentline[7],
-      raw_boolean: currentline[8],
-      raw_int32: currentline[9],
-      raw_int64: currentline[10],
-      raw_float32: currentline[11],
-      raw_float64: currentline[12],
+      raw_boolean: Boolean(currentline[8]),
+      raw_int32: Number(currentline[9]),
+      raw_int64: Number(currentline[10]),
+      raw_float32: Number(currentline[11]),
+      raw_float64: Number(currentline[12]),
     };
     result.push(row);
   }
@@ -62,24 +60,29 @@ const handler = async () => {
   const records = await fetchCSVfromCurl(CSV_URL);
   const result = csvToRowArray(records);
 
-  const table = tableFromJSON(result);
-  const batch = tableToIPC(table);
+  const db = await getDbClient();
 
-  const tableSyncRequest: TableSyncRequest = {
-    tableName: "every_data_type_table",
-    arrowRecordBatches: [batch],
-    // TODO: Your CSV must have a unique column that can be used to identify each row.
-    // Put the name of that column here (instead of `id`)
-    primaryKeyColumnNames: ["id"],
-    dropExtraColumns: true,
-    deleteExtraRows: true,
-    transactionAnnotations: {},
-    tableAnnotations: {},
-    columnAnnotations: {},
-  };
-
-  const db = getDbClient();
-  await db.tableSync(tableSyncRequest);
+  console.log("xx-", result[0]);
+  for (const row of result) {
+    await new MutationsBuilder()
+      .insertRow("every_data_type_table", Date.now(), {
+        id: row.id,
+        select: row.select,
+        // Button can't be inserted into!
+        // button: row.button,
+        checkbox: row.checkbox,
+        text: row.text,
+        number: row.number,
+        url: row.url,
+        raw_string: row.raw_string,
+        raw_boolean: row.raw_boolean,
+        raw_int32: row.raw_int32,
+        raw_int64: row.raw_int64,
+        raw_float32: row.raw_float32,
+        raw_float64: row.raw_float64,
+      })
+      .run(db);
+  }
 };
 
 registerCronHandler(handler);
