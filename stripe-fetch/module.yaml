@@ -15,7 +15,7 @@ parameters:
 
 tables:
   - tableId: stripe-customers
-    tableName: stripe-customers
+    tableName: stripe_customers
     autoMigrate: true
     columnDescriptors:
       # id: stripeCustomer.id,
@@ -108,7 +108,7 @@ tables:
         dataType: int64
 
   - tableId: stripe-subscriptions
-    tableName: stripe-subscriptions
+    tableName: stripe_subscriptions
     autoMigrate: true
     columnDescriptors:
       # id: stripeCustomer.id,
@@ -199,7 +199,7 @@ tables:
         dataType: string
 
   - tableId: stripe-payment-intents
-    tableName: stripe-payment-intents
+    tableName: stripe_payment_intents
     autoMigrate: true
     columnDescriptors:
       - columnId: "id"
@@ -361,7 +361,7 @@ tables:
         dataType: string
 
   - tableId: stripe-invoices
-    tableName: stripe-invoices
+    tableName: stripe_invoices
     autoMigrate: true
     columnDescriptors:
       - columnId: id
@@ -464,7 +464,7 @@ tables:
         dataType: float64
 
   - tableId: stripe-refunds
-    tableName: stripe-refunds
+    tableName: stripe_refunds
     autoMigrate: true
     columnDescriptors:
       - columnId: id
@@ -524,7 +524,7 @@ tables:
             }
 
   - tableId: stripe-subscription-items
-    tableName: stripe-subscription-items
+    tableName: stripe_subscription_items
     autoMigrate: true
     columnDescriptors:
       - columnId: id
@@ -589,97 +589,6 @@ tables:
 
       - columnId: price-obj
         columnName: price_obj
-        dataType: string
-
-  - tableId: view-stripe-subscriptions-with-customers
-    tableName: view-stripe-subscriptions-with-customers
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: subscription-item-id
-        columnName: subscription_item_id
-        dataType: string
-
-      - columnId: price-unit-amount
-        columnName: price_unit_amount
-        dataType: float64
-
-      - columnId: quantity
-        columnName: quantity
-        dataType: int32
-
-      - columnId: subscription-id
-        columnName: subscription_id
-        dataType: string
-
-      - columnId: status
-        columnName: status
-        dataType: string
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "select",
-              "options": [
-                {
-                  "value": "incomplete_expired",
-                  "theme": "ruby"
-                },
-                {
-                  "value": "incomplete",
-                  "theme": "ruby"
-                },
-                {
-                  "value": "cancelled",
-                  "theme": "ruby"
-                },
-                {
-                  "value": "unpaid",
-                  "theme": "ruby"
-                },
-                {
-                  "value": "trialing",
-                  "theme": "pink"
-                },
-                {
-                  "value": "past_due",
-                  "theme": "yellow"
-                },
-                {
-                  "value": "active",
-                  "theme": "green"
-                }
-              ]
-            }
-
-      - columnId: items
-        columnName: items
-        dataType: string
-
-      - columnId: created
-        columnName: created
-        dataType: int32
-
-      - columnId: customer-id
-        columnName: customer_id
-        dataType: string
-
-      - columnId: email
-        columnName: email
-        dataType: string
-
-      - columnId: name
-        columnName: name
-        dataType: string
-
-      - columnId: phone
-        columnName: phone
-        dataType: string
-
-      - columnId: delinquent
-        columnName: delinquent
-        dataType: boolean
-
-      - columnId: invoice-prefix
-        columnName: invoice_prefix
         dataType: string
 
 workers:
