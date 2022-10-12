@@ -61,19 +61,19 @@ workers:
   #   triggers:
   #     transaction: {}
 
-  # - workerId: post-stripe-subscription-item-quantity-decrement
-  #   scriptPath: dist/postStripeSubscriptionItemQuantityDecrement.bundle.js
-  #   env:
-  #     STRIPE_API_KEY: stripe-api-key
-  #   triggers:
-  #     transaction: {}
+  - workerId: post-stripe-subscription-item-quantity-decrement
+    scriptPath: dist/postStripeSubscriptionItemQuantityDecrement.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      transaction: {}
 
-  # - workerId: post-stripe-payment-intent-refund
-  #   scriptPath: dist/postStripePaymentIntentRefund.bundle.js
-  #   env:
-  #     STRIPE_API_KEY: stripe-api-key
-  #   triggers:
-  #     transaction: {}
+  - workerId: post-stripe-payment-intent-refund
+    scriptPath: dist/postStripePaymentIntentRefund.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      transaction: {}
 
 tables:
   - tableName: stripe_customers

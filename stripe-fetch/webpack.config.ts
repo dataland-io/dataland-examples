@@ -10,9 +10,9 @@ const config: Configuration = {
     fetchStripeInvoices: "./src/fetchStripeInvoices.ts",
     fetchStripeRefunds: "./src/fetchStripeRefunds.ts",
     fetchStripePaymentIntents: "./src/fetchStripePaymentIntents.ts",
-    // postStripePaymentIntentRefund: "./src/postStripePaymentIntentRefund.ts",
-    // postStripeSubscriptionItemQuantityDecrement:
-    //   "./src/postStripeSubscriptionItemQuantityDecrement.ts",
+    postStripePaymentIntentRefund: "./src/postStripePaymentIntentRefund.ts",
+    postStripeSubscriptionItemQuantityDecrement:
+      "./src/postStripeSubscriptionItemQuantityDecrement.ts",
     // postStripeSubscriptionItemQuantityIncrement:
     //   "./src/postStripeSubscriptionItemQuantityIncrement.ts",
   },
