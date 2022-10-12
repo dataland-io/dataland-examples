@@ -43,6 +43,8 @@ const handler = async (transaction: Transaction) => {
         for (const row of mutation.kind.updateRows.rows) {
           affected_row_ids.push(row.rowId);
         }
+      } else {
+        return;
       }
     }
   }

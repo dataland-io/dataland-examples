@@ -146,7 +146,7 @@ const handler = async () => {
 
   const subscription_items_tableSyncRequest: TableSyncRequest = {
     tableName: "stripe_subscription_items",
-    arrowRecordBatches: [subscriptions_batch],
+    arrowRecordBatches: [subscription_items_batch],
     primaryKeyColumnNames: ["id"],
     dropExtraColumns: true,
     deleteExtraRows: true,
