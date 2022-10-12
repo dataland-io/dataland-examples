@@ -1,16 +1,15 @@
+import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-cjs";
 import {
+  TableSyncRequest,
   getEnv,
-  syncTables,
-  SyncTable,
   registerCronHandler,
-} from "@dataland-io/dataland-sdk-worker";
-
-import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
+  getDbClient,
+} from "@dataland-io/dataland-sdk";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
 const fetchStripeCustomers = async () => {
-  var headers = new Headers();
+  const headers = new Headers();
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
@@ -70,13 +69,19 @@ const handler = async () => {
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
 
-  const syncTable: SyncTable = {
+  const tableSyncRequest: TableSyncRequest = {
     tableName: "stripe_customers",
     arrowRecordBatches: [batch],
-    identityColumnNames: ["id"],
+    primaryKeyColumnNames: ["id"],
+    dropExtraColumns: true,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
   };
 
-  await syncTables({ syncTables: [syncTable] });
+  const db = getDbClient();
+  await db.tableSync(tableSyncRequest);
   console.log("synced Stripe customers to Dataland");
 };
 

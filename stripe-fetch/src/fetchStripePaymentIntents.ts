@@ -1,16 +1,15 @@
+import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-cjs";
 import {
+  TableSyncRequest,
+  getDbClient,
   getEnv,
-  syncTables,
-  SyncTable,
   registerCronHandler,
-} from "@dataland-io/dataland-sdk-worker";
-
-import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
+} from "@dataland-io/dataland-sdk";
 
 const stripe_key = getEnv("STRIPE_API_KEY");
 
 const fetchStripePaymentIntents = async () => {
-  var headers = new Headers();
+  const headers = new Headers();
   headers.append("Content-Type", "application/x-www-form-urlencoded");
   headers.append("Authorization", `Bearer ${stripe_key}`);
 
@@ -67,14 +66,19 @@ const handler = async () => {
   const table = tableFromJSON(records);
   const batch = tableToIPC(table);
 
-  const syncTable: SyncTable = {
+  const tableSyncRequest: TableSyncRequest = {
     tableName: "stripe_payment_intents",
     arrowRecordBatches: [batch],
-    identityColumnNames: ["id"],
-    keepExtraColumns: true,
+    primaryKeyColumnNames: ["id"],
+    dropExtraColumns: true,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
   };
 
-  await syncTables({ syncTables: [syncTable] });
+  const db = getDbClient();
+  await db.tableSync(tableSyncRequest);
   console.log("Synced Stripe payment intents to Dataland");
 };
 

@@ -54,237 +54,82 @@ workers:
       cron:
         cronExpression: "0 */15 * * * * *"
 
-  - workerId: post-stripe-subscription-item-quantity-increment
-    scriptPath: dist/postStripeSubscriptionItemQuantityIncrement.bundle.js
-    env:
-      STRIPE_API_KEY: stripe-api-key
-    triggers:
-      transaction: {}
+  # - workerId: post-stripe-subscription-item-quantity-increment
+  #   scriptPath: dist/postStripeSubscriptionItemQuantityIncrement.bundle.js
+  #   env:
+  #     STRIPE_API_KEY: stripe-api-key
+  #   triggers:
+  #     transaction: {}
 
-  - workerId: post-stripe-subscription-item-quantity-decrement
-    scriptPath: dist/postStripeSubscriptionItemQuantityDecrement.bundle.js
-    env:
-      STRIPE_API_KEY: stripe-api-key
-    triggers:
-      transaction: {}
+  # - workerId: post-stripe-subscription-item-quantity-decrement
+  #   scriptPath: dist/postStripeSubscriptionItemQuantityDecrement.bundle.js
+  #   env:
+  #     STRIPE_API_KEY: stripe-api-key
+  #   triggers:
+  #     transaction: {}
 
-  - workerId: post-stripe-payment-intent-refund
-    scriptPath: dist/postStripePaymentIntentRefund.bundle.js
-    env:
-      STRIPE_API_KEY: stripe-api-key
-    triggers:
-      transaction: {}
+  # - workerId: post-stripe-payment-intent-refund
+  #   scriptPath: dist/postStripePaymentIntentRefund.bundle.js
+  #   env:
+  #     STRIPE_API_KEY: stripe-api-key
+  #   triggers:
+  #     transaction: {}
 
 tables:
-  - tableId: stripe-refunds
-    tableName: stripe_refunds
+  - tableName: stripe_customers
     autoMigrate: true
     columnDescriptors:
-      - columnId: id
-        columnName: id
+      - columnName: id
         dataType: string
-      - columnId: amount
-        columnName: amount
+      - columnName: phone
+        dataType: string
+      - columnName: email
+        dataType: string
+      - columnName: object
+        dataType: string
+      - columnName: address
+        dataType: string
+      - columnName: balance
         dataType: float64
-      - columnId: charge
-        columnName: charge
+      - columnName: created
+        dataType: float64
+      - columnName: currency
         dataType: string
-      - columnId: currency
-        columnName: currency
+      - columnName: default_currency
         dataType: string
-      - columnId: metadata
-        columnName: metadata
+      - columnName: default_source
         dataType: string
-      - columnId: payment-intent
-        columnName: payment_intent
-        dataType: string
-      - columnId: status
-        columnName: status
-        dataType: string
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "select",
-              "options": [
-                {
-                  "value": "pending",
-                  "theme": "silver"
-                },
-                {
-                  "value": "succeeded",
-                  "theme": "green"
-                },
-                {
-                  "value": "failed",
-                  "theme": "ruby"
-                }
-              ]
-            }
-      - columnId: reason
-        columnName: reason
-        dataType: string
-
-  - tableId: stripe-invoices
-    tableName: stripe_invoices
-    autoMigrate: true
-    columnDescriptors:
-      - columnId: id
-        columnName: id
-        dataType: string
-      - columnId: auto-advance
-        columnName: auto_advance
+      - columnName: delinquent
         dataType: boolean
-      - columnId: charge
-        columnName: charge
+      - columnName: description
         dataType: string
-      - columnId: collection-method
-        columnName: collection_method
+      - columnName: discount
         dataType: string
-      - columnId: currency
-        columnName: currency
+      - columnName: invoice_prefix
         dataType: string
-      - columnId: customer
-        columnName: customer
+      - columnName: livemode
+        dataType: boolean
+      - columnName: metadata
         dataType: string
-      - columnId: description
-        columnName: description
+      - columnName: name
         dataType: string
-      - columnId: hosted-invoice-url
-        columnName: hosted_invoice_url
-        dataType: string
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "url"
-            }
-      - columnId: metadata
-        columnName: metadata
-        dataType: string
-      - columnId: payment-intent
-        columnName: payment_intent
-        dataType: string
-      - columnId: period-end
-        columnName: period_end
+      - columnName: next_invoice_sequence
         dataType: float64
-      - columnId: period-start
-        columnName: period_start
-        dataType: float64
-      - columnId: status
-        columnName: status
+      - columnName: preferred_locales
         dataType: string
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "select",
-              "options": [
-                {
-                  "value": "draft",
-                  "theme": "silver"
-                },
-                {
-                  "value": "open",
-                  "theme": "ruby"
-                },
-                {
-                  "value": "paid",
-                  "theme": "green"
-                },
-                {
-                  "value": "uncollectible",
-                  "theme": "yellow"
-                },
-                {
-                  "value": "voided",
-                  "theme": "silver"
-                }
-              ]
-            }
-      - columnId: subscription
-        columnName: subscription
+      - columnName: shipping
         dataType: string
-      - columnId: total
-        columnName: total
+      - columnName: tax_exempt
+        dataType: string
+      - columnName: test_clock
         dataType: float64
 
-  - tableId: stripe-customers
-    tableName: stripe_customers
+  - tableName: stripe_subscriptions
     autoMigrate: true
     columnDescriptors:
-      - columnId: id
-        columnName: id
+      - columnName: id
         dataType: string
-      - columnId: phone
-        columnName: phone
-        dataType: string
-      - columnId: email
-        columnName: email
-        dataType: string
-      - columnId: object
-        columnName: object
-        dataType: string
-      - columnId: address
-        columnName: address
-        dataType: string
-      - columnId: balance
-        columnName: balance
-        dataType: float64
-      - columnId: created
-        columnName: created
-        dataType: float64
-      - columnId: currency
-        columnName: currency
-        dataType: string
-      - columnId: default-currency
-        columnName: default_currency
-        dataType: string
-      - columnId: default-source
-        columnName: default_source
-        dataType: string
-      - columnId: delinquent
-        columnName: delinquent
-        dataType: boolean
-      - columnId: description
-        columnName: description
-        dataType: string
-      - columnId: discount
-        columnName: discount
-        dataType: string
-      - columnId: invoice-prefix
-        columnName: invoice_prefix
-        dataType: string
-      - columnId: livemode
-        columnName: livemode
-        dataType: boolean
-      - columnId: metadata
-        columnName: metadata
-        dataType: string
-      - columnId: name
-        columnName: name
-        dataType: string
-      - columnId: next-invoice-sequence
-        columnName: next_invoice_sequence
-        dataType: float64
-      - columnId: preferred-locales
-        columnName: preferred_locales
-        dataType: string
-      - columnId: shipping
-        columnName: shipping
-        dataType: string
-      - columnId: tax-exempt
-        columnName: tax_exempt
-        dataType: string
-
-  - tableId: stripe-subscriptions
-    tableName: stripe_subscriptions
-    autoMigrate: true
-    columnDescriptors:
-      # id: stripeCustomer.id,
-      - columnId: id
-        columnName: id
-        dataType: string
-      # status: stripeSubscription.status,
-      - columnId: status
-        columnName: status
+      - columnName: status
         dataType: string
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -321,130 +166,69 @@ tables:
                 }
               ]
             }
-      - columnId: created
-        columnName: created
+      - columnName: created
         dataType: float64
-      # cancel_at_period_end: stripeSubscription.cancel_at_period_end,
-      - columnId: cancel-at-period-end
-        columnName: cancel_at_period_end
+      - columnName: cancel_at_period_end
         dataType: boolean
-        # canceled_at: stripeSubscription.canceled_at,
-      - columnId: canceled-at
-        columnName: canceled_at
+      - columnName: canceled_at
         dataType: float64
-        # current_period_end: stripeSubscription.current_period_end,
-      - columnId: current-period-end
-        columnName: current_period_end
+      - columnName: current_period_end
         dataType: float64
-        # current_period_start: stripeSubscription.current_period_start,
-      - columnId: current-period-start
-        columnName: current_period_start
+      - columnName: current_period_start
         dataType: float64
-        # customer: stripeSubscription.customer,
-      - columnId: customer
-        columnName: customer
+      - columnName: customer
         dataType: string
-      # default_payment_method: stripeSubscription.default_payment_method,
-      - columnId: default-payment-method
-        columnName: default_payment_method
+      - columnName: default_payment_method
         dataType: string
-      # description: stripeSubscription.description,
-      - columnId: description
-        columnName: description
+      - columnName: description
         dataType: string
-      # items: stripeSubscription.items,
-      - columnId: items
-        columnName: items
+      - columnName: items
         dataType: string
-      # latest_invoice: stripeSubscription.latest_invoice,
-      - columnId: latest-invoice
-        columnName: latest_invoice
+      - columnName: latest_invoice
         dataType: string
-      # metadata: stripeSubscription.metadata,
-      - columnId: metadata
-        columnName: metadata
+      - columnName: metadata
         dataType: string
 
-  - tableId: stripe-payment-intents
-    tableName: stripe_payment_intents
+  - tableName: stripe_payment_intents
     autoMigrate: true
     columnDescriptors:
-      - columnId: "id"
-        columnName: "id"
+      - columnName: "id"
         dataType: string
-        # amount: stripePaymentIntent.amount,
-      - columnId: amount
-        columnName: amount
+      - columnName: amount
         dataType: float64
-        # automatic_payment_methods:
-        #   stripePaymentIntent.automatic_payment_methods,
-      - columnId: automatic-payment-methods
-        columnName: automatic_payment_methods
+      - columnName: automatic_payment_methods
         dataType: string
-      # charges: stripePaymentIntent.charges,
-      - columnId: charges
-        columnName: charges
+      - columnName: charges
         dataType: string
-      # client_secret: stripePaymentIntent.client_secret,
-      - columnId: client-secret
-        columnName: client_secret
+      - columnName: client_secret
         dataType: string
-      # currency: stripePaymentIntent.currency,
-      - columnId: currency
-        columnName: currency
+      - columnName: currency
         dataType: string
-      # customer: stripePaymentIntent.customer,
-      - columnId: customer
-        columnName: customer
+      - columnName: customer
         dataType: string
-      # description: stripePaymentIntent.description,
-      - columnId: description
-        columnName: description
+      - columnName: description
         dataType: string
-      # last_payment_error: stripePaymentIntent.last_payment_error,
-      - columnId: last-payment-error
-        columnName: last_payment_error
+      - columnName: last_payment_error
         dataType: string
-      # metadata: stripePaymentIntent.metadata,
-      - columnId: metadata
-        columnName: metadata
+      - columnName: metadata
         dataType: string
-      # next_action: stripePaymentIntent.next_action,
-      - columnId: next-action
-        columnName: next_action
+      - columnName: next_action
         dataType: string
-      # payment_method: stripePaymentIntent.payment_method,
-      - columnId: payment-method
-        columnName: payment_method
+      - columnName: payment_method
         dataType: string
-      # payment_method_types: stripePaymentIntent.payment_method_types,
-      - columnId: payment-method-types
-        columnName: payment_method_types
+      - columnName: payment_method_types
         dataType: string
-      # receipt_email: stripePaymentIntent.receipt_email,
-      - columnId: receipt-email
-        columnName: receipt_email
+      - columnName: receipt_email
         dataType: string
-      # setup_future_usage: stripePaymentIntent.setup_future_usage,
-      - columnId: setup-future-usage
-        columnName: setup_future_usage
+      - columnName: setup_future_usage
         dataType: string
-      # shipping: stripePaymentIntent.shipping,
-      - columnId: shipping
-        columnName: shipping
+      - columnName: shipping
         dataType: string
-      # statement_descriptor: stripePaymentIntent.statement_descriptor,
-      - columnId: statement-descriptor
-        columnName: statement_descriptor
+      - columnName: statement_descriptor
         dataType: string
-      # statement_descriptor_suffix:
-      #   stripePaymentIntent.statement_descriptor_suffix,
-      - columnId: statement-descriptor-suffix
-        columnName: statement_descriptor_suffix
+      - columnName: statement_descriptor_suffix
         dataType: string
-      # status: stripePaymentIntent.status,
-      - columnId: status
-        columnName: status
+      - columnName: status
         dataType: string
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -481,8 +265,7 @@ tables:
                 }
               ]
             }
-      - columnId: "issue-refund"
-        columnName: "Issue refund"
+      - columnName: "issue_refund"
         dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -491,8 +274,7 @@ tables:
               "label": "Issue refund",
               "theme": "blue"
             }
-      - columnId: refund-status
-        columnName: refund_status
+      - columnName: refund_status
         dataType: string
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -521,52 +303,139 @@ tables:
                 }
               ]
             }
-      - columnId: "processed-at"
-        columnName: "Processed at"
+      - columnName: "processed_at"
         dataType: string
 
-  - tableId: stripe-subscription-items
-    tableName: stripe_subscription_items
+  - tableName: stripe_invoices
     autoMigrate: true
     columnDescriptors:
-      - columnId: id
-        columnName: "id"
+      - columnName: id
         dataType: string
-      # id: stripeSubscriptionItem.id,
-      # price_id: stripe_subscription_item_price_id,
-      - columnId: price-id
-        columnName: price_id
+      - columnName: auto_advance
+        dataType: boolean
+      - columnName: charge
         dataType: string
-      # price_currency: stripe_subscription_item_price_currency,
-      - columnId: price-currency
-        columnName: price_currency
+      - columnName: collection_method
         dataType: string
-      # price_unit_amount: stripe_subscription_item_price_unit_amount,
-      - columnId: price-unit-amount
-        columnName: price_unit_amount
+      - columnName: currency
+        dataType: string
+      - columnName: customer
+        dataType: string
+      - columnName: description
+        dataType: string
+      - columnName: hosted_invoice_url
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
+      - columnName: metadata
+        dataType: string
+      - columnName: payment_intent
+        dataType: string
+      - columnName: period_end
         dataType: float64
-      # product_id: stripe_subscription_item_product_id,
-      - columnId: product-id
-        columnName: product_id
+      - columnName: period_start
+        dataType: float64
+      - columnName: status
         dataType: string
-      # metadata: JSON.stringify(stripeSubscriptionItem.metadata),
-      - columnId: metadata
-        columnName: metadata
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "draft",
+                  "theme": "silver"
+                },
+                {
+                  "value": "open",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "paid",
+                  "theme": "green"
+                },
+                {
+                  "value": "uncollectible",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "voided",
+                  "theme": "silver"
+                }
+              ]
+            }
+      - columnName: subscription
         dataType: string
-      # quantity: stripeSubscriptionItem.quantity,
-      - columnId: quantity
-        columnName: quantity
+      - columnName: total
+        dataType: float64
+
+  - tableName: stripe_refunds
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: id
+        dataType: string
+      - columnName: amount
+        dataType: float64
+      - columnName: charge
+        dataType: string
+      - columnName: currency
+        dataType: string
+      - columnName: description
+        dataType: string
+      - columnName: metadata
+        dataType: string
+      - columnName: payment_intent
+        dataType: string
+      - columnName: reason
+        dataType: string
+      - columnName: status
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "pending",
+                  "theme": "silver"
+                },
+                {
+                  "value": "succeeded",
+                  "theme": "green"
+                },
+                {
+                  "value": "failed",
+                  "theme": "ruby"
+                }
+              ]
+            }
+
+  - tableName: stripe_subscription_items
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: id
+        dataType: string
+      - columnName: price_id
+        dataType: string
+      - columnName: price_currency
+        dataType: string
+      - columnName: price_unit_amount
+        dataType: float64
+      - columnName: product_id
+        dataType: string
+      - columnName: metadata
+        dataType: string
+      - columnName: quantity
         dataType: float64
       # subscription: stripeSubscriptionItem.subscription,
-      - columnId: subscription
-        columnName: subscription
+      - columnName: subscription
         dataType: string
-        # customer: stripeSubscription.customer,
-      - columnId: customer
-        columnName: customer
+      - columnName: customer
         dataType: string
-      - columnId: increment
-        columnName: "Increment quantity"
+      - columnName: "increment_quantity"
         dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -575,8 +444,7 @@ tables:
               "label": "Increment",
               "theme": "blue"
             }
-      - columnId: decrement
-        columnName: "Decrement quantity"
+      - columnName: "decrement_quantity"
         dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -585,10 +453,7 @@ tables:
               "label": "Decrement",
               "theme": "red"
             }
-      - columnId: "processed-at"
-        columnName: "Processed at"
+      - columnName: "processed_at"
         dataType: string
-
-      - columnId: price-obj
-        columnName: price_obj
+      - columnName: price_obj
         dataType: string
