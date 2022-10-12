@@ -1,36 +1,28 @@
 moduleId: defining-tables-guide
 
 tables:
-  - tableId: first-table
-    tableName: first
+  - tableName: first
     autoMigrate: true
     columnDescriptors:
-      - columnId: first-column
-        columnName: first
+      - columnName: first
         dataType: string
 
-      - columnId: second-column
-        columnName: second
+      - columnName: second
         dataType: string
 
-  - tableId: users-table
-    tableName: users
+  - tableName: users
     autoMigrate: false
     columnDescriptors:
-      - columnId: name-column
-        columnName: name
+      - columnName: name
         dataType: string
 
-      - columnId: age-column
-        columnName: age
+      - columnName: age
         dataType: int32
 
-      - columnId: billing-address-column
-        columnName: billing-address
+      - columnName: billing_address
         dataType: string
 
-      - columnId: personal-website-column
-        columnName: personal-website
+      - columnName: personal_website
         dataType: string
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -38,8 +30,7 @@ tables:
               "type": "url"
             }
 
-      - columnId: plan-tier-column
-        columnName: plan-tier
+      - columnName: plan_tier
         dataType: string
         columnAnnotations:
           dataland.io/column-display-config: |
