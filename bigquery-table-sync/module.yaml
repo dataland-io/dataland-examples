@@ -1,0 +1,35 @@
+moduleId: bigquery-table-sync-example
+
+buildCommand: npm run build
+
+info:
+  title: BigQuery Table Sync
+  description: Sync a specified BigQuery table into Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: bigquery-icon.png
+
+parameters:
+  - gcp-access-token
+  - gcp-project-id
+  - gcp-dataset-id
+  - gcp-table-id
+  - gcp-api-key
+  - gcp-table-identity-column
+
+workers:
+  - workerId: bigquery-table-sync
+    scriptPath: dist/bigqueryTableSync.bundle.js
+    triggers:
+      transaction:
+        enabled: true
+      cron:
+        cronExpression: "*/30 * * * * * *"
+    env:
+      GCP_ACCESS_TOKEN: gcp-access-token
+      GCP_PROJECT_ID: gcp-project-id
+      GCP_DATASET_ID: gcp-dataset-id
+      GCP_TABLE_ID: gcp-table-id
+      GCP_API_KEY: gcp-api-key
+      GCP_TABLE_IDENTITY_COLUMN: gcp-table-identity-column
