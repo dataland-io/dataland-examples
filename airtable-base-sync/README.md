@@ -1,6 +1,6 @@
 # Overview
 
-Set up a two-way sync for your Airtable base in Dataland.
+Set up a two-way sync for multiple Airtable tables and Dataland.
 
 ## Parameter explanation
 

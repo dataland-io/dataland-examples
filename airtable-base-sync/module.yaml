@@ -1,8 +1,8 @@
 moduleId: airtable-base-sync
 
 info:
-  title: Airtable Whole Base Sync
-  description: Sync a whole Airtable base to Dataland
+  title: Airtable Multi-Table Sync
+  description: Sync multiple tables from Airtable to Dataland
   author: Dataland Devs <support@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
   readmePath: README.md
