@@ -8,14 +8,15 @@ Data in the Dataland UI will be re-updated every 15 minutes by default. This cad
 
 ## Parameter setup
 
-| Name                  | About                                                               |
-| --------------------- | ------------------------------------------------------------------- |
-| `mysql-host`          | Database host                                                       |
-| `mysql-port`          | Database port                                                       |
-| `mysql-db`            | Database name                                                       |
-| `mysql-user`          | Database user                                                       |
-| `mysql-password`      | Database password                                                   |
-| `mysql-table-mapping` | The list of synced tables from MySQL. See below for format details. |
+| Name                  | About                                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| `mysql-host`          | Database host                                                                                    |
+| `mysql-port`          | Database port                                                                                    |
+| `mysql-db`            | Database name                                                                                    |
+| `mysql-user`          | Database user                                                                                    |
+| `mysql-password`      | Database password                                                                                |
+| `mysql-table-mapping` | The list of synced tables from MySQL. See below for format details.                              |
+| `mysql-do-writeback`  | A boolean value. If `true`, then writeback is enabled. If `false`, then no writeback is allowed. |
 
 ### Inputting `mysql-table-mapping`
 
@@ -25,30 +26,30 @@ The JSON follows the format:
 
 ```json
 {
-  "mysql-table-name-1": "dataland-table-name-1",
-  "mysql-table-name-2": "dataland-table-name-2"
+  "mysql_table_name_1": "dataland_table_name_1",
+  "mysql_table_name_2": "dataland_table_name_2"
   // and so on
 }
 ```
 
-For example, let's say we want to sync three tables from MySQL database into Dataland. In MySQL, the desired tables are titled `Customers`, `Orders`, and `Products`. We want to sync them into Dataland with the names `Synced Customers`, `Synced Orders`, and `Synced Products` respectively. The resulting JSON would be:
+For example, let's say we want to sync three tables from MySQL database into Dataland. In MySQL, the desired tables are titled `Customers`, `Orders`, and `Products`. We want to sync them into Dataland with the names `synced_customers`, `synced_orders`, and `synced_products` respectively. The resulting JSON would be:
 
 ```json
 {
-  "Customers": "Synced Customers",
-  "Orders": "Synced Orders",
-  "Products": "Synced Products"
+  "Customers": "synced_customers",
+  "Orders": "synced_orders",
+  "Products": "synced_products"
 }
 ```
 
 The stringified version of this JSON can then used as the `mysql-table-mapping` module installation form:
 
 ```
-'{"Customers": "Synced Customers","Orders": "Synced Orders","Products": "Synced Products"}'
+'{"Customers":"synced_customers","Orders":"synced_orders","Products":"synced_products"}'
 ```
 
 Or, in the .env file:
 
 ```env
-DL_PARAM_MYSQL_TABLE_MAPPING='{"Customers": "Synced Customers","Orders": "Synced Orders","Products": "Synced Products"}'
+DL_PARAM_MYSQL_TABLE_MAPPING='{"Customers":"synced_customers","Orders":"synced_orders","Products":"synced_products"}'
 ```
