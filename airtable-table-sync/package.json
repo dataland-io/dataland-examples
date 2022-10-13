@@ -7,9 +7,11 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
-    "@dataland-io/dataland-api-proto": "^0.17.0",
+    "@dataland-io/dataland-api-proto": "0.17.0",
     "@dataland-io/dataland-sdk": "0.17.0",
-    "airtable": "0.11.4"
+    "airtable": "0.11.4",
+    "airtable-deno": "./airtable-deno",
+    "querystring": "^0.2.1"
   },
   "devDependencies": {
     "@types/webpack": "5.28.0",

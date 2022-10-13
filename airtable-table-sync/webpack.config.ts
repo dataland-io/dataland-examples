@@ -15,10 +15,13 @@ const config: Configuration = {
   },
   resolve: {
     extensions: [".ts", ".js"],
+    fallback: {
+      querystring: require.resolve("querystring"),
+    },
   },
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "bundle.js",
+    filename: "bundle3.js",
     clean: true,
   },
   performance: {

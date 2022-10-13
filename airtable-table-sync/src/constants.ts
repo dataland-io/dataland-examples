@@ -1,1 +1,1 @@
-export const RECORD_ID = "record-id";
+export const RECORD_ID = "record_id";

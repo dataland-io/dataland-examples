@@ -31,16 +31,61 @@ parameters:
 
 workers:
   - workerId: airtable-table-sync-worker
-    scriptPath: dist/bundle.js
+    scriptPath: dist/bundle3.js
     triggers:
       cron:
-        cronExpression: "*/30 * * * * * *"
-      # transaction: {}
+        cronExpression: "*/15 * * * * * *"
+      transaction: {}
     env:
       AIRTABLE_API_KEY: airtable-api-key
       AIRTABLE_BASE_ID: airtable-base-id
       AIRTABLE_TABLE_NAME: airtable-table-name
       AIRTABLE_VIEW_NAME: airtable-view-name
       AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
-      AIRTABLE_DATALAND_TABLE_NAME: dataland-table-name
+      AIRTABLE_DATALAND_TABLE_NAME: airtable-dataland-table-name
       AIRTABLE_FIELDS_LIST: airtable-fields-list
+
+tables:
+  - tableName: stripe_subscription_items
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: id
+        dataType: string
+      - columnName: price_id
+        dataType: string
+      - columnName: price_currency
+        dataType: string
+      - columnName: price_unit_amount
+        dataType: float64
+      - columnName: product_id
+        dataType: string
+      - columnName: metadata
+        dataType: string
+      - columnName: quantity
+        dataType: float64
+      - columnName: subscription
+        dataType: string
+      - columnName: customer
+        dataType: string
+      - columnName: "increment_quantity"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Increment",
+              "theme": "blue"
+            }
+      - columnName: "decrement_quantity"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Decrement",
+              "theme": "red"
+            }
+      - columnName: "processed_at"
+        dataType: string
+      - columnName: price_obj
+        dataType: string
