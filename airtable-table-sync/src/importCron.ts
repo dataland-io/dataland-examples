@@ -1,36 +1,20 @@
 import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
 import {
+  getEnv,
   registerCronHandler,
+  TableSyncRequest,
+  getDbClient,
   Scalar,
-  SyncTable,
-  syncTables,
-} from "@dataland-io/dataland-sdk-worker";
-import Airtable, { Attachment, Collaborator } from "airtable";
-import {
-  AIRTABLE_API_KEY,
-  AIRTABLE_BASE_ID,
-  AIRTABLE_TABLE_NAME,
-  AIRTABLE_VIEW_NAME,
-  DATALAND_TABLE_NAME,
-  RECORD_ID,
-  SYNC_TABLES_MARKER,
-  AIRTABLE_FIELDS_LIST,
-} from "./constants";
-
-const airtableBase = new Airtable({
-  apiKey: AIRTABLE_API_KEY,
-}).base(AIRTABLE_BASE_ID);
-const airtableTable = airtableBase(AIRTABLE_TABLE_NAME);
+} from "@dataland-io/dataland-sdk";
+import { fetchRetry, RECORD_ID } from "./common";
 
 type AirtableValue =
   | undefined
   | string
   | number
   | boolean
-  | Collaborator
-  | ReadonlyArray<Collaborator>
-  | ReadonlyArray<string>
-  | ReadonlyArray<Attachment>;
+  | Record<any, any>
+  | any[];
 
 const parseAirtableValue = (value: AirtableValue): Scalar => {
   if (value == null) {
@@ -77,88 +61,166 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
   return null;
 };
 
-const readFromAirtable = async (): Promise<Record<string, Scalar>[]> => {
-  const records: Record<string, any>[] = [];
+const getAirtableTableRecords = async (): Promise<Record<string, any>[]> => {
+  const apiKey = getEnv("AIRTABLE_API_KEY");
+  const baseId = getEnv("AIRTABLE_BASE_ID");
+  const tableName = getEnv("AIRTABLE_TABLE_NAME");
+  const viewId = getEnv("AIRTABLE_VIEW_NAME");
+  const AIRTABLE_FIELDS_LIST = getEnv("AIRTABLE_FIELDS_LIST");
 
-  let fields_array: (string | number)[] = [];
-  if (AIRTABLE_FIELDS_LIST == "ALL") {
-  } else {
-    fields_array = AIRTABLE_FIELDS_LIST.split(",").map((field) => field.trim());
+  let fields: string[] = [];
+  if (AIRTABLE_FIELDS_LIST !== "ALL") {
+    fields = AIRTABLE_FIELDS_LIST.split(",").map((field) => field.trim());
   }
 
-  await new Promise((resolve, error) => {
-    airtableTable
-      .select({
-        pageSize: 100,
-        view: AIRTABLE_VIEW_NAME,
-        fields: fields_array,
-      })
-      .eachPage(
-        (pageRecords, fetchNextPage) => {
-          const fieldNames: Set<string> = new Set();
-          for (const record of pageRecords) {
-            for (const fieldName in record.fields) {
-              fieldNames.add(fieldName);
-            }
-          }
+  const fieldParameters = fields.map((field) => `fields[]=${field}`).join("&");
 
-          for (const record of pageRecords) {
-            const parsedRecord: Record<string, Scalar> = {
-              [RECORD_ID]: record.id,
-            };
-            for (const columnName in record.fields) {
-              const columnValue = record.fields[columnName];
-              const parsedColumnValue = parseAirtableValue(columnValue);
-              parsedRecord[columnName] = parsedColumnValue;
-            }
-
-            // NOTE(gab): Fields containing empty values (false, "", [], {}) are
-            // never sent from Airtable. These fields are added as null explicitly.
-            // This is due to syncTables having an issue of setting number cells to
-            // NaN if the column name is excluded from the row.
-            for (const columnName of fieldNames) {
-              if (columnName in parsedRecord) {
-                continue;
-              }
-              parsedRecord[columnName] = null;
-            }
-
-            records.push(parsedRecord);
-          }
-
-          fetchNextPage();
+  const records: Record<string, any>[] = [];
+  let offset = "";
+  while (offset != null) {
+    const url = `https://api.airtable.com/v0/${baseId}/${tableName}?offset=${offset}&pageSize=100&view=${viewId}&${fieldParameters}`;
+    const response = await fetchRetry(() =>
+      fetch(encodeURI(url), {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
         },
-        (err) => {
-          if (err) {
-            console.error("Import fetch rows failed - ", err);
-            error();
-            return;
-          }
-          resolve(true);
-        }
-      );
-  });
+      })
+    );
+    if (response === "error") {
+      throw new Error(`Airtable import failed: ${JSON.stringify({ url })}`);
+    }
+
+    const res = await response.json();
+    records.push(...res.records);
+    offset = res.offset;
+  }
   return records;
 };
 
-const cronHandler = async () => {
-  const records = await readFromAirtable();
+type ColumnName = string;
+type FieldName = string;
+const readFromAirtable = async (): Promise<{
+  rows: Record<string, Scalar>[];
+  fieldNameMapping: Record<ColumnName, FieldName>;
+}> => {
+  const records = await getAirtableTableRecords();
 
-  const table = tableFromJSON(records);
+  const rows: Record<string, Scalar>[] = [];
+  const columnNameMapping: Record<FieldName, ColumnName> = {};
+  const fieldNameMapping: Record<ColumnName, FieldName> = {};
+  for (const record of records) {
+    for (const fieldName in record.fields) {
+      if (fieldName in columnNameMapping) {
+        continue;
+      }
+      const columnName = fieldName
+        .toLowerCase()
+        .replace(/[\s-]/g, "_")
+        .replace(/[^0-9a-z_]/g, "")
+        .replace(/^[^a-z]*/, "")
+        .slice(0, 63);
+
+      if (columnName === "") {
+        throw new Error(
+          `Aborting: Empty column name after parsing Airtable field names. Dataland column name must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters. ${JSON.stringify(
+            {
+              datalandColumnName: columnName,
+              airtableFieldName: fieldName,
+            }
+          )}`
+        );
+      }
+      if (columnName in fieldNameMapping) {
+        throw new Error(
+          `Aborting: Collision of parsed Airtable field names. Dataland column name must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters. ${JSON.stringify(
+            {
+              datalandColumnName: columnName,
+              duplicateAirtableFieldNames: [
+                fieldName,
+                fieldNameMapping[columnName]!,
+              ],
+            }
+          )}`
+        );
+      }
+      columnNameMapping[fieldName] = columnName;
+      fieldNameMapping[columnName] = fieldName;
+    }
+  }
+
+  for (const record of records) {
+    const row: Record<string, Scalar> = {
+      [RECORD_ID]: record.id,
+    };
+    for (const fieldName in record.fields) {
+      const columnName = columnNameMapping[fieldName]!;
+      const columnValue = record.fields[fieldName];
+      const parsedColumnValue = parseAirtableValue(columnValue);
+      row[columnName] = parsedColumnValue;
+    }
+    rows.push(row);
+  }
+
+  // NOTE(gab): Fields containing empty values (false, "", [], {}) are
+  // never sent from Airtable. These fields are added as null explicitly.
+  // This is due to syncTables having an issue of setting number cells to
+  // NaN if the column name is excluded from the row.
+  for (const row of rows) {
+    for (const columnName in fieldNameMapping) {
+      if (columnName in row) {
+        continue;
+      }
+      row[columnName] = null;
+    }
+  }
+  return { rows, fieldNameMapping };
+};
+
+const validateSqlIdentifier = (sqlIdentifier: string): boolean => {
+  return /^[a-z][_a-z0-9]{0,62}$/.test(sqlIdentifier);
+};
+
+const cronHandler = async () => {
+  const DATALAND_TABLE_NAME = getEnv("AIRTABLE_DATALAND_TABLE_NAME");
+  if (!validateSqlIdentifier(DATALAND_TABLE_NAME)) {
+    console.error(
+      `Import - Aborting: Invalid table name: "${DATALAND_TABLE_NAME}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
+    );
+    return;
+  }
+
+  const { rows, fieldNameMapping } = await readFromAirtable();
+  const table = tableFromJSON(rows);
   const batch = tableToIPC(table);
 
-  const syncTable: SyncTable = {
+  const columnAnnotations: Record<
+    string,
+    { columnAnnotations: Record<string, string> }
+  > = {};
+  for (const columnName in fieldNameMapping) {
+    const fieldName = fieldNameMapping[columnName]!;
+    columnAnnotations[columnName] = {
+      columnAnnotations: {
+        "dataland.io/airtable-field-name": fieldName,
+      },
+    };
+  }
+  const tableSyncRequest: TableSyncRequest = {
     tableName: DATALAND_TABLE_NAME,
     arrowRecordBatches: [batch],
-    identityColumnNames: [RECORD_ID],
+    primaryKeyColumnNames: [RECORD_ID],
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations,
+    dropExtraColumns: true,
+    deleteExtraRows: true,
   };
-
-  await syncTables({
-    syncTables: [syncTable],
-    transactionAnnotations: {
-      [SYNC_TABLES_MARKER]: "true",
-    },
-  });
+  const db = getDbClient();
+  await db.tableSync(tableSyncRequest);
+  console.log(`Import - Airtable import complete. Row count: ${rows.length}`);
 };
 
 registerCronHandler(cronHandler);

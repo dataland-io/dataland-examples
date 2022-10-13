@@ -27,20 +27,20 @@ parameters:
 # DL_PARAM_AIRTABLE_VIEW_NAME=<your-view-name>
 # DL_PARAM_AIRTABLE_ALLOW_WRITEBACK_BOOLEAN=<true-or-false>
 # DL_PARAM_AIRTABLE_DATALAND_TABLE_NAME=<your-dataland-table-name>
-# DL_PARAM_AIRTABLE_FIELDS_LIST=<your-fields-list>
+# DL_PARAM_AIRTABLE_FIELDS_LIST=<"ALL" or your-fields-list>
 
 workers:
   - workerId: airtable-table-sync-worker
     scriptPath: dist/bundle.js
     triggers:
+      transaction: {}
       cron:
         cronExpression: "0 */5 * * * * *"
-      transaction: {}
     env:
       AIRTABLE_API_KEY: airtable-api-key
       AIRTABLE_BASE_ID: airtable-base-id
       AIRTABLE_TABLE_NAME: airtable-table-name
       AIRTABLE_VIEW_NAME: airtable-view-name
       AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
-      AIRTABLE_DATALAND_TABLE_NAME: dataland-table-name
+      AIRTABLE_DATALAND_TABLE_NAME: airtable-dataland-table-name
       AIRTABLE_FIELDS_LIST: airtable-fields-list

@@ -1,38 +1,24 @@
+import { fetchRetry, RECORD_ID } from "./common";
 import {
   Transaction,
-  getCatalogSnapshot,
-  querySqlSnapshot,
   unpackRows,
-  Schema,
   Mutation,
-  runMutations,
   registerTransactionHandler,
-  Uuid,
-} from "@dataland-io/dataland-sdk-worker";
-import Airtable, {
+  getEnv,
+  MutationsBuilder,
+  getDbClient,
+  valueToScalar,
+  getHistoryClient,
+} from "@dataland-io/dataland-sdk";
+
+import {
   FieldSet as AirtableFieldSet,
   RecordData as AirtableRecordData,
-  Table as AirtableTable,
 } from "airtable";
-import {
-  AIRTABLE_API_KEY,
-  AIRTABLE_BASE_ID,
-  AIRTABLE_TABLE_NAME,
-  ALLOW_WRITEBACK_BOOLEAN,
-  DATALAND_TABLE_NAME,
-  RECORD_ID,
-  SYNC_TABLES_MARKER,
-} from "./constants";
-
-const airtableBase = new Airtable({
-  apiKey: AIRTABLE_API_KEY,
-}).base(AIRTABLE_BASE_ID);
-const airtableTable = airtableBase(AIRTABLE_TABLE_NAME);
 
 const AIRTABLE_MAX_UPDATES = 10;
 const chunkAirtablePayload = <T>(payload: T[]) => {
   const chunks: T[][] = [];
-
   for (let i = 0; i < payload.length; i += AIRTABLE_MAX_UPDATES) {
     const chunk = payload.slice(i, i + AIRTABLE_MAX_UPDATES);
     chunks.push(chunk);
@@ -40,169 +26,209 @@ const chunkAirtablePayload = <T>(payload: T[]) => {
   return chunks;
 };
 
-const airtableUpdateRows = async (
-  table: AirtableTable<AirtableFieldSet>,
-  updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[]
+const airtableUpdateRows2 = async (
+  updateRecords: AirtableRecordData<Partial<AirtableFieldSet>>[]
 ) => {
-  const chunks = chunkAirtablePayload(updateRows);
+  const baseId = getEnv("AIRTABLE_BASE_ID");
+  const tableName = getEnv("AIRTABLE_TABLE_NAME");
+  const apiKey = getEnv("AIRTABLE_API_KEY");
+  const url = encodeURI(`https://api.airtable.com/v0/${baseId}/${tableName}`);
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+
+  const chunks = chunkAirtablePayload(updateRecords);
   for (const chunk of chunks) {
-    await new Promise((resolve) => {
-      table.update(chunk, { typecast: true }, (err) => {
-        if (err != null) {
-          console.error("Writeback - Failed to update rows in Airtable table", {
-            error: err,
-            updateRows,
-          });
-          resolve(false);
-          return;
-        }
-        resolve(true);
-      });
-    });
+    const body = JSON.stringify({ records: chunk });
+    const response = await fetchRetry(() =>
+      fetch(url, {
+        method: "PATCH",
+        headers,
+        body,
+      })
+    );
+    if (response === "error") {
+      throw new Error(
+        `Airtable update records request failed: ${JSON.stringify({
+          url,
+          body,
+        })}`
+      );
+    }
   }
+  console.log(
+    "Writeback - Successfully updated Airtable records:",
+    updateRecords.map((record) => record.id)
+  );
 };
 
 const airtableCreateRows = async (
-  table: AirtableTable<AirtableFieldSet>,
-  createRows: { fields: AirtableFieldSet }[]
+  createRecords: { fields: AirtableFieldSet }[]
 ): Promise<string[]> => {
-  const recordIds: string[] = [];
-  const chunks = chunkAirtablePayload(createRows);
-  for (const chunk of chunks) {
-    const chunkRecordIds = await new Promise<string[]>((resolve) => {
-      table.create(chunk, { typecast: true }, (err, records) => {
-        if (err != null || records == null) {
-          console.error(
-            "Writeback - Failed to insert rows into Airtable table",
-            {
-              error: err,
-              createRows,
-            }
-          );
-          resolve([]);
-          return;
-        }
+  const baseId = getEnv("AIRTABLE_BASE_ID");
+  const tableName = getEnv("AIRTABLE_TABLE_NAME");
+  const apiKey = getEnv("AIRTABLE_API_KEY");
+  const url = encodeURI(`https://api.airtable.com/v0/${baseId}/${tableName}`);
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
+  };
 
-        const recordIds = records.map((record) => record.getId());
-        resolve(recordIds);
-      });
-    });
-    recordIds.push(...chunkRecordIds);
+  const createdRecordIds: string[] = [];
+  const chunks = chunkAirtablePayload(createRecords);
+  for (const chunk of chunks) {
+    const body = JSON.stringify({ records: chunk });
+    const response = await fetchRetry(() =>
+      fetch(url, {
+        method: "POST",
+        headers,
+        body,
+      })
+    );
+    if (response === "error") {
+      throw new Error(
+        `Airtable create records request failed: ${JSON.stringify({
+          url,
+          body,
+        })}`
+      );
+    }
+    const jsonBody = await response.json();
+    const ids = jsonBody.records.map((record: any) => record.id);
+    createdRecordIds.push(...ids);
   }
-  return recordIds;
+  console.log(
+    "Writeback - Successfully created Airtable records:",
+    createdRecordIds
+  );
+  return createdRecordIds;
 };
 
-const airtableDestroyRows = async (
-  table: AirtableTable<AirtableFieldSet>,
-  recordIds: string[]
-) => {
-  const chunks = chunkAirtablePayload(recordIds);
+const airtableDestroyRows = async (deleteRecordIds: string[]) => {
+  const baseId = getEnv("AIRTABLE_BASE_ID");
+  const tableName = getEnv("AIRTABLE_TABLE_NAME");
+  const apiKey = getEnv("AIRTABLE_API_KEY");
+  const url = `https://api.airtable.com/v0/${baseId}/${tableName}`;
+  const headers = {
+    "Content-Type": "application/x-www-form-urlencoded",
+    Authorization: `Bearer ${apiKey}`,
+  };
+
+  const chunks = chunkAirtablePayload(deleteRecordIds);
   for (const chunk of chunks) {
-    await new Promise((resolve) => {
-      table.destroy(chunk, (err) => {
-        if (err != null) {
-          console.error("Writeback - Failed to delete rows in Airtable table", {
-            error: err,
-            recordIds,
-          });
-          resolve(false);
-          return;
-        }
-        resolve(true);
-      });
-    });
+    const urlEncodedParams = chunk
+      .map((recordId) => `records[]=${recordId}`)
+      .join("&");
+    const uriUrl = encodeURI(`${url}?${urlEncodedParams}`);
+    const response = await fetchRetry(() =>
+      fetch(uriUrl, {
+        method: "DELETE",
+        headers,
+      })
+    );
+    if (response === "error") {
+      throw new Error(
+        `Airtable delete records request failed: ${JSON.stringify({
+          url: uriUrl,
+        })}`
+      );
+    }
   }
+  console.log(
+    "Writeback - Successfully deleted Airtable records:",
+    deleteRecordIds
+  );
 };
 
 const insertRowsWriteback = async (
-  mutation: Extract<Mutation, { kind: "insert_rows" }>,
-  schema: Schema,
-  columnNameMap: Record<Uuid, string>,
+  mutation: Extract<Mutation["kind"], { oneofKind: "insertRows" }>,
+  fieldNameMap: Record<string, string>,
   recordIdMap: Record<number, string>
 ) => {
-  const createRows: { fields: AirtableFieldSet }[] = [];
-  const { rows, columnMapping } = mutation.value;
+  const createRecords: { fields: AirtableFieldSet }[] = [];
+  const { rows, columnNames } = mutation.insertRows;
 
   for (let i = 0; i < rows.length; i++) {
-    const createRow: AirtableFieldSet = {};
-    const { values } = rows[i]!;
-
+    const createRecord: AirtableFieldSet = {};
+    const { values: listValues } = rows[i]!;
+    if (listValues == null) {
+      continue;
+    }
+    const values = listValues.values;
     for (let j = 0; j < values.length; j++) {
-      const taggedScalar = values[j];
-      const columnUuid = columnMapping[j]!;
-      const columnName = columnNameMap[columnUuid];
-      if (columnName == null) {
-        console.error("Writeback - Could not find column name by column uuid", {
-          columnUuid,
+      const scalar = valueToScalar(values[j]!);
+      const columnName = columnNames[j]!;
+      const fieldName = fieldNameMap[columnName];
+      if (fieldName == null) {
+        console.error("Writeback - Could not find field name by column name", {
+          columnName,
         });
         continue;
       }
-      if (columnName === "_dataland_ordinal") {
-        continue;
-      }
 
-      createRow[columnName] = taggedScalar?.value;
+      createRecord[fieldName] = scalar ?? undefined; // NOTE(gab): accepts undefined, not null
     }
 
-    createRows.push({ fields: createRow });
+    createRecords.push({ fields: createRecord });
   }
 
-  if (createRows.length === 0) {
+  if (createRecords.length === 0) {
     return;
   }
-  const recordIds = await airtableCreateRows(airtableTable, createRows);
+  const recordIds = await airtableCreateRows(createRecords);
   if (recordIds.length !== rows.length) {
     console.error(
-      "Writeback - Created rows in Dataland and created rows in Airtable was of different length. State will be reconciled in next Airtable Sync",
+      "Writeback - Created rows of different lengths. State will be reconciled in next Airtable Sync",
       {
-        datalandRowsLength: mutation.value.rows.length,
+        datalandRowsLength: mutation.insertRows.columnNames.length,
         airtableRecordsLength: recordIds.length,
       }
     );
     return;
   }
 
-  const mutations: Mutation[] = [];
+  const mutations = new MutationsBuilder();
   for (let i = 0; i < recordIds.length; i++) {
     // NOTE(gab): Record ids are returned from Airtable in the same order
     // as the records were sent, therefore we can safely assume the first index
     // of recordIds corresponds to the first index of the rows.
     const recordId = recordIds[i]!;
-    const datalandKey = rows[i]!.key;
+    const rowKey = rows[i]!.rowId;
+    recordIdMap[rowKey] = recordId;
 
-    recordIdMap[datalandKey] = recordId;
-
-    const update = schema.makeUpdateRows(DATALAND_TABLE_NAME, datalandKey, {
+    // TODO: move out
+    mutations.updateRow(getEnv("AIRTABLE_DATALAND_TABLE_NAME"), rowKey, {
       [RECORD_ID]: recordId,
     });
-    mutations.push(update);
+    // mutations.push(update);
   }
-  await runMutations({ mutations });
+  await mutations.run(getDbClient());
 };
 
 const updateRowsWriteback = async (
-  mutation: Extract<Mutation, { kind: "update_rows" }>,
-  columnNameMap: Record<Uuid, string>,
+  mutation: Extract<Mutation["kind"], { oneofKind: "updateRows" }>,
+  fieldNameMap: Record<string, string>,
   recordIdMap: Record<number, string>
 ) => {
-  const updateRows: AirtableRecordData<Partial<AirtableFieldSet>>[] = [];
-  const { rows, columnMapping } = mutation.value;
+  const updateRecords: AirtableRecordData<Partial<AirtableFieldSet>>[] = [];
+  const { rows, columnNames } = mutation.updateRows;
   for (let i = 0; i < rows.length; i++) {
-    const updateRow: Partial<AirtableFieldSet> = {};
-    const { key, values } = rows[i]!;
+    const updateRecord: Partial<AirtableFieldSet> = {};
+    const { rowId, values: listValues } = rows[i]!;
+    if (listValues == null) {
+      continue;
+    }
 
+    const values = listValues.values;
     for (let j = 0; j < values.length; j++) {
-      const taggedScalar = values[j];
-      const columnUuid = columnMapping[j]!;
-      const columnName = columnNameMap[columnUuid];
-      if (columnName == null) {
+      const scalar = valueToScalar(values[j]!);
+      const columnName = columnNames[j]!;
+      const fieldName = fieldNameMap[columnName];
+      if (fieldName == null) {
         console.error("Writeback - Could not find column name by column uuid", {
-          columnUuid,
+          columnName,
         });
-        continue;
-      }
-
-      if (columnName === "_dataland_ordinal") {
         continue;
       }
 
@@ -211,69 +237,76 @@ const updateRowsWriteback = async (
       // the empty type for that field: "false", "", [] etc and not null. But since
       // no schema is provided from their side, the correct "empty type" cannot be known,
       // and null is used.
-      updateRow[columnName] = taggedScalar?.value ?? null;
+      updateRecord[fieldName] = scalar ?? null;
     }
 
-    const recordId = recordIdMap[key];
+    const recordId = recordIdMap[rowId];
     if (recordId == null) {
-      console.error("Writeback - Could not find record id by dataland key", {
-        key,
+      console.error("Writeback - Could not find record id by dataland rowId", {
+        rowId,
       });
       continue;
     }
-    updateRows.push({ id: recordId, fields: updateRow });
+    updateRecords.push({ id: recordId, fields: updateRecord });
   }
 
-  if (updateRows.length === 0) {
+  if (updateRecords.length === 0) {
     return;
   }
-  await airtableUpdateRows(airtableTable, updateRows);
+  await airtableUpdateRows2(updateRecords);
 };
 
 const deleteRowsWriteback = async (
-  mutation: Extract<Mutation, { kind: "delete_rows" }>,
+  mutation: Extract<Mutation["kind"], { oneofKind: "deleteRows" }>,
   recordIdMap: Record<number, string>
 ) => {
-  const deleteRows: string[] = [];
-  for (let i = 0; i < mutation.value.keys.length; i++) {
-    const key = mutation.value.keys[i]!;
-    const recordId = recordIdMap[key];
+  const deleteRecordIds: string[] = [];
+  const rowIds = mutation.deleteRows.rowIds;
+  for (const rowId of rowIds) {
+    const recordId = recordIdMap[rowId];
     if (recordId == null) {
       console.error("Writeback - Could not find record id by dataland key", {
-        key,
+        rowId,
       });
       continue;
     }
-
-    deleteRows.push(recordId);
+    deleteRecordIds.push(recordId);
   }
 
-  if (deleteRows.length === 0) {
+  if (deleteRecordIds.length === 0) {
     return;
   }
-  await airtableDestroyRows(airtableTable, deleteRows);
+  await airtableDestroyRows(deleteRecordIds);
 };
 
 const transactionHandler = async (transaction: Transaction) => {
-  // NOTE(gab): Updating a cell in Dataland while Airtable import cron is running would
-  // cause the imported data from airtable to be outdated. When the syncTables transaction
-  // finally goes through, it would set the cell to its previous value which we expect.
-  // The discrepancy would then be reconciled in the next sync. But if the transaction handler
-  // is triggered on syncTables, the outdated cell change would propagate to Airtable again,
-  // permanently reverting the cell update.
-  if (SYNC_TABLES_MARKER in transaction.transactionAnnotations) {
+  const ALLOW_WRITEBACK_BOOLEAN = getEnv("AIRTABLE_ALLOW_WRITEBACK_BOOLEAN");
+  if (
+    ALLOW_WRITEBACK_BOOLEAN !== "true" &&
+    ALLOW_WRITEBACK_BOOLEAN !== "false"
+  ) {
+    console.error(
+      `Writeback - ABORTING: 'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
+    );
     return;
   }
 
-  const response = await querySqlSnapshot({
+  if (ALLOW_WRITEBACK_BOOLEAN !== "true") {
+    return;
+  }
+
+  const DATALAND_TABLE_NAME = getEnv("AIRTABLE_DATALAND_TABLE_NAME");
+
+  const history = getHistoryClient();
+  const response = await history.querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp - 1,
-    sqlQuery: `select "_dataland_key", "${RECORD_ID}" from "${DATALAND_TABLE_NAME}"`,
-  });
+    sqlQuery: `select "_row_id", "${RECORD_ID}" from "${DATALAND_TABLE_NAME}"`,
+  }).response;
   const rows = unpackRows(response);
 
-  const { tableDescriptors } = await getCatalogSnapshot({
+  const { tableDescriptors } = await history.getCatalogSnapshot({
     logicalTimestamp: transaction.logicalTimestamp - 1,
-  });
+  }).response;
   const tableDescriptor = tableDescriptors.find(
     (descriptor) => descriptor.tableName === DATALAND_TABLE_NAME
   );
@@ -283,43 +316,52 @@ const transactionHandler = async (transaction: Transaction) => {
     });
     return;
   }
-  const schema = new Schema(tableDescriptors);
 
   const recordIdMap: Record<number, string> = {};
   for (const row of rows) {
-    const key = row["_dataland_key"] as number;
+    const key = row["_row_id"] as number;
     const recordId = row[RECORD_ID] as string;
     recordIdMap[key] = recordId;
   }
 
-  const columnNameMap: Record<Uuid, string> = {};
+  const fieldNameMap: Record<string, string> = {};
   for (const columnDescriptor of tableDescriptor.columnDescriptors) {
-    columnNameMap[columnDescriptor.columnUuid] = columnDescriptor.columnName;
+    if (columnDescriptor.columnName === "record_id") {
+      continue;
+    }
+    const fieldName =
+      columnDescriptor.columnAnnotations["dataland.io/airtable-field-name"];
+    // NOTE(gab): this makes users unable to add arbitrary columns to the table,
+    // as they will not have a field name annotation.
+    if (fieldName == null) {
+      throw new Error(
+        "Aborting: Missing field name annotation on column descriptor"
+      );
+    }
+    fieldNameMap[columnDescriptor.columnName] = fieldName;
   }
 
-  for (const mutation of transaction.mutations) {
-    if (
-      mutation.kind !== "insert_rows" &&
-      mutation.kind !== "update_rows" &&
-      mutation.kind !== "delete_rows"
-    ) {
-      continue;
-    }
-
-    if (tableDescriptor.tableUuid !== mutation.value.tableUuid) {
-      continue;
-    }
-
-    switch (mutation.kind) {
-      case "insert_rows": {
-        await insertRowsWriteback(mutation, schema, columnNameMap, recordIdMap);
+  for (const protoMutation of transaction.mutations) {
+    const mutation = protoMutation.kind;
+    switch (mutation.oneofKind) {
+      case "insertRows": {
+        if (tableDescriptor.tableName !== mutation.insertRows.tableName) {
+          continue;
+        }
+        await insertRowsWriteback(mutation, fieldNameMap, recordIdMap);
         break;
       }
-      case "update_rows": {
-        await updateRowsWriteback(mutation, columnNameMap, recordIdMap);
+      case "updateRows": {
+        if (tableDescriptor.tableName !== mutation.updateRows.tableName) {
+          continue;
+        }
+        await updateRowsWriteback(mutation, fieldNameMap, recordIdMap);
         break;
       }
-      case "delete_rows": {
+      case "deleteRows": {
+        if (tableDescriptor.tableName !== mutation.deleteRows.tableName) {
+          continue;
+        }
         await deleteRowsWriteback(mutation, recordIdMap);
         break;
       }
@@ -327,14 +369,4 @@ const transactionHandler = async (transaction: Transaction) => {
   }
 };
 
-if (ALLOW_WRITEBACK_BOOLEAN !== "true" && ALLOW_WRITEBACK_BOOLEAN !== "false") {
-  console.error(
-    `Writeback - 'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
-  );
-}
-
-if (ALLOW_WRITEBACK_BOOLEAN === "true") {
-  registerTransactionHandler(transactionHandler, {
-    filterTransactions: "handle-all",
-  });
-}
+registerTransactionHandler(transactionHandler);

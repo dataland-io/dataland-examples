@@ -15,6 +15,9 @@ const config: Configuration = {
   },
   resolve: {
     extensions: [".ts", ".js"],
+    fallback: {
+      querystring: require.resolve("querystring"),
+    },
   },
   output: {
     path: path.resolve(__dirname, "dist"),
