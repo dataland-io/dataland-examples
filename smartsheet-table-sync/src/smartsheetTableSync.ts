@@ -1,33 +1,13 @@
 import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
 import {
   registerCronHandler,
-  Scalar,
-  SyncTable,
+  getDbClient,
+  TableSyncRequest,
   getEnv,
-  syncTables,
-} from "@dataland-io/dataland-sdk-worker";
+} from "@dataland-io/dataland-sdk";
 
 import { isString } from "lodash-es";
-
-const SMARTSHEET_API_KEY = getEnv("SMARTSHEET_API_KEY");
-
-if (SMARTSHEET_API_KEY == null) {
-  throw new Error("Missing environment variable - SMARTSHEET_API_KEY");
-}
-
-const SMARTSHEET_SHEET_ID = getEnv("SMARTSHEET_SHEET_ID");
-
-if (SMARTSHEET_SHEET_ID == null) {
-  throw new Error("Missing environment variable - SMARTSHEET_SHEET_ID");
-}
-
-const SMARTSHEET_DATALAND_TABLE_NAME = getEnv("SMARTSHEET_DATALAND_TABLE_NAME");
-
-if (SMARTSHEET_DATALAND_TABLE_NAME == null) {
-  throw new Error(
-    "Missing environment variable - SMARTSHEET_DATALAND_TABLE_NAME"
-  );
-}
+import { ContextExclusionPlugin } from "webpack";
 
 interface SmartsheetColumn {
   id: number;
@@ -40,7 +20,21 @@ interface SmartsheetColumn {
   width: number;
 }
 
-const readFromSmartsheetTable = async () => {
+const findDuplicates = (arr: Array<String>) => {
+  let sorted_arr = arr.slice().sort();
+  let results = [];
+  for (let i = 0; i < sorted_arr.length - 1; i++) {
+    if (sorted_arr[i + 1] == sorted_arr[i]) {
+      results.push(sorted_arr[i]);
+    }
+  }
+  return results;
+};
+
+const readFromSmartsheetTable = async (
+  SMARTSHEET_SHEET_ID: string,
+  SMARTSHEET_API_KEY: string
+) => {
   const url = `https://api.smartsheet.com/2.0/sheets/${SMARTSHEET_SHEET_ID}/`;
 
   const options = {
@@ -56,15 +50,36 @@ const readFromSmartsheetTable = async () => {
 
   const columns = result.columns;
 
-  let column_titles = [];
+  let column_titles: string[] = [];
   let primary_key_column_name = null;
 
   columns.forEach((column: SmartsheetColumn) => {
-    column_titles.push(column.title);
+    const column_title_normalized = column.title
+      .toLowerCase()
+      .replace(/[\s-]/g, "_")
+      .replace(/[^0-9a-z_]/g, "")
+      .replace(/^[^a-z]*/, "")
+      .slice(0, 63);
+
+    column_titles.push(column_title_normalized);
+
     if (column.primary) {
-      primary_key_column_name = column.title;
+      primary_key_column_name = column.title
+        .toLowerCase()
+        .replace(/[\s-]/g, "_")
+        .replace(/[^0-9a-z_]/g, "")
+        .replace(/^[^a-z]*/, "")
+        .slice(0, 63);
     }
   });
+
+  const duplicated_column_titles = findDuplicates(column_titles);
+
+  if (duplicated_column_titles.length > 0) {
+    throw new Error(
+      `Duplicate normalized field names detected - ${duplicated_column_titles} - please rename fields in Smartsheet`
+    );
+  }
 
   if (primary_key_column_name == null) {
     throw new Error("No primary key column found in Smartsheet table");
@@ -75,8 +90,9 @@ const readFromSmartsheetTable = async () => {
   const records = [];
   for (const row of rows) {
     let record = {} as any;
-    for (const column of columns) {
-      const title = column.title;
+    for (var i = 0; i < columns.length; i++) {
+      const column = columns[i];
+      const title = column_titles[i];
       const value = row.cells.find(
         (cell: { columnId: any }) => cell.columnId === column.id
       ).displayValue;
@@ -89,7 +105,39 @@ const readFromSmartsheetTable = async () => {
 };
 
 const cronHandler = async () => {
-  const result = await readFromSmartsheetTable();
+  const SMARTSHEET_API_KEY = getEnv("SMARTSHEET_API_KEY");
+
+  if (SMARTSHEET_API_KEY == null) {
+    throw new Error("Missing environment variable - SMARTSHEET_API_KEY");
+  }
+
+  const SMARTSHEET_SHEET_ID = getEnv("SMARTSHEET_SHEET_ID");
+
+  if (SMARTSHEET_SHEET_ID == null) {
+    throw new Error("Missing environment variable - SMARTSHEET_SHEET_ID");
+  }
+
+  const SMARTSHEET_DATALAND_TABLE_NAME = getEnv(
+    "SMARTSHEET_DATALAND_TABLE_NAME"
+  );
+
+  if (SMARTSHEET_DATALAND_TABLE_NAME == null) {
+    throw new Error(
+      "Missing environment variable - SMARTSHEET_DATALAND_TABLE_NAME"
+    );
+  }
+  // check if Smartsheet Dataland Table Name matches format
+  if (!SMARTSHEET_DATALAND_TABLE_NAME.match(/^[a-z0-9_]+$/)) {
+    throw new Error(
+      "Invalid Smartsheet Dataland Table Name - must be lowercase alphanumeric and underscores only"
+    );
+  }
+
+  const result = await readFromSmartsheetTable(
+    SMARTSHEET_SHEET_ID,
+    SMARTSHEET_API_KEY
+  );
+
   const smartsheet_rows = result[0];
   const primary_key_column_name = result[1];
 
@@ -97,20 +145,24 @@ const cronHandler = async () => {
     throw new Error("Primary key column name is not a string");
   }
 
-  console.log("smartsheet_rows: ", smartsheet_rows);
+  // console.log("smartsheet_rows: ", smartsheet_rows);
 
   const table = tableFromJSON(smartsheet_rows);
   const batch = tableToIPC(table);
 
-  const syncTable: SyncTable = {
+  const tableSyncRequest: TableSyncRequest = {
     tableName: SMARTSHEET_DATALAND_TABLE_NAME,
     arrowRecordBatches: [batch],
-    identityColumnNames: [primary_key_column_name],
+    primaryKeyColumnNames: [primary_key_column_name],
+    dropExtraColumns: false,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
   };
 
-  await syncTables({
-    syncTables: [syncTable],
-  });
+  const db = getDbClient();
+  await db.tableSync(tableSyncRequest);
 };
 
 registerCronHandler(cronHandler);
