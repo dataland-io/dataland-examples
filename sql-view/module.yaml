@@ -12,6 +12,7 @@ buildCommand: npm run build
 
 parameters:
   - sql-query
+  - example-input-dataland-table-name
   - sql-view-dataland-table-name
   - sql-view-primary-key-column-name
 
@@ -22,12 +23,13 @@ parameters:
 # DL_PARAM_SQL_VIEW_PRIMARY_KEY_COLUMN_NAME={your-identity-column-name}
 
 workers:
-  - workerId: materialized-view
-    scriptPath: dist/materializedView.bundle.js
+  - workerId: sql-view
+    scriptPath: dist/sqlView.bundle.js
     env:
       SQL_QUERY: sql-query
       SQL_VIEW_DATALAND_TABLE_NAME: sql-view-dataland-table-name
       SQL_VIEW_PRIMARY_KEY_COLUMN_NAME: sql-view-primary-key-column-name
+      EXAMPLE_INPUT_DATALAND_TABLE_NAME: example-input-dataland-table-name
     triggers:
       cron:
         cronExpression: "*/30 * * * * * *"

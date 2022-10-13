@@ -29,6 +29,14 @@ const handler = async () => {
       "Missing environment variable - SQL_VIEW_PRIMARY_KEY_COLUMN_NAME"
     );
   }
+  const exampleInputDatalandTableName = getEnv(
+    "EXAMPLE_INPUT_DATALAND_TABLE_NAME"
+  );
+  if (exampleInputDatalandTableName == null) {
+    throw new Error(
+      "Missing environment variable - EXAMPLE_INPUT_DATALAND_TABLE_NAME"
+    );
+  }
 
   const sqlViewDatalandTableName_normalized = sqlViewDatalandTableName
     .toLowerCase()
@@ -39,13 +47,16 @@ const handler = async () => {
 
   // Construct the new join query
 
-  const joined_query = await history.querySqlMirror({
-    sqlQuery: `${sqlQuery}`,
+  const test_query = await history.querySqlMirror({
+    sqlQuery: `select * from ${exampleInputDatalandTableName} limit 1`,
   }).response;
 
-  if (joined_query == null) {
-    return;
-  }
+  const last_logical_timestamp = test_query.logicalTimestamp;
+
+  const joined_query = await history.querySqlSnapshot({
+    logicalTimestamp: last_logical_timestamp,
+    sqlQuery: `${sqlQuery}`,
+  }).response;
 
   const tableSyncRequest: TableSyncRequest = {
     tableName: sqlViewDatalandTableName_normalized,
