@@ -6,19 +6,7 @@ import {
   getDbClient,
   Scalar,
 } from "@dataland-io/dataland-sdk";
-// import { Collaborator, Attachment } from "airtable";
-import { RECORD_ID } from "./constants";
-
-// const a = getEnv("FLSDKFJSÖ");
-// import {
-//   getEnv,
-//   registerCronHandler,
-//   Scalar,
-//   TableSyncRequest,
-//   getDbClient,
-// } from "@dataland-io/dataland-sdk";
-
-// type Scalar = string | number | boolean | null;
+import { fetchRetry, RECORD_ID } from "./common";
 
 type AirtableValue =
   | undefined
@@ -73,31 +61,39 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
   return null;
 };
 
-const getAirtableTableRecords = async (
-  baseId: string,
-  tableName: string,
-  apiKey: string
-): Promise<Record<string, any>[]> => {
-  const records: Record<string, any>[] = [];
+const getAirtableTableRecords = async (): Promise<Record<string, any>[]> => {
+  const apiKey = getEnv("AIRTABLE_API_KEY");
+  const baseId = getEnv("AIRTABLE_BASE_ID");
+  const tableName = getEnv("AIRTABLE_TABLE_NAME");
+  const viewId = getEnv("AIRTABLE_VIEW_NAME");
+  const AIRTABLE_FIELDS_LIST = getEnv("AIRTABLE_FIELDS_LIST");
 
+  let fields: string[] = [];
+  if (AIRTABLE_FIELDS_LIST !== "ALL") {
+    fields = AIRTABLE_FIELDS_LIST.split(",").map((field) => field.trim());
+  }
+
+  const fieldParameters = fields.map((field) => `fields[]=${field}`).join("&");
+
+  const records: Record<string, any>[] = [];
   let offset = "";
   while (offset != null) {
-    console.log("got", records.length);
-    const resp = await fetch(
-      `https://api.airtable.com/v0/${baseId}/${tableName}?offset=${offset}&pageSize=100`,
-      {
+    const url = `https://api.airtable.com/v0/${baseId}/${tableName}?offset=${offset}&pageSize=100&view=${viewId}&${fieldParameters}`;
+    const response = await fetchRetry(() =>
+      fetch(encodeURI(url), {
         method: "GET",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
         },
-      }
+      })
     );
-    if (!resp.ok) {
-      throw new Error("Airtable request failed");
+    if (response === "error") {
+      throw new Error(`Airtable import failed: ${JSON.stringify({ url })}`);
     }
-    const res = await resp.json();
+
+    const res = await response.json();
     records.push(...res.records);
     offset = res.offset;
   }
@@ -110,18 +106,7 @@ const readFromAirtable = async (): Promise<{
   rows: Record<string, Scalar>[];
   fieldNameMapping: Record<ColumnName, FieldName>;
 }> => {
-  const AIRTABLE_FIELDS_LIST = getEnv("AIRTABLE_FIELDS_LIST");
-
-  let fields: string[] = [];
-  if (AIRTABLE_FIELDS_LIST !== "ALL") {
-    fields = AIRTABLE_FIELDS_LIST.split(",").map((field) => field.trim());
-  }
-
-  const records = await getAirtableTableRecords(
-    getEnv("AIRTABLE_BASE_ID"),
-    getEnv("AIRTABLE_TABLE_NAME"),
-    getEnv("AIRTABLE_API_KEY")
-  );
+  const records = await getAirtableTableRecords();
 
   const rows: Record<string, Scalar>[] = [];
   const columnNameMapping: Record<FieldName, ColumnName> = {};
@@ -137,16 +122,28 @@ const readFromAirtable = async (): Promise<{
         .replace(/[^0-9a-z_]/g, "")
         .replace(/^[^a-z]*/, "")
         .slice(0, 63);
+
+      if (columnName === "") {
+        throw new Error(
+          `Aborting: Empty column name after parsing Airtable field names. Dataland column name must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters. ${JSON.stringify(
+            {
+              datalandColumnName: columnName,
+              airtableFieldName: fieldName,
+            }
+          )}`
+        );
+      }
       if (columnName in fieldNameMapping) {
-        console.error(
-          `Aborting: Collision of parsed Airtable field names. Dataland column name must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`,
-          {
-            datalandColumnName: columnName,
-            duplicateAirtableFieldNames: [
-              fieldName,
-              fieldNameMapping[columnName]!,
-            ],
-          }
+        throw new Error(
+          `Aborting: Collision of parsed Airtable field names. Dataland column name must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters. ${JSON.stringify(
+            {
+              datalandColumnName: columnName,
+              duplicateAirtableFieldNames: [
+                fieldName,
+                fieldNameMapping[columnName]!,
+              ],
+            }
+          )}`
         );
       }
       columnNameMapping[fieldName] = columnName;
@@ -190,7 +187,7 @@ const cronHandler = async () => {
   const DATALAND_TABLE_NAME = getEnv("AIRTABLE_DATALAND_TABLE_NAME");
   if (!validateSqlIdentifier(DATALAND_TABLE_NAME)) {
     console.error(
-      `Aborting: Invalid table name: "${DATALAND_TABLE_NAME}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
+      `Import - Aborting: Invalid table name: "${DATALAND_TABLE_NAME}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
     );
     return;
   }
@@ -223,7 +220,7 @@ const cronHandler = async () => {
   };
   const db = getDbClient();
   await db.tableSync(tableSyncRequest);
+  console.log(`Import - Airtable import complete. Row count: ${rows.length}`);
 };
 
-console.log("registering");
 registerCronHandler(cronHandler);

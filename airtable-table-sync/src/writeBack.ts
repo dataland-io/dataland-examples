@@ -1,4 +1,4 @@
-import { RECORD_ID } from "./constants";
+import { fetchRetry, RECORD_ID } from "./common";
 import {
   Transaction,
   unpackRows,
@@ -32,7 +32,7 @@ const airtableUpdateRows2 = async (
   const baseId = getEnv("AIRTABLE_BASE_ID");
   const tableName = getEnv("AIRTABLE_TABLE_NAME");
   const apiKey = getEnv("AIRTABLE_API_KEY");
-  const url = `https://api.airtable.com/v0/${baseId}/${tableName}`;
+  const url = encodeURI(`https://api.airtable.com/v0/${baseId}/${tableName}`);
   const headers = {
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
@@ -40,15 +40,27 @@ const airtableUpdateRows2 = async (
 
   const chunks = chunkAirtablePayload(updateRecords);
   for (const chunk of chunks) {
-    const resp = await fetch(url, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({ records: chunk }),
-    });
-    if (!resp.ok) {
-      throw new Error(`Airtable request failed. Reason: ${resp.statusText}`);
+    const body = JSON.stringify({ records: chunk });
+    const response = await fetchRetry(() =>
+      fetch(url, {
+        method: "PATCH",
+        headers,
+        body,
+      })
+    );
+    if (response === "error") {
+      throw new Error(
+        `Airtable update records request failed: ${JSON.stringify({
+          url,
+          body,
+        })}`
+      );
     }
   }
+  console.log(
+    "Writeback - Successfully update Airtable records:",
+    updateRecords.map((record) => record.id)
+  );
 };
 
 const airtableCreateRows = async (
@@ -57,28 +69,40 @@ const airtableCreateRows = async (
   const baseId = getEnv("AIRTABLE_BASE_ID");
   const tableName = getEnv("AIRTABLE_TABLE_NAME");
   const apiKey = getEnv("AIRTABLE_API_KEY");
-  const url = `https://api.airtable.com/v0/${baseId}/${tableName}`;
+  const url = encodeURI(`https://api.airtable.com/v0/${baseId}/${tableName}`);
   const headers = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${apiKey}`,
   };
 
-  const removedIds: string[] = [];
+  const createdRecordIds: string[] = [];
   const chunks = chunkAirtablePayload(createRecords);
   for (const chunk of chunks) {
-    const resp = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ records: chunk }),
-    });
-    if (!resp.ok) {
-      throw new Error(`Airtable request failed. Reason: ${resp.statusText}`);
+    const body = JSON.stringify({ records: chunk });
+    const response = await fetchRetry(() =>
+      fetch(url, {
+        method: "POST",
+        headers,
+        body,
+      })
+    );
+    if (response === "error") {
+      throw new Error(
+        `Airtable create records request failed: ${JSON.stringify({
+          url,
+          body,
+        })}`
+      );
     }
-    const json = await resp.json();
-    const ids = json.records.map((record: any) => record.id);
-    removedIds.push(...ids);
+    const jsonBody = await response.json();
+    const ids = jsonBody.records.map((record: any) => record.id);
+    createdRecordIds.push(...ids);
   }
-  return removedIds;
+  console.log(
+    "Writeback - Successfully created Airtable records:",
+    createdRecordIds
+  );
+  return createdRecordIds;
 };
 
 const airtableDestroyRows = async (deleteRecordIds: string[]) => {
@@ -93,16 +117,28 @@ const airtableDestroyRows = async (deleteRecordIds: string[]) => {
 
   const chunks = chunkAirtablePayload(deleteRecordIds);
   for (const chunk of chunks) {
-    const head = "?records[]=" + chunk.join("&records[]=");
-
-    const resp = await fetch(`${url}${head}`, {
-      method: "DELETE",
-      headers,
-    });
-    if (!resp.ok) {
-      throw new Error(`Airtable request failed. Reason: ${resp.statusText}`);
+    const urlEncodedParams = chunk
+      .map((recordId) => `records[]=${recordId}`)
+      .join("&");
+    const uriUrl = encodeURI(`${url}?${urlEncodedParams}`);
+    const response = await fetchRetry(() =>
+      fetch(uriUrl, {
+        method: "DELETE",
+        headers,
+      })
+    );
+    if (response === "error") {
+      throw new Error(
+        `Airtable delete records request failed: ${JSON.stringify({
+          url: uriUrl,
+        })}`
+      );
     }
   }
+  console.log(
+    "Writeback - Successfully deleted Airtable records:",
+    deleteRecordIds
+  );
 };
 
 const insertRowsWriteback = async (
@@ -290,8 +326,19 @@ const transactionHandler = async (transaction: Transaction) => {
 
   const fieldNameMap: Record<string, string> = {};
   for (const columnDescriptor of tableDescriptor.columnDescriptors) {
-    fieldNameMap[columnDescriptor.columnName] =
+    if (columnDescriptor.columnName === "record_id") {
+      continue;
+    }
+    const fieldName =
       columnDescriptor.columnAnnotations["dataland.io/airtable-field-name"];
+    // NOTE(gab): this makes users unable to add arbitrary columns to the table,
+    // as they will not have a field name annotation.
+    if (fieldName == null) {
+      throw new Error(
+        "Aborting: Missing field name annotation on column descriptor"
+      );
+    }
+    fieldNameMap[columnDescriptor.columnName] = fieldName;
   }
 
   for (const protoMutation of transaction.mutations) {
@@ -321,5 +368,5 @@ const transactionHandler = async (transaction: Transaction) => {
     }
   }
 };
-console.log("WRITEBACK");
+
 registerTransactionHandler(transactionHandler);
