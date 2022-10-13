@@ -1,14 +1,12 @@
 import {
-  getCatalogSnapshot,
   getEnv,
-  Mutation,
-  querySqlSnapshot,
+  getDbClient,
+  getHistoryClient,
+  MutationsBuilder,
   registerTransactionHandler,
-  runMutations,
-  Schema,
   Transaction,
   unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+} from "@dataland-io/dataland-sdk";
 import * as t from "io-ts";
 
 interface Mailbox {
@@ -66,55 +64,53 @@ const sendEmail = async (
 
 const handler = async (transaction: Transaction) => {
   const sendgridApiKey = getEnv("SENDGRID_API_KEY");
-  const fromEmail = getEnv("FROM_EMAIL");
-  const fromName = getEnv("FROM_NAME");
+  const fromEmail = getEnv("SENDGRID_FROM_EMAIL");
+  const fromName = getEnv("SENDGRID_FROM_NAME");
 
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
-  const schema = new Schema(tableDescriptors);
+  const affected_row_ids = [];
 
-  const affectedRows = schema.getAffectedRows(
-    "emails",
-    "Send Email",
-    transaction
-  );
-
-  const sendEmailKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number" && value > 0) {
-      sendEmailKeys.push(key);
+  for (const mutation of transaction.mutations) {
+    if (mutation.kind.oneofKind == "updateRows") {
+      if (
+        mutation.kind.updateRows.columnNames.includes("send_email") &&
+        mutation.kind.updateRows.tableName === "emails"
+      ) {
+        for (const row of mutation.kind.updateRows.rows) {
+          affected_row_ids.push(row.rowId);
+        }
+      } else {
+        return;
+      }
+    } else {
+      return;
     }
   }
 
-  if (sendEmailKeys.length === 0) {
+  const affected_row_ids_key_list = affected_row_ids.join(",");
+  console.log("xx1", affected_row_ids_key_list);
+
+  // get all rows where issue_refund was incremented
+  const history = await getHistoryClient();
+  const response = await history.querySqlMirror({
+    sqlQuery: `select _row_id, email_address, subject, body from "emails" where _row_id in (${affected_row_ids_key_list})`,
+  }).response;
+
+  const rows = unpackRows(response);
+  console.log("xx - test");
+  console.log("xx2", rows);
+
+  if (rows == null) {
     return;
   }
 
-  const keyList = `(${sendEmailKeys.join(",")})`;
-  const response = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `
-      select
-        _dataland_key,
-        "Email Address" as email_address,
-        Subject as subject,
-        Body as body
-      from emails
-      where _dataland_key in ${keyList}
-    `,
-  });
-
-  const rows = unpackRows(response);
-
   const RowT = t.type({
-    _dataland_key: t.number,
+    _row_id: t.number,
     email_address: t.string,
     subject: t.string,
     body: t.string,
   });
 
-  const mutations: Mutation[] = [];
+  // for each row, run the logic
   for (const row of rows) {
     if (!RowT.is(row)) {
       continue;
@@ -126,23 +122,23 @@ const handler = async (transaction: Transaction) => {
     const to: Mailbox = {
       email: row.email_address,
     };
-    try {
-      await sendEmail(sendgridApiKey, from, to, row.subject, row.body);
-      const sentTimestamp = new Date().toISOString();
-      const update = schema.makeUpdateRows("emails", row._dataland_key, {
-        "Sent Timestamp": sentTimestamp,
-      });
-      mutations.push(update);
-    } catch (e) {
-      // continue to next
-    }
-  }
 
-  if (mutations.length === 0) {
-    return;
-  }
+    const result = await sendEmail(
+      sendgridApiKey,
+      from,
+      to,
+      row.subject,
+      row.body
+    );
 
-  await runMutations({ mutations });
+    const db = await getDbClient();
+
+    await new MutationsBuilder()
+      .updateRow("emails", row._row_id, {
+        sent_timestamp: new Date().toISOString(),
+      })
+      .run(db);
+  }
 };
 
 registerTransactionHandler(handler);

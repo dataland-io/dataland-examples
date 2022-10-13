@@ -4,26 +4,24 @@ buildCommand: npm run build
 
 parameters:
   - sendgrid-api-key
-  - from-email
-  - from-name
+  - sendgrid-from-email
+  - sendgrid-from-name
 
 workers:
   - workerId: send-email
     scriptPath: dist/sendEmail.bundle.js
     env:
       SENDGRID_API_KEY: sendgrid-api-key
-      FROM_EMAIL: from-email
-      FROM_NAME: from-name
+      SENDGRID_FROM_EMAIL: sendgrid-from-email
+      SENDGRID_FROM_NAME: sendgrid-from-name
     triggers:
       transaction: {}
 
 tables:
-  - tableId: emails-table
-    tableName: emails
+  - tableName: emails
     autoMigrate: true
     columnDescriptors:
-      - columnId: send-email-column
-        columnName: Send Email
+      - columnName: send_email
         dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -33,18 +31,14 @@ tables:
               "theme": "blue"
             }
 
-      - columnId: sent-column
-        columnName: Sent Timestamp
+      - columnName: sent_timestamp
         dataType: string
 
-      - columnId: email-address-column
-        columnName: Email Address
+      - columnName: email_address
         dataType: string
 
-      - columnId: subject-column
-        columnName: Subject
+      - columnName: subject
         dataType: string
 
-      - columnId: body-column
-        columnName: Body
+      - columnName: body
         dataType: string
