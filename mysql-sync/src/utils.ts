@@ -17,6 +17,7 @@ export const getTableMapping = (): TableMapping => {
   const mysqlTableMapping = getEnv("MYSQL_TABLE_MAPPING");
   const tableMappingJson = JSON.parse(mysqlTableMapping);
   const tableMapping = TableMapping.parse(tableMappingJson);
+  console.log("tableMapping", tableMapping);
 
   const seenTargetTableNames = new Set<string>();
 

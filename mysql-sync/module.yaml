@@ -20,8 +20,8 @@ workers:
       MYSQL_USER: mysql-user
       MYSQL_PASSWORD: mysql-password
       MYSQL_DB: mysql-db
-      TABLE_MAPPING: mysql-table-mapping
-      DO_WRITEBACK: mysql-do-writeback
+      MYSQL_TABLE_MAPPING: mysql-table-mapping
+      MYSQL_DO_WRITEBACK: mysql-do-writeback
     triggers:
       cron:
         # every 30 seconds
