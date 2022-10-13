@@ -1,13 +1,13 @@
 moduleId: defining-tables-guide
 
 tables:
-  - tableName: first
+  - tableName: mirror
     autoMigrate: true
     columnDescriptors:
-      - columnName: first
+      - columnName: original
         dataType: string
 
-      - columnName: second
+      - columnName: duplicate
         dataType: string
 
   - tableName: users
