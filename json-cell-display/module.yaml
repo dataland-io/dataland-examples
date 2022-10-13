@@ -3,16 +3,12 @@ moduleId: json-cell-display-example
 buildCommand: npm run build
 
 tables:
-  - tableId: json-table
-    tableName: Table with JSON cell display
+  - tableName: table_with_json_cell_display
     autoMigrate: true
     columnDescriptors:
-      - columnId: grocery-basket-id
-        columnName: Grocery List ID
+      - columnName: grocery_basket_id
         dataType: string
-
-      - columnId: grocery-list-contents
-        columnName: Grocery List Contents
+      - columnName: grocery_list_contents
         dataType: string
         columnAnnotations:
           dataland.io/column-display-config: |

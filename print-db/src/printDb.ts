@@ -1,29 +1,31 @@
 import {
-  getCatalogSnapshot,
-  querySqlSnapshot,
+  getDbClient,
+  getHistoryClient,
   registerTransactionHandler,
   Transaction,
   unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+} from "@dataland-io/dataland-sdk";
 
 const handler = async (transaction: Transaction) => {
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
+  const db = await getDbClient();
+  const history = await getHistoryClient();
 
-  for (const tableDescriptor of tableDescriptors) {
-    const tableName = tableDescriptor.tableName;
-    const sqlQuery = `select * from "${tableName}" order by _dataland_ordinal`;
-    const response = await querySqlSnapshot({
-      logicalTimestamp: transaction.logicalTimestamp,
-      sqlQuery,
-    });
-    const rows = unpackRows(response);
-    console.log(tableName);
+  const getCatalogResponse = await db.getCatalog({}).response;
+  const table_list = getCatalogResponse?.tableDescriptors.map(
+    (table: any) => table.tableName
+  );
+
+  console.log("table_list", table_list);
+
+  for (const table of table_list) {
+    const queryResponse = await history.querySqlMirror({
+      sqlQuery: `SELECT * FROM ${table}`,
+    }).response;
+
+    const rows = unpackRows(queryResponse);
+    console.log(table);
     console.table(rows);
   }
 };
 
-registerTransactionHandler(handler, {
-  filterTransactions: "handle-all",
-});
+registerTransactionHandler(handler);

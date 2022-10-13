@@ -1,5 +1,5 @@
 {
-  "name": "@dataland-examples/materialized-view",
+  "name": "@dataland-examples/sql-view-example",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
@@ -7,7 +7,7 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
-    "@dataland-io/dataland-sdk-worker": "0.16.0"
+    "@dataland-io/dataland-sdk": "0.17.0"
   },
   "devDependencies": {
     "@types/webpack": "5.28.0",

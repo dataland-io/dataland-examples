@@ -1,14 +1,13 @@
 import {
-  getCatalogSnapshot,
+  getHistoryClient,
+  getDbClient,
+  MutationsBuilder,
   getEnv,
-  Mutation,
-  querySqlSnapshot,
   registerTransactionHandler,
-  runMutations,
-  Schema,
   Transaction,
   unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+} from "@dataland-io/dataland-sdk";
+
 import { get } from "lodash-es";
 
 const getPrices = async (symbols: string[]): Promise<Map<string, number>> => {
@@ -61,20 +60,19 @@ const getPrices = async (symbols: string[]): Promise<Map<string, number>> => {
 };
 
 const handler = async (transaction: Transaction) => {
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
+  const db = await getDbClient();
+  const history = await getHistoryClient();
 
-  const response = await querySqlSnapshot({
+  const response = await history.querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: "select _dataland_key, symbol from crypto",
-  });
+    sqlQuery: "select _row_id, symbol from crypto",
+  }).response;
 
   const rows = unpackRows(response);
 
   const symbols: Map<number, string> = new Map();
   for (const row of rows) {
-    const key = Number(row["_dataland_key"]);
+    const key = Number(row["_row_id"]);
     let symbol = String(row["symbol"]);
     symbol = symbol.trim();
     if (symbol.length === 0) {
@@ -85,25 +83,18 @@ const handler = async (transaction: Transaction) => {
 
   const priceBySymbol = await getPrices([...symbols.values()]);
 
-  const schema = new Schema(tableDescriptors);
-
-  const mutations: Mutation[] = [];
   for (const [key, symbol] of symbols) {
     const price = priceBySymbol.get(symbol);
     if (price == null) {
       continue;
     }
-    const update = schema.makeUpdateRows("crypto", key, {
-      price: price,
-    });
-    mutations.push(update);
+    // mutations write
+    await new MutationsBuilder()
+      .updateRow("crypto", key, {
+        price: price,
+      })
+      .run(db);
   }
-
-  if (mutations.length === 0) {
-    return;
-  }
-
-  await runMutations({ mutations });
 };
 
 registerTransactionHandler(handler);

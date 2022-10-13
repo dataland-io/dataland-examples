@@ -1,13 +1,9 @@
 import {
   registerCronHandler,
   CronEvent,
-  Mutation,
-  KeyGenerator,
-  OrdinalGenerator,
-  getCatalogMirror,
-  Schema,
-  runMutations,
-} from "@dataland-io/dataland-sdk-worker";
+  MutationsBuilder,
+  getDbClient,
+} from "@dataland-io/dataland-sdk";
 
 const fetchRandomUserDetails = async () => {
   const url = "https://randomuser.me/api";
@@ -30,40 +26,23 @@ const handler = async (cron: CronEvent) => {
     `Logging due to cron event with scheduled time: ${cron.scheduledTime}`
   );
 
-  const { tableDescriptors } = await getCatalogMirror();
-
-  const schema = new Schema(tableDescriptors);
+  const db = await getDbClient();
 
   const user = await fetchRandomUserDetails();
-
-  const keyGenerator = new KeyGenerator();
-  const ordinalGenerator = new OrdinalGenerator();
-
-  const mutations: Mutation[] = [];
-
-  const id = await keyGenerator.nextKey();
-  const ordinal = await ordinalGenerator.nextOrdinal();
 
   const name = user.results[0].name.first + " " + user.results[0].name.last;
   const email = user.results[0].email;
   const phone = user.results[0].phone;
   const picture = user.results[0].picture.large;
 
-  const insert = schema.makeInsertRows("Random Users", id, {
-    _dataland_ordinal: ordinal,
-    Name: name,
-    Email: email,
-    Phone: phone,
-    "Picture Link": picture,
-  });
-
-  if (insert == null) {
-    return;
-  }
-
-  mutations.push(insert);
-
-  await runMutations({ mutations });
+  await new MutationsBuilder()
+    .insertRow("random_users", Date.now(), {
+      name: name,
+      email: email,
+      phone: phone,
+      picture_link: picture,
+    })
+    .run(db);
 };
 
 registerCronHandler(handler);

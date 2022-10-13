@@ -1,10 +1,8 @@
 import {
-  registerTransactionHandler,
   Transaction,
-} from "@dataland-io/dataland-sdk-worker";
+  registerTransactionHandler,
+} from "@dataland-io/dataland-sdk";
 
-const handler = async (transaction: Transaction) => {
-  console.log("processing transaction", JSON.stringify(transaction));
-};
-
-registerTransactionHandler(handler);
+registerTransactionHandler(async (transaction) => {
+  console.log("transaction", Transaction.toJsonString(transaction));
+});

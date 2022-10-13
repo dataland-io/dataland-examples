@@ -14,13 +14,10 @@ workers:
       transaction: {}
 
 tables:
-  - tableId: crypto-table
-    tableName: crypto
+  - tableName: crypto
     autoMigrate: true
     columnDescriptors:
-      - columnId: symbol-column
-        columnName: symbol
+      - columnName: symbol
         dataType: string
-      - columnId: price-column
-        columnName: price
+      - columnName: price
         dataType: float64

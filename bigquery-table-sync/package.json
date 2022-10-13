@@ -1,5 +1,5 @@
 {
-  "name": "@dataland-examples/sendgrid-send-email",
+  "name": "@dataland-examples/bigquery-table-sync",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@dataland-io/dataland-sdk": "0.17.0",
-    "io-ts": "2.2.16"
+    "@apache-arrow/es2015-esm": "9.0.0"
   },
   "devDependencies": {
     "@types/webpack": "5.28.0",
