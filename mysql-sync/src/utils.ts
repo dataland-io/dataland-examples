@@ -10,11 +10,11 @@ import { z } from "zod";
 import { Column, PrimaryKeyColumn, TableMapping } from "./types";
 
 export const getDoWriteback = (): boolean => {
-  return tryGetEnv("DO_WRITEBACK") === "true";
+  return tryGetEnv("MYSQL_DO_WRITEBACK") === "true";
 };
 
 export const getTableMapping = (): TableMapping => {
-  const mysqlTableMapping = getEnv("TABLE_MAPPING");
+  const mysqlTableMapping = getEnv("MYSQL_TABLE_MAPPING");
   const tableMappingJson = JSON.parse(mysqlTableMapping);
   const tableMapping = TableMapping.parse(tableMappingJson);
 
