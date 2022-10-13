@@ -1,0 +1,998 @@
+moduleId: mindbody-module
+
+info:
+  title: Mindbody
+  description: Sync Mindbody into Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: otf-icon.svg
+
+buildCommand: npm run build
+
+parameters:
+  - mindbody-api-key
+  - mindbody-authorization
+  - mindbody-site-id
+  - mindbody-allow-writeback-boolean
+  - dataland-clients-table-name
+
+workers:
+  - workerId: mindbody-worker
+    scriptPath: dist/bundle.js
+    triggers:
+      cron:
+        cronExpression: "0 */30 * * * * *"
+      transaction: {}
+    env:
+      MINDBODY_API_KEY: mindbody-api-key
+      MINDBODY_AUTHORIZATION: mindbody-authorization
+      MINDBODY_SITE_ID: mindbody-site-id
+      MINDBODY_ALLOW_WRITEBACK_BOOLEAN: mindbody-allow-writeback-boolean
+      DATALAND_CLIENTS_TABLE_NAME: dataland-clients-table-name
+tables:
+  - tableId: clients-3
+    tableName: clients-3
+    autoMigrate: true
+    tableAnnotations:
+      lead-management: |
+        {
+          "tableUuid": "4ca77cfa-2c5a-5094-9f01-504614d7ebba",
+          "viewName": "Lead Management",
+          "filterSpec": {
+            "operator": "all",
+            "conditions": []
+          },
+          "sortSpec": {
+            "conditions": []
+          },
+          "hideColumns": {
+            "AppointmentGenderPreference": true,
+            "BirthDate": true,
+            "Country": true,
+            "ClientCreditCard/~/Address": true,
+            "ClientCreditCard/~/CardHolder": true,
+            "ClientCreditCard/~/CardNumber": true,
+            "ClientCreditCard/~/CardType": true,
+            "ClientCreditCard/~/City": true,
+            "ClientCreditCard/~/ExpMonth": true,
+            "ClientCreditCard/~/ExpYear": true,
+            "ClientCreditCard/~/LastFour": true,
+            "ClientCreditCard/~/PostalCode": true,
+            "ClientCreditCard/~/State": true,
+            "ClientIndexes": true,
+            "ClientRelationships": true,
+            "IsCompany": true,
+            "Liability/~/AgreementDate": true,
+            "Liability/~/IsReleased": true,
+            "Liability/~/ReleasedBy": true,
+            "LiabilityRelease": true,
+            "MembershipIcon": true,
+            "SendAccountEmails": true,
+            "SendAccountTexts": true,
+            "SendPromotionalEmails": true,
+            "SendPromotionalTexts": true,
+            "SendScheduleEmails": true,
+            "SendScheduleTexts": true,
+            "State": true,
+            "SuspensionInfo/~/BookingSuspended": true,
+            "SuspensionInfo/~/SuspensionStartDate": true,
+            "SuspensionInfo/~/SuspensionEndDate": true,
+            "UniqueId": true,
+            "RedAlert": true,
+            "YellowAlert": true,
+            "MiddleName": true,
+            "MobileProvider": true,
+            "HomePhone": true,
+            "WorkPhone": true,
+            "WorkExtension": true,
+            "CustomClientFields": true,
+            "AccountBalance": true,
+            "AddressLine1": true,
+            "AddressLine2": true,
+            "City": true,
+            "PostalCode": true,
+            "ReferredBy": true,
+            "PhotoUrl": true,
+            "EmergencyContactInfoName": true,
+            "EmergencyContactInfoEmail": true,
+            "EmergencyContactInfoPhone": true,
+            "EmergencyContactInfoRelationship": true,
+            "Gender": true,
+            "LastFormulaNotes": true,
+            "Active": true,
+            "SalesReps": true,
+            "Action": true,
+            "HomeLocation/~/AdditionalImageURLs": true,
+            "HomeLocation/~/Address": true,
+            "HomeLocation/~/Address2": true,
+            "HomeLocation/~/Amenities": true,
+            "HomeLocation/~/BusinessDescription": true,
+            "HomeLocation/~/City": true,
+            "HomeLocation/~/Description": true,
+            "HomeLocation/~/HasClasses": true,
+            "HomeLocation/~/Id": true,
+            "HomeLocation/~/Latitude": true,
+            "HomeLocation/~/Longitude": true,
+            "HomeLocation/~/Name": true,
+            "HomeLocation/~/Phone": true,
+            "HomeLocation/~/PhoneExtension": true,
+            "HomeLocation/~/PostalCode": true,
+            "HomeLocation/~/SiteID": true,
+            "HomeLocation/~/StateProvCode": true,
+            "HomeLocation/~/Tax1": true,
+            "HomeLocation/~/Tax2": true,
+            "HomeLocation/~/Tax3": true,
+            "HomeLocation/~/Tax4": true,
+            "HomeLocation/~/Tax5": true,
+            "HomeLocation/~/TotalNumberOfRatings": true,
+            "HomeLocation/~/AverageRating": true,
+            "HomeLocation/~/TotalNumberOfDeals": true,
+            "LockerNumber": true
+          }
+        }
+      credit-card-management: |
+        {
+          "tableUuid": "4ca77cfa-2c5a-5094-9f01-504614d7ebba",
+          "viewName": "Credit Card Management",
+          "filterSpec": {
+            "operator": "all",
+            "conditions": []
+          },
+          "sortSpec": {
+            "conditions": []
+          },
+          "hideColumns": {
+            "IsProspect": true,
+            "ProspectStage/~/Active": true,
+            "ProspectStage/~/Id": true,
+            "ProspectStage/~/Description": true,
+            "AppointmentGenderPreference": true,
+            "BirthDate": true,
+            "Country": true,
+            "ClientIndexes": true,
+            "ClientRelationships": true,
+            "IsCompany": true,
+            "Liability/~/AgreementDate": true,
+            "Liability/~/IsReleased": true,
+            "Liability/~/ReleasedBy": true,
+            "LiabilityRelease": true,
+            "MembershipIcon": true,
+            "SendAccountEmails": true,
+            "SendAccountTexts": true,
+            "SendPromotionalEmails": true,
+            "SendPromotionalTexts": true,
+            "SendScheduleEmails": true,
+            "SendScheduleTexts": true,
+            "State": true,
+            "SuspensionInfo/~/BookingSuspended": true,
+            "SuspensionInfo/~/SuspensionStartDate": true,
+            "SuspensionInfo/~/SuspensionEndDate": true,
+            "UniqueId": true,
+            "RedAlert": true,
+            "YellowAlert": true,
+            "MiddleName": true,
+            "MobileProvider": true,
+            "HomePhone": true,
+            "WorkPhone": true,
+            "WorkExtension": true,
+            "CustomClientFields": true,
+            "AccountBalance": true,
+            "AddressLine1": true,
+            "AddressLine2": true,
+            "City": true,
+            "PostalCode": true,
+            "ReferredBy": true,
+            "PhotoUrl": true,
+            "EmergencyContactInfoName": true,
+            "EmergencyContactInfoEmail": true,
+            "EmergencyContactInfoPhone": true,
+            "EmergencyContactInfoRelationship": true,
+            "Gender": true,
+            "LastFormulaNotes": true,
+            "Active": true,
+            "SalesReps": true,
+            "Action": true,
+            "HomeLocation/~/AdditionalImageURLs": true,
+            "HomeLocation/~/Address": true,
+            "HomeLocation/~/Address2": true,
+            "HomeLocation/~/Amenities": true,
+            "HomeLocation/~/BusinessDescription": true,
+            "HomeLocation/~/City": true,
+            "HomeLocation/~/Description": true,
+            "HomeLocation/~/HasClasses": true,
+            "HomeLocation/~/Id": true,
+            "HomeLocation/~/Latitude": true,
+            "HomeLocation/~/Longitude": true,
+            "HomeLocation/~/Name": true,
+            "HomeLocation/~/Phone": true,
+            "HomeLocation/~/PhoneExtension": true,
+            "HomeLocation/~/PostalCode": true,
+            "HomeLocation/~/SiteID": true,
+            "HomeLocation/~/StateProvCode": true,
+            "HomeLocation/~/Tax1": true,
+            "HomeLocation/~/Tax2": true,
+            "HomeLocation/~/Tax3": true,
+            "HomeLocation/~/Tax4": true,
+            "HomeLocation/~/Tax5": true,
+            "HomeLocation/~/TotalNumberOfRatings": true,
+            "HomeLocation/~/AverageRating": true,
+            "HomeLocation/~/TotalNumberOfDeals": true,
+            "LockerNumber": true          
+          }
+        }
+      client-contact-info: |
+        {
+          "tableUuid": "4ca77cfa-2c5a-5094-9f01-504614d7ebba",
+          "viewName": "Client Contact Info",
+          "filterSpec": {
+            "operator": "all",
+            "conditions": []
+          },
+          "sortSpec": {
+            "conditions": []
+          },
+          "hideColumns": {
+            "IsProspect": true,
+            "ProspectStage/~/Active": true,
+            "ProspectStage/~/Id": true,
+            "ProspectStage/~/Description": true,
+            "ClientCreditCard/~/Address": true,
+            "ClientCreditCard/~/CardHolder": true,
+            "ClientCreditCard/~/CardNumber": true,
+            "ClientCreditCard/~/CardType": true,
+            "ClientCreditCard/~/City": true,
+            "ClientCreditCard/~/ExpMonth": true,
+            "ClientCreditCard/~/ExpYear": true,
+            "ClientCreditCard/~/LastFour": true,
+            "ClientCreditCard/~/PostalCode": true,
+            "ClientCreditCard/~/State": true,
+            "ClientIndexes": true,
+            "ClientRelationships": true,
+            "IsCompany": true,
+            "Liability/~/AgreementDate": true,
+            "Liability/~/IsReleased": true,
+            "Liability/~/ReleasedBy": true,
+            "LiabilityRelease": true,
+            "MembershipIcon": true,
+            "SendAccountEmails": true,
+            "SendAccountTexts": true,
+            "SendPromotionalEmails": true,
+            "SendPromotionalTexts": true,
+            "SendScheduleEmails": true,
+            "SendScheduleTexts": true,
+            "SuspensionInfo/~/SuspensionEndDate": true,
+            "UniqueId": true,
+            "RedAlert": true,
+            "YellowAlert": true,
+            "PostalCode": true,
+            "Gender": true,
+            "LastFormulaNotes": true,
+            "Active": true,
+            "SalesReps": true,
+            "Action": true,
+            "HomeLocation/~/AdditionalImageURLs": true,
+            "HomeLocation/~/Address": true,
+            "HomeLocation/~/Address2": true,
+            "HomeLocation/~/Amenities": true,
+            "HomeLocation/~/BusinessDescription": true,
+            "HomeLocation/~/City": true,
+            "HomeLocation/~/Description": true,
+            "HomeLocation/~/HasClasses": true,
+            "HomeLocation/~/Id": true,
+            "HomeLocation/~/Latitude": true,
+            "HomeLocation/~/Longitude": true,
+            "HomeLocation/~/Name": true,
+            "HomeLocation/~/Phone": true,
+            "HomeLocation/~/PhoneExtension": true,
+            "HomeLocation/~/PostalCode": true,
+            "HomeLocation/~/SiteID": true,
+            "HomeLocation/~/StateProvCode": true,
+            "HomeLocation/~/Tax1": true,
+            "HomeLocation/~/Tax2": true,
+            "HomeLocation/~/Tax3": true,
+            "HomeLocation/~/Tax4": true,
+            "HomeLocation/~/Tax5": true,
+            "HomeLocation/~/TotalNumberOfRatings": true,
+            "HomeLocation/~/AverageRating": true,
+            "HomeLocation/~/TotalNumberOfDeals": true          
+          }
+        }
+      liability-view: |
+        {
+          "tableUuid": "4ca77cfa-2c5a-5094-9f01-504614d7ebba",
+          "viewName": "Liability Management",
+          "filterSpec": {
+            "operator": "all",
+            "conditions": []
+          },
+          "sortSpec": {
+            "conditions": []
+          },
+          "hideColumns": {
+            "IsProspect": true,
+            "ProspectStage/~/Active": true,
+            "ProspectStage/~/Id": true,
+            "ProspectStage/~/Description": true,
+            "AppointmentGenderPreference": true,
+            "BirthDate": true,
+            "Country": true,
+            "ClientCreditCard/~/Address": true,
+            "ClientCreditCard/~/CardHolder": true,
+            "ClientCreditCard/~/CardNumber": true,
+            "ClientCreditCard/~/CardType": true,
+            "ClientCreditCard/~/City": true,
+            "ClientCreditCard/~/ExpMonth": true,
+            "ClientCreditCard/~/ExpYear": true,
+            "ClientCreditCard/~/LastFour": true,
+            "ClientCreditCard/~/PostalCode": true,
+            "ClientCreditCard/~/State": true,
+            "ClientIndexes": true,
+            "ClientRelationships": true,
+            "IsCompany": true,
+            "MembershipIcon": true,
+            "SendAccountEmails": true,
+            "SendAccountTexts": true,
+            "SendPromotionalEmails": true,
+            "SendPromotionalTexts": true,
+            "SendScheduleEmails": true,
+            "SendScheduleTexts": true,
+            "State": true,
+            "SuspensionInfo/~/BookingSuspended": true,
+            "SuspensionInfo/~/SuspensionStartDate": true,
+            "SuspensionInfo/~/SuspensionEndDate": true,
+            "UniqueId": true,
+            "RedAlert": true,
+            "YellowAlert": true,
+            "MiddleName": true,
+            "MobileProvider": true,
+            "HomePhone": true,
+            "WorkPhone": true,
+            "WorkExtension": true,
+            "CustomClientFields": true,
+            "AccountBalance": true,
+            "AddressLine1": true,
+            "AddressLine2": true,
+            "City": true,
+            "PostalCode": true,
+            "ReferredBy": true,
+            "PhotoUrl": true,
+            "EmergencyContactInfoName": true,
+            "EmergencyContactInfoEmail": true,
+            "EmergencyContactInfoPhone": true,
+            "EmergencyContactInfoRelationship": true,
+            "Gender": true,
+            "LastFormulaNotes": true,
+            "Active": true,
+            "SalesReps": true,
+            "Action": true,
+            "HomeLocation/~/AdditionalImageURLs": true,
+            "HomeLocation/~/Address": true,
+            "HomeLocation/~/Address2": true,
+            "HomeLocation/~/Amenities": true,
+            "HomeLocation/~/BusinessDescription": true,
+            "HomeLocation/~/City": true,
+            "HomeLocation/~/Description": true,
+            "HomeLocation/~/HasClasses": true,
+            "HomeLocation/~/Id": true,
+            "HomeLocation/~/Latitude": true,
+            "HomeLocation/~/Longitude": true,
+            "HomeLocation/~/Name": true,
+            "HomeLocation/~/Phone": true,
+            "HomeLocation/~/PhoneExtension": true,
+            "HomeLocation/~/PostalCode": true,
+            "HomeLocation/~/SiteID": true,
+            "HomeLocation/~/StateProvCode": true,
+            "HomeLocation/~/Tax1": true,
+            "HomeLocation/~/Tax2": true,
+            "HomeLocation/~/Tax3": true,
+            "HomeLocation/~/Tax4": true,
+            "HomeLocation/~/Tax5": true,
+            "HomeLocation/~/TotalNumberOfRatings": true,
+            "HomeLocation/~/AverageRating": true,
+            "HomeLocation/~/TotalNumberOfDeals": true,
+            "LockerNumber": true          
+          }
+        }
+      home-location: |
+        {
+          "tableUuid": "4ca77cfa-2c5a-5094-9f01-504614d7ebba",
+          "viewName": "Client Home Location",
+          "filterSpec": {
+            "operator": "all",
+            "conditions": []
+          },
+          "sortSpec": {
+            "conditions": []
+          },
+          "hideColumns": {
+            "IsProspect": true,
+            "ProspectStage/~/Active": true,
+            "ProspectStage/~/Id": true,
+            "ProspectStage/~/Description": true,
+            "AppointmentGenderPreference": true,
+            "BirthDate": true,
+            "Country": true,
+            "ClientCreditCard/~/Address": true,
+            "ClientCreditCard/~/CardHolder": true,
+            "ClientCreditCard/~/CardNumber": true,
+            "ClientCreditCard/~/CardType": true,
+            "ClientCreditCard/~/City": true,
+            "ClientCreditCard/~/ExpMonth": true,
+            "ClientCreditCard/~/ExpYear": true,
+            "ClientCreditCard/~/LastFour": true,
+            "ClientCreditCard/~/PostalCode": true,
+            "ClientCreditCard/~/State": true,
+            "ClientIndexes": true,
+            "ClientRelationships": true,
+            "IsCompany": true,
+            "Liability/~/AgreementDate": true,
+            "Liability/~/IsReleased": true,
+            "Liability/~/ReleasedBy": true,
+            "LiabilityRelease": true,
+            "MembershipIcon": true,
+            "SendAccountEmails": true,
+            "SendAccountTexts": true,
+            "SendPromotionalEmails": true,
+            "SendPromotionalTexts": true,
+            "SendScheduleEmails": true,
+            "SendScheduleTexts": true,
+            "State": true,
+            "SuspensionInfo/~/BookingSuspended": true,
+            "SuspensionInfo/~/SuspensionStartDate": true,
+            "SuspensionInfo/~/SuspensionEndDate": true,
+            "UniqueId": true,
+            "RedAlert": true,
+            "YellowAlert": true,
+            "MiddleName": true,
+            "MobileProvider": true,
+            "HomePhone": true,
+            "WorkPhone": true,
+            "WorkExtension": true,
+            "CustomClientFields": true,
+            "AccountBalance": true,
+            "AddressLine1": true,
+            "AddressLine2": true,
+            "City": true,
+            "PostalCode": true,
+            "ReferredBy": true,
+            "PhotoUrl": true,
+            "EmergencyContactInfoName": true,
+            "EmergencyContactInfoEmail": true,
+            "EmergencyContactInfoPhone": true,
+            "EmergencyContactInfoRelationship": true,
+            "Gender": true,
+            "LastFormulaNotes": true,
+            "Active": true,
+            "SalesReps": true,
+            "LockerNumber": true          
+          }
+        }
+      comms-preference: |
+        {
+          "tableUuid": "4ca77cfa-2c5a-5094-9f01-504614d7ebba",
+          "viewName": "Notification Preferences",
+          "filterSpec": {
+            "operator": "all",
+            "conditions": []
+          },
+          "sortSpec": {
+            "conditions": []
+          },
+          "hideColumns": {
+            "IsProspect": true,
+            "ProspectStage/~/Active": true,
+            "ProspectStage/~/Id": true,
+            "ProspectStage/~/Description": true,
+            "AppointmentGenderPreference": true,
+            "BirthDate": true,
+            "Country": true,
+            "ClientCreditCard/~/Address": true,
+            "ClientCreditCard/~/CardHolder": true,
+            "ClientCreditCard/~/CardNumber": true,
+            "ClientCreditCard/~/CardType": true,
+            "ClientCreditCard/~/City": true,
+            "ClientCreditCard/~/ExpMonth": true,
+            "ClientCreditCard/~/ExpYear": true,
+            "ClientCreditCard/~/LastFour": true,
+            "ClientCreditCard/~/PostalCode": true,
+            "ClientCreditCard/~/State": true,
+            "ClientIndexes": true,
+            "ClientRelationships": true,
+            "IsCompany": true,
+            "Liability/~/AgreementDate": true,
+            "Liability/~/IsReleased": true,
+            "Liability/~/ReleasedBy": true,
+            "LiabilityRelease": true,
+            "MembershipIcon": true,
+            "State": true,
+            "SuspensionInfo/~/BookingSuspended": true,
+            "SuspensionInfo/~/SuspensionStartDate": true,
+            "SuspensionInfo/~/SuspensionEndDate": true,
+            "UniqueId": true,
+            "RedAlert": true,
+            "YellowAlert": true,
+            "MiddleName": true,
+            "MobileProvider": true,
+            "HomePhone": true,
+            "WorkPhone": true,
+            "WorkExtension": true,
+            "CustomClientFields": true,
+            "AccountBalance": true,
+            "AddressLine1": true,
+            "AddressLine2": true,
+            "City": true,
+            "PostalCode": true,
+            "ReferredBy": true,
+            "PhotoUrl": true,
+            "EmergencyContactInfoName": true,
+            "EmergencyContactInfoEmail": true,
+            "EmergencyContactInfoPhone": true,
+            "EmergencyContactInfoRelationship": true,
+            "Gender": true,
+            "LastFormulaNotes": true,
+            "Active": true,
+            "SalesReps": true,
+            "Action": true,
+            "HomeLocation/~/AdditionalImageURLs": true,
+            "HomeLocation/~/Address": true,
+            "HomeLocation/~/Address2": true,
+            "HomeLocation/~/Amenities": true,
+            "HomeLocation/~/BusinessDescription": true,
+            "HomeLocation/~/City": true,
+            "HomeLocation/~/Description": true,
+            "HomeLocation/~/HasClasses": true,
+            "HomeLocation/~/Id": true,
+            "HomeLocation/~/Latitude": true,
+            "HomeLocation/~/Longitude": true,
+            "HomeLocation/~/Name": true,
+            "HomeLocation/~/Phone": true,
+            "HomeLocation/~/PhoneExtension": true,
+            "HomeLocation/~/PostalCode": true,
+            "HomeLocation/~/SiteID": true,
+            "HomeLocation/~/StateProvCode": true,
+            "HomeLocation/~/Tax1": true,
+            "HomeLocation/~/Tax2": true,
+            "HomeLocation/~/Tax3": true,
+            "HomeLocation/~/Tax4": true,
+            "HomeLocation/~/Tax5": true,
+            "HomeLocation/~/TotalNumberOfRatings": true,
+            "HomeLocation/~/AverageRating": true,
+            "HomeLocation/~/TotalNumberOfDeals": true,
+            "LockerNumber": true          
+          }
+        }
+    columnDescriptors:
+      - columnId: id
+        columnName: Id
+        dataType: string
+      - columnId: first-name
+        columnName: FirstName
+        dataType: string
+      - columnId: last-name
+        columnName: LastName
+        dataType: string
+      - columnId: status
+        columnName: Status
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "Suspended",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "Terminated",
+                  "theme": "ruby"
+                },                
+                {
+                  "value": "Non-Member",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "Expired",
+                  "theme": "silver"
+                },      
+                {
+                  "value": "Declined",
+                  "theme": "silver"
+                },                                
+                {
+                  "value": "Active",
+                  "theme": "green"
+                }
+              ]
+            }
+
+      - columnId: email
+        columnName: Email
+        dataType: string
+      - columnId: mobile-phone
+        columnName: MobilePhone
+        dataType: string
+      - columnId: is-prospect
+        columnName: IsProspect
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: prospect-stage---active
+        columnName: ProspectStage/~/Active
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: prospect-stage---id
+        columnName: ProspectStage/~/Id
+        dataType: float64
+      - columnId: prospect-stage---description
+        columnName: ProspectStage/~/Description
+        dataType: string
+      - columnId: appointment-gender-preference
+        columnName: AppointmentGenderPreference
+        dataType: string
+      - columnId: birth-date
+        columnName: BirthDate
+        dataType: string
+      - columnId: country
+        columnName: Country
+        dataType: string
+      - columnId: creation-date
+        columnName: CreationDate
+        dataType: string
+      - columnId: client-credit-card---address
+        columnName: ClientCreditCard/~/Address
+        dataType: string
+      - columnId: client-credit-card---card-holder
+        columnName: ClientCreditCard/~/CardHolder
+        dataType: string
+      - columnId: client-credit-card---card-number
+        columnName: ClientCreditCard/~/CardNumber
+        dataType: string
+      - columnId: client-credit-card---card-type
+        columnName: ClientCreditCard/~/CardType
+        dataType: string
+      - columnId: client-credit-card---city
+        columnName: ClientCreditCard/~/City
+        dataType: string
+      - columnId: client-credit-card---exp-month
+        columnName: ClientCreditCard/~/ExpMonth
+        dataType: string
+      - columnId: client-credit-card---exp-year
+        columnName: ClientCreditCard/~/ExpYear
+        dataType: string
+      - columnId: client-credit-card---last-four
+        columnName: ClientCreditCard/~/LastFour
+        dataType: string
+      - columnId: client-credit-card---postal-code
+        columnName: ClientCreditCard/~/PostalCode
+        dataType: string
+      - columnId: client-credit-card---state
+        columnName: ClientCreditCard/~/State
+        dataType: string
+      - columnId: client-indexes
+        columnName: ClientIndexes
+        dataType: string
+      - columnId: client-relationships
+        columnName: ClientRelationships
+        dataType: string
+      - columnId: first-appointment-date
+        columnName: FirstAppointmentDate
+        dataType: string
+      - columnId: is-company
+        columnName: IsCompany
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: liability---agreement-date
+        columnName: Liability/~/AgreementDate
+        dataType: string
+      - columnId: liability---is-released
+        columnName: Liability/~/IsReleased
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: liability---released-by
+        columnName: Liability/~/ReleasedBy
+        dataType: float64
+      - columnId: liability-release
+        columnName: LiabilityRelease
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: membership-icon
+        columnName: MembershipIcon
+        dataType: float64
+      - columnId: notes
+        columnName: Notes
+        dataType: string
+      - columnId: send-account-emails
+        columnName: SendAccountEmails
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: send-account-texts
+        columnName: SendAccountTexts
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: send-promotional-emails
+        columnName: SendPromotionalEmails
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: send-promotional-texts
+        columnName: SendPromotionalTexts
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: send-schedule-emails
+        columnName: SendScheduleEmails
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: send-schedule-texts
+        columnName: SendScheduleTexts
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: state
+        columnName: State
+        dataType: string
+      - columnId: suspension-info---booking-suspended
+        columnName: SuspensionInfo/~/BookingSuspended
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: suspension-info---suspension-start-date
+        columnName: SuspensionInfo/~/SuspensionStartDate
+        dataType: string
+      - columnId: suspension-info---suspension-end-date
+        columnName: SuspensionInfo/~/SuspensionEndDate
+        dataType: string
+      - columnId: unique-id
+        columnName: UniqueId
+        dataType: float64
+      - columnId: last-modified-date-time
+        columnName: LastModifiedDateTime
+        dataType: string
+      - columnId: red-alert
+        columnName: RedAlert
+        dataType: string
+      - columnId: yellow-alert
+        columnName: YellowAlert
+        dataType: string
+      - columnId: middle-name
+        columnName: MiddleName
+        dataType: string
+      - columnId: mobile-provider
+        columnName: MobileProvider
+        dataType: float64 # NOTE(gab): it says string in the docs, but apparently it is not.
+      - columnId: home-phone
+        columnName: HomePhone
+        dataType: string
+      - columnId: work-phone
+        columnName: WorkPhone
+        dataType: string
+      - columnId: work-extension
+        columnName: WorkExtension
+        dataType: string
+      - columnId: custom-client-fields
+        columnName: CustomClientFields
+        dataType: string
+      - columnId: account-balance
+        columnName: AccountBalance
+        dataType: float64
+      - columnId: address-line-1
+        columnName: AddressLine1
+        dataType: string
+      - columnId: address-line-2
+        columnName: AddressLine2
+        dataType: string
+      - columnId: city
+        columnName: City
+        dataType: string
+      - columnId: postal-code
+        columnName: PostalCode
+        dataType: string
+      - columnId: referred-by
+        columnName: ReferredBy
+        dataType: string
+      - columnId: photo-url
+        columnName: PhotoUrl
+        dataType: string
+      - columnId: emergency-contact-info-name
+        columnName: EmergencyContactInfoName
+        dataType: string
+      - columnId: emergency-contact-info-email
+        columnName: EmergencyContactInfoEmail
+        dataType: string
+      - columnId: emergency-contact-info-phone
+        columnName: EmergencyContactInfoPhone
+        dataType: string
+      - columnId: emergency-contact-info-relationship
+        columnName: EmergencyContactInfoRelationship
+        dataType: string
+      - columnId: gender
+        columnName: Gender
+        dataType: string
+      - columnId: last-formula-notes
+        columnName: LastFormulaNotes
+        dataType: string
+      - columnId: active
+        columnName: Active
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: sales-reps
+        columnName: SalesReps
+        dataType: string
+      - columnId: action
+        columnName: Action
+        dataType: string
+      - columnId: home-location---additional-image-urls
+        columnName: HomeLocation/~/AdditionalImageURLs
+        dataType: string
+      - columnId: home-location---address
+        columnName: HomeLocation/~/Address
+        dataType: string
+      - columnId: home-location---address2
+        columnName: HomeLocation/~/Address2
+        dataType: string
+      - columnId: home-location---amenities
+        columnName: HomeLocation/~/Amenities
+        dataType: string
+      - columnId: home-location---business-description
+        columnName: HomeLocation/~/BusinessDescription
+        dataType: string
+      - columnId: home-location---city
+        columnName: HomeLocation/~/City
+        dataType: string
+      - columnId: home-location---description
+        columnName: HomeLocation/~/Description
+        dataType: string
+      - columnId: home-location---has-classes
+        columnName: HomeLocation/~/HasClasses
+        dataType: boolean
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "checkbox"
+            }
+
+      - columnId: home-location---id
+        columnName: HomeLocation/~/Id
+        dataType: float64
+      - columnId: home-location---latitude
+        columnName: HomeLocation/~/Latitude
+        dataType: float64
+      - columnId: home-location---longitude
+        columnName: HomeLocation/~/Longitude
+        dataType: float64
+      - columnId: home-location---name
+        columnName: HomeLocation/~/Name
+        dataType: string
+      - columnId: home-location---phone
+        columnName: HomeLocation/~/Phone
+        dataType: string
+      - columnId: home-location---phone-extension
+        columnName: HomeLocation/~/PhoneExtension
+        dataType: string
+      - columnId: home-location---postal-code
+        columnName: HomeLocation/~/PostalCode
+        dataType: string
+      - columnId: home-location---site-id
+        columnName: HomeLocation/~/SiteID
+        dataType: float64
+      - columnId: home-location---state-prov-code
+        columnName: HomeLocation/~/StateProvCode
+        dataType: string
+      - columnId: home-location---tax1
+        columnName: HomeLocation/~/Tax1
+        dataType: float64
+      - columnId: home-location---tax2
+        columnName: HomeLocation/~/Tax2
+        dataType: float64
+      - columnId: home-location---tax3
+        columnName: HomeLocation/~/Tax3
+        dataType: float64
+      - columnId: home-location---tax4
+        columnName: HomeLocation/~/Tax4
+        dataType: float64
+      - columnId: home-location---tax5
+        columnName: HomeLocation/~/Tax5
+        dataType: float64
+      - columnId: home-location---total-number-of-ratings
+        columnName: HomeLocation/~/TotalNumberOfRatings
+        dataType: float64
+      - columnId: home-location---average-rating
+        columnName: HomeLocation/~/AverageRating
+        dataType: float64
+      - columnId: home-location---total-number-of-deals
+        columnName: HomeLocation/~/TotalNumberOfDeals
+        dataType: float64
+      - columnId: locker-number
+        columnName: LockerNumber
+        dataType: string
+      - columnId: "mbo-push"
+        columnName: "MBO push"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "MBO push",
+              "theme": "blue"
+            }
+      - columnId: "mbo-pull"
+        columnName: "MBO pull"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "MBO pull",
+              "theme": "blue"
+            }
+      - columnId: "mbo-push-status"
+        columnName: "MBO push status"
+        dataType: string
+      - columnId: "mbo-pushed-at"
+        columnName: "MBO pushed at"
+        dataType: string
+      - columnId: "mbo-data-logical-timestamp"
+        columnName: "MBO data logical timestamp"
+        dataType: int64
