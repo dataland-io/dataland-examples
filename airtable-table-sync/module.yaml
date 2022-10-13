@@ -31,12 +31,11 @@ parameters:
 
 workers:
   - workerId: airtable-table-sync-worker
-    scriptPath: dist/bundle3.js
+    scriptPath: dist/bundle.js
     triggers:
       transaction: {}
       cron:
-        cronExpression: "*/15 * * * * * *"
-        # cronExpression: "0 */2 * * * * *"
+        cronExpression: "0 */5 * * * * *"
     env:
       AIRTABLE_API_KEY: airtable-api-key
       AIRTABLE_BASE_ID: airtable-base-id

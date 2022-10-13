@@ -21,7 +21,7 @@ const config: Configuration = {
   },
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "bundle3.js",
+    filename: "bundle.js",
     clean: true,
   },
   performance: {
