@@ -5,7 +5,7 @@ const config: Configuration = {
   mode: "production",
   target: "web",
   entry: {
-    materializedView: "./src/materializedView.ts",
+    sqlView: "./src/sqlView.ts",
   },
   module: {
     rules: [

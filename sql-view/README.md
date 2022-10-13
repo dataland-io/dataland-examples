@@ -8,9 +8,9 @@ It's helpful to test SQL queries in the Dataland CLI with the command `dataland 
 
 ## Parameter setup
 
-| Name                               | About                                                                                                                                       |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sql-query`                        | SQL query                                                                                                                                   |
-| `sql-view-dataland-table-name`     | Output table name in Dataland                                                                                                               |
-| `sql-view-primary-key-column-name` | Primary key column for the join. Composite keys can be used as well, but must be specified as `"{column1}", "{column2}", "{column3}"`, etc. |
-| `keep-extra-columns-boolean`       | This preserves any extra columns added to the output table in the Dataland UI.                                                              |
+| Name                                | About                                                                                                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sql-query`                         | SQL query                                                                                                                                   |
+| `sql-view-dataland-table-name`      | Output table name in Dataland                                                                                                               |
+| `sql-view-primary-key-column-name`  | Primary key column for the join. Composite keys can be used as well, but must be specified as `"{column1}", "{column2}", "{column3}"`, etc. |
+| `example-input-dataland-table-name` | Write one of the names of the input tables for the join                                                                                     |
