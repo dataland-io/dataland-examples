@@ -5,7 +5,7 @@ const config: Configuration = {
   mode: "production",
   target: "web",
   entry: {
-    mysqlSync: "./src/mysqlSync.ts",
+    "mysql-sync": "./src/mysql-sync.ts",
   },
   module: {
     rules: [
@@ -36,4 +36,5 @@ const config: Configuration = {
   },
 };
 
+// eslint-disable-next-line import/no-default-export
 export default config;

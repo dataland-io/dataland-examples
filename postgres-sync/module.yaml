@@ -1,8 +1,8 @@
-moduleId: postgres-sync-example
+moduleId: postgres-sync
 
 info:
   title: Postgres
-  description: Sync a Postgres database to Dataland
+  description: Two-way sync a Postgres database to Dataland
   author: Dataland Devs <devs@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
   readmePath: README.md
@@ -11,28 +11,30 @@ info:
 buildCommand: npm run build
 
 parameters:
-  - pghost
-  - pgport
-  - pgdatabase
-  - pguser
-  - pgpassword
-  - pgschema
-  - allow-drop-tables-boolean
-  - allow-writeback-boolean
+  - pg-host
+  - pg-port
+  - pg-database
+  - pg-user
+  - pg-password
+  - pg-schema
+  - pg-table-mapping
+  - pg-do-writeback
 
 workers:
-  - workerId: postgres-sync
-    scriptPath: dist/postgresSync.bundle.js
+  - workerId: postgres-sync-worker
+    scriptPath: dist/postgres-sync.bundle.js
     env:
-      PGHOST: pghost
-      PGPORT: pgport
-      PGDATABASE: pgdatabase
-      PGUSER: pguser
-      PGPASSWORD: pgpassword
-      PGSCHEMA: pgschema
-      ALLOW_DROP_TABLES_BOOLEAN: allow-drop-tables-boolean
-      ALLOW_WRITEBACK_BOOLEAN: allow-writeback-boolean
+      PG_HOST: pg-host
+      PG_PORT: pg-port
+      PG_DATABASE: pg-database
+      PG_USER: pg-user
+      PG_PASSWORD: pg-password
+      PG_SCHEMA: pg-schema
+      PG_TABLE_MAPPING: pg-table-mapping
+      PG_DO_WRITEBACK: pg-do-writeback
     triggers:
       cron:
+        # every 30 seconds
         cronExpression: "*/30 * * * * * *"
-      transaction: {}
+      transaction:
+        enabled: true

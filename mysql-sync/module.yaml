@@ -1,10 +1,10 @@
-moduleId: mysql-sync-example
+moduleId: mysql-sync
 
 buildCommand: npm run build
 
 info:
   title: MySQL
-  description: Sync a MySQL database into Dataland
+  description: Two-way sync a MySQL database into Dataland
   author: Dataland Devs <devs@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
   readmePath: README.md
@@ -17,6 +17,7 @@ parameters:
   - mysql-password
   - mysql-db
   - mysql-table-mapping
+  - mysql-do-writeback
 
 # To deploy this module locally, create a .env file in the root of this folder
 # with the following contents, and add your values.
@@ -26,14 +27,11 @@ parameters:
 # DL_PARAM_MYSQL_PASSWORD=
 # DL_PARAM_MYSQL_DB=
 # DL_PARAM_MYSQL_TABLE_MAPPING=
+# DL_PARAM_MYSQL_DO_WRITEBACK=
 
 workers:
-  - workerId: mysql-sync
-    scriptPath: dist/mysqlSync.bundle.js
-    triggers:
-      transaction: {}
-      cron:
-        cronExpression: "0 */15 * * * * *"
+  - workerId: mysql-sync-worker
+    scriptPath: dist/mysql-sync.bundle.js
     env:
       MYSQL_HOST: mysql-host
       MYSQL_PORT: mysql-port
@@ -41,3 +39,10 @@ workers:
       MYSQL_PASSWORD: mysql-password
       MYSQL_DB: mysql-db
       MYSQL_TABLE_MAPPING: mysql-table-mapping
+      MYSQL_DO_WRITEBACK: mysql-do-writeback
+    triggers:
+      cron:
+        # every 30 seconds
+        cronExpression: "*/30 * * * * * *"
+      transaction:
+        enabled: true
