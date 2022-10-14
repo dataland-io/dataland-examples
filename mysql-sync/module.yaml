@@ -46,3 +46,61 @@ workers:
         cronExpression: "*/30 * * * * * *"
       transaction:
         enabled: true
+
+tables:
+  - tableName: "mysql_orders"
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: order_id
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "100"
+      - columnName: customer_id
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
+      - columnName: delivery_status
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "Unable to get delivered",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "In warehouse",
+                  "theme": "orange"
+                },
+                {
+                  "value": "In transit",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "Delivered",
+                  "theme": "green"
+                }
+              ]
+            }
+      - columnName: "order_placed_at"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "140"
+      - columnName: "delivery_time"
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "140"
+      - columnName: "rating"
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
+      - columnName: "user_rating_comment"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "200"
+      - columnName: "order_value"
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
