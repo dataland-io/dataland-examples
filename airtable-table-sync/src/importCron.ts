@@ -211,5 +211,4 @@ const cronHandler = async () => {
   console.log(`Import - Airtable import complete. Row count: ${rows.length}`);
 };
 
-console.log("register");
 registerCronHandler(cronHandler);

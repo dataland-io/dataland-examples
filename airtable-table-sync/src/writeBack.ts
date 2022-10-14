@@ -22,7 +22,7 @@ import {
   getHistoryClient,
 } from "@dataland-io/dataland-sdk";
 
-// NOTE(gab): maximum allowed by airtable
+// NOTE(gab): 10 is maximum allowed by airtable
 const AIRTABLE_MAX_UPDATES = 10;
 const chunkAirtablePayload = <T>(payload: T[]) => {
   const chunks: T[][] = [];
@@ -297,7 +297,6 @@ const deleteRowsWriteback = async (
 };
 
 const transactionHandler = async (transaction: Transaction) => {
-  console.log("transactions");
   const ALLOW_WRITEBACK_BOOLEAN = getEnv("AIRTABLE_ALLOW_WRITEBACK_BOOLEAN");
   if (
     ALLOW_WRITEBACK_BOOLEAN !== "true" &&

@@ -44,7 +44,7 @@ export const getDatalandTableName = (): string => {
 
 export const fetchRetry = async (
   fetch: () => Promise<Response>,
-  maxTries: number = 2
+  maxTries: number = 4
 ): Promise<Response | "error"> => {
   for (let tries = 0; tries < maxTries; tries++) {
     if (tries !== 0) {
