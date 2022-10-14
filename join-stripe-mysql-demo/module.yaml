@@ -1,0 +1,177 @@
+## Single source of truth to declare new functions (aka workers) + tables
+moduleId: join-stripe-postgres-demo-example
+
+buildCommand: npm run build
+
+parameters:
+  - stripe-api-key
+
+info:
+  title: Custom Order Refund Workflow
+  description: Issue refunds to high LTV customers
+  author: Acme Corp
+
+workers:
+  # Worker to handle the join every 30 seconds
+  - workerId: join-stripe-mysql-demo
+    scriptPath: dist/joinStripeMySQLDemo.bundle.js
+    triggers:
+      cron:
+        cronExpression: "*/15 * * * * * *"
+
+  # Worker to handle the Stripe credit on button click
+  - workerId: post-stripe-credit
+    scriptPath: dist/postStripeCredit.bundle.js
+    env:
+      STRIPE_API_KEY: stripe-api-key
+    triggers:
+      transaction: {}
+
+tables:
+  - tableId: orders-refund-workflow
+    tableName: "Orders Credit Workflow"
+    autoMigrate: true
+    columnDescriptors:
+      # id
+      - columnId: "id"
+        columnName: "Order ID"
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
+
+      # customer_id
+      - columnId: "customer-id"
+        columnName: "Customer ID"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
+
+      # delivery-status
+      - columnId: "delivery-status"
+        columnName: "Delivery Status"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "Unable to get delivered",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "In warehouse",
+                  "theme": "orange"
+                },
+                {
+                  "value": "In transit",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "Delivered",
+                  "theme": "green"
+                }
+              ]
+            }
+
+      # order_placed_at
+      - columnId: "order-placed-at"
+        columnName: "Order Placed At"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "180"
+
+      # delivery_time
+      - columnId: "delivery-time"
+        columnName: "Delivery Time (mins)"
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
+
+      # rating
+      - columnId: rating
+        columnName: "User Rating"
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
+
+      # user_rating_comment
+      - columnId: "user-rating-comment"
+        columnName: "User Rating Comment"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "180"
+
+      # order_value
+      - columnId: "order-value"
+        columnName: "Order Value"
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
+
+      - columnId: phone
+        columnName: "Phone"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "150"
+
+      - columnId: email
+        columnName: "Email"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "150"
+
+      - columnId: name
+        columnName: "Name"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "150"
+
+      - columnId: total-order-value
+        columnName: "Lifetime Order Value"
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "150"
+
+      - columnId: "stripe-url"
+        columnName: "Stripe URL"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
+
+      - columnId: "stripe-customer-id"
+        columnName: "Stripe Customer ID"
+        dataType: string
+
+      - columnId: "issue-credit"
+        columnName: "Issue credit"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Issue $25 credit",
+              "theme": "blue"
+            }
+
+      - columnId: "credit-processed-at"
+        columnName: "Credit processed at"
+        dataType: string
+
+      - columnId: "send-email"
+        columnName: "Send Email"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Send notification email",
+              "theme": "blue"
+            }
+
+      - columnId: "email-sent-at"
+        columnName: "Email sent at"
+        dataType: string
