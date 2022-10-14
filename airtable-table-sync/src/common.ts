@@ -7,14 +7,14 @@ export type AirtableImportedValue =
   | boolean
   | Record<any, any>
   | any[];
-export interface AirtableImportedRecord {
+export type AirtableImportedRecord = {
   id: string;
   createdTime: string;
   fields: Record<string, AirtableImportedValue>;
-}
+};
 export type AirtableImportedRecords = AirtableImportedRecord[];
 
-// NOTE(gab): null: clear any cell, undefined: do nothing
+// NOTE(gab): null: clear cell, undefined: do nothing
 export type AirtableUpdateValue = string | number | boolean | null | undefined;
 export type UpdateRecord = {
   id: string;
@@ -44,7 +44,7 @@ export const getDatalandTableName = (): string => {
 
 export const fetchRetry = async (
   fetch: () => Promise<Response>,
-  maxTries: number = 4
+  maxTries: number = 2
 ): Promise<Response | "error"> => {
   for (let tries = 0; tries < maxTries; tries++) {
     if (tries !== 0) {

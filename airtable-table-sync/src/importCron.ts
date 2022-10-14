@@ -30,7 +30,7 @@ const airtableValueToDatalandValue = (value: AirtableImportedValue): Scalar => {
   // The reason these fields are parsed as strings is that when sending an update to Airtable,
   // Airtable expects lists to be in this format: "x,y,z" or '"x","y","z"', and not in its
   // stringified json form '["x", "y", "z"]'. This allows us to not need any additional parsing on
-  // updating values.
+  // updating values. (this is only true if typecast: true is set on the update)
   //
   // Field types that NEED to be parsed as a concatenated string:
   // - Linked record (list of strings)

@@ -46,7 +46,7 @@ const airtableUpdateRows = async (updateRecords: UpdateRecords) => {
   const successfullyUpdated: string[] = [];
   const chunks = chunkAirtablePayload(updateRecords);
   for (const chunk of chunks) {
-    const body = JSON.stringify({ records: chunk });
+    const body = JSON.stringify({ records: chunk, typecast: true });
     const response = await fetchRetry(() =>
       fetch(url, {
         method: "PATCH",
@@ -57,22 +57,16 @@ const airtableUpdateRows = async (updateRecords: UpdateRecords) => {
     if (response === "error") {
       console.error(
         "Writeback - Airtable update records request failed. Payload:",
-        {
-          url,
-          body,
-          recordIds: updateRecords.map((record) => record.id),
-        }
+        { url, body }
       );
       continue;
     }
-    updateRecords.forEach((record) => successfullyUpdated.push(record.id));
+    chunk.forEach((record) => successfullyUpdated.push(record.id));
   }
   if (successfullyUpdated.length !== 0) {
     console.log(
       "Writeback - Successfully updated the following Airtable records:",
-      {
-        recordIds: successfullyUpdated,
-      }
+      { recordIds: successfullyUpdated }
     );
   }
 };
@@ -92,7 +86,7 @@ const airtableCreateRows = async (
   const createdRecordIds: string[] = [];
   const chunks = chunkAirtablePayload(createRecords);
   for (const chunk of chunks) {
-    const body = JSON.stringify({ records: chunk });
+    const body = JSON.stringify({ records: chunk, typecast: true });
     const response = await fetchRetry(() =>
       fetch(url, {
         method: "POST",
@@ -103,10 +97,7 @@ const airtableCreateRows = async (
     if (response === "error") {
       console.error(
         "Writeback - Airtable create records request failed. Payload:",
-        {
-          url,
-          body,
-        }
+        { url, body }
       );
       continue;
     }
@@ -219,7 +210,7 @@ const insertRowsWriteback = async (
   for (let i = 0; i < recordIds.length; i++) {
     // NOTE(gab): Record ids are returned from Airtable in the same order
     // as the records were sent, therefore we can safely assume that a index
-    // of recordIds corresponds to the same index of the rows.
+    // in recordIds corresponds to the same index in the rows.
     const recordId = recordIds[i]!;
     const rowKey = rows[i]!.rowId;
     recordIdMap[rowKey] = recordId;
@@ -265,9 +256,9 @@ const updateRowsWriteback = async (
         );
         continue;
       }
-      // NOTE(gab): Nulls are used to clear ANY field value from Airtable.
+      // NOTE(gab): Nulls are used to clear ANY value from Airtable.
       // The reason it's not in their type system is probably that they "expect"
-      // the empty type for that field: "false", "", [] etc and not null. But since
+      // the empty type for that field: "false", "", [] etc. But since
       // no schema is provided from their side, the correct "empty type" cannot be known,
       // and null is used.
       updateRecord.fields[fieldName] = scalar ?? null;
