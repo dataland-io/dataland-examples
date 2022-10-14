@@ -1,14 +1,12 @@
 import {
-  getCatalogSnapshot,
   getEnv,
-  Mutation,
-  querySqlSnapshot,
+  MutationsBuilder,
+  getDbClient,
+  getHistoryClient,
   registerTransactionHandler,
-  runMutations,
-  Schema,
   Transaction,
   unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+} from "@dataland-io/dataland-sdk";
 
 import { isString, isNumber } from "lodash-es";
 
@@ -49,61 +47,65 @@ const postStripeCredit = async (stripe_customer_id: string) => {
 //        a transaction is created that invokes this function.
 // ------------------------------------------------------------
 const handler = async (transaction: Transaction) => {
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
+  const db = await getDbClient();
+  const history = await getHistoryClient();
 
-  const schema = new Schema(tableDescriptors);
+  const affected_row_ids = [];
 
-  const affectedRows = schema.getAffectedRows(
-    "Orders Credit Workflow",
-    "Issue credit",
-    transaction
-  );
+  // -------------------------------------------------------------------
+  // (awu): Get all rows where issue_credit was incremented
+  // -------------------------------------------------------------------
 
-  const lookupKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number") {
-      lookupKeys.push(key);
-      console.log("key noticed: ", key);
+  for (const mutation of transaction.mutations) {
+    if (mutation.kind.oneofKind == "updateRows") {
+      if (
+        mutation.kind.updateRows.columnNames.includes("issue_credit") &&
+        mutation.kind.updateRows.tableName === "orders_credit_workflow"
+      ) {
+        for (const row of mutation.kind.updateRows.rows) {
+          affected_row_ids.push(row.rowId);
+        }
+      } else {
+        return;
+      }
+    } else {
+      return;
     }
   }
 
-  if (lookupKeys.length === 0) {
-    console.log("No lookup keys found");
+  const affected_row_ids_key_list = affected_row_ids.join(",");
+
+  // -------------------------------------------------------------------
+  // (awu): Grab the stripe_customer_id for each of the issue_credit rows
+  // -------------------------------------------------------------------
+
+  const response = await history.querySqlMirror({
+    sqlQuery: `select
+    _row_id, stripe_customer_id
+  from "orders_credit_workflow"
+  where _row_id in (${affected_row_ids_key_list})`,
+  }).response;
+
+  const rows = unpackRows(response);
+
+  if (rows == null) {
     return;
   }
-  const keyList = `(${lookupKeys.join(",")})`;
-  console.log("keyList: ", keyList);
 
   // -------------------------------------------------------------------
   // (awu): Use Dataland SDK to read the Stripe Customer ID value,
   //        and pass into postStripeCredit function
   // -------------------------------------------------------------------
-  const order_response = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `select
-      _dataland_key, "Stripe Customer ID"
-    from "Orders Credit Workflow" 
-    where _dataland_key in ${keyList}`,
-  });
 
-  const order_rows = unpackRows(order_response);
-
-  if (order_rows == null) {
-    return;
-  }
-
-  const mutations: Mutation[] = [];
-  for (const order_row of order_rows) {
-    const stripe_customer_id = order_row["Stripe Customer ID"];
-    const key = order_row._dataland_key;
+  for (const row of rows) {
+    const stripe_customer_id = row.stripe_customer_id;
+    const row_id = row._row_id;
 
     if (!isString(stripe_customer_id)) {
       continue;
     }
 
-    if (!isNumber(key)) {
+    if (!isNumber(row_id)) {
       continue;
     }
 
@@ -112,18 +114,13 @@ const handler = async (transaction: Transaction) => {
     if (credit_response.id == null) {
       continue;
     } else {
-      const sentTimestamp = new Date().toISOString();
-      const update = schema.makeUpdateRows("Orders Credit Workflow", key, {
-        "Credit processed at": sentTimestamp,
-      });
-
-      if (update == null) {
-        continue;
-      }
-      mutations.push(update);
+      await new MutationsBuilder()
+        .updateRow("orders_credit_workflow", row_id, {
+          credit_processed_at: new Date().toISOString(),
+        })
+        .run(db);
     }
   }
-  await runMutations({ mutations });
 };
 
 registerTransactionHandler(handler);

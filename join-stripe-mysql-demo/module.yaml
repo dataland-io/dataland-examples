@@ -28,27 +28,23 @@ workers:
       transaction: {}
 
 tables:
-  - tableId: orders-refund-workflow
-    tableName: "Orders Credit Workflow"
+  - tableName: "orders_credit_workflow"
     autoMigrate: true
     columnDescriptors:
       # id
-      - columnId: "id"
-        columnName: "Order ID"
+      - columnName: "order_id"
         dataType: float64
         columnAnnotations:
           dataland.io/column-width: "120"
 
       # customer_id
-      - columnId: "customer-id"
-        columnName: "Customer ID"
+      - columnName: "customer_id"
         dataType: string
         columnAnnotations:
           dataland.io/column-width: "120"
 
       # delivery-status
-      - columnId: "delivery-status"
-        columnName: "Delivery Status"
+      - columnName: "delivery_status"
         dataType: string
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -75,66 +71,56 @@ tables:
             }
 
       # order_placed_at
-      - columnId: "order-placed-at"
-        columnName: "Order Placed At"
+      - columnName: "order_placed_at"
         dataType: string
         columnAnnotations:
           dataland.io/column-width: "180"
 
       # delivery_time
-      - columnId: "delivery-time"
-        columnName: "Delivery Time (mins)"
+      - columnName: "delivery_time"
         dataType: float64
         columnAnnotations:
           dataland.io/column-width: "120"
 
       # rating
-      - columnId: rating
-        columnName: "User Rating"
+      - columnName: "user_rating"
         dataType: float64
         columnAnnotations:
           dataland.io/column-width: "120"
 
       # user_rating_comment
-      - columnId: "user-rating-comment"
-        columnName: "User Rating Comment"
+      - columnName: "user_rating_comment"
         dataType: string
         columnAnnotations:
           dataland.io/column-width: "180"
 
       # order_value
-      - columnId: "order-value"
-        columnName: "Order Value"
+      - columnName: "order_value"
         dataType: float64
         columnAnnotations:
           dataland.io/column-width: "120"
 
-      - columnId: phone
-        columnName: "Phone"
+      - columnName: phone
         dataType: string
         columnAnnotations:
           dataland.io/column-width: "150"
 
-      - columnId: email
-        columnName: "Email"
+      - columnName: email
         dataType: string
         columnAnnotations:
           dataland.io/column-width: "150"
 
-      - columnId: name
-        columnName: "Name"
+      - columnName: name
         dataType: string
         columnAnnotations:
           dataland.io/column-width: "150"
 
-      - columnId: total-order-value
-        columnName: "Lifetime Order Value"
+      - columnName: lifetime_order_value
         dataType: float64
         columnAnnotations:
           dataland.io/column-width: "150"
 
-      - columnId: "stripe-url"
-        columnName: "Stripe URL"
+      - columnName: stripe_url
         dataType: string
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -142,12 +128,10 @@ tables:
               "type": "url"
             }
 
-      - columnId: "stripe-customer-id"
-        columnName: "Stripe Customer ID"
+      - columnName: "stripe_customer_id"
         dataType: string
 
-      - columnId: "issue-credit"
-        columnName: "Issue credit"
+      - columnName: "issue_credit"
         dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -157,12 +141,10 @@ tables:
               "theme": "blue"
             }
 
-      - columnId: "credit-processed-at"
-        columnName: "Credit processed at"
+      - columnName: "credit_processed_at"
         dataType: string
 
-      - columnId: "send-email"
-        columnName: "Send Email"
+      - columnName: "send_email"
         dataType: int32
         columnAnnotations:
           dataland.io/column-display-config: |
@@ -172,6 +154,5 @@ tables:
               "theme": "blue"
             }
 
-      - columnId: "email-sent-at"
-        columnName: "Email sent at"
+      - columnName: "email_sent_at"
         dataType: string

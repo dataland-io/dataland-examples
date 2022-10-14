@@ -1,64 +1,71 @@
 import {
-  querySqlMirror,
   registerCronHandler,
-  syncTables,
-  SyncTable,
-  unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+  getDbClient,
+  getHistoryClient,
+  TableSyncRequest,
+} from "@dataland-io/dataland-sdk";
 
 const handler = async () => {
   // Construct the new join query
-  const joined_query = await querySqlMirror({
+  const db = await getDbClient();
+  const history = await getHistoryClient();
+
+  const test_query = await history.querySqlMirror({
+    sqlQuery: `select * from "mysql_orders" limit 1`,
+  }).response;
+
+  const last_logical_timestamp = test_query.logicalTimestamp;
+
+  const joined_query = await history.querySqlSnapshot({
+    logicalTimestamp: last_logical_timestamp,
     sqlQuery: `
-      WITH total_order_value_by_customer AS (
-          SELECT
-            mso.customer_id,
-            SUM(mso."order_value") as "total_order_value"
-          FROM "MySQL Orders" mso
-          GROUP BY ("customer_id")
-        )
+    WITH total_order_value_by_customer AS (
         SELECT
-          mso.order_id AS "Order ID",
-          mso.customer_id AS "Customer ID",
-          mso.delivery_status AS "Delivery Status",
-          mso.order_placed_at AS "Order Placed At",
-          mso.delivery_time AS "Delivery Time (mins)",
-          mso.rating AS "User Rating",
-          mso.user_rating_comment AS "User Rating Comment",
-          mso.order_value AS "Order Value",
-          msu.phone AS "Phone",
-          msu.email AS "Email",
-          msu.name AS "Name",
-          tovbc.total_order_value AS "Lifetime Order Value",
-          msu.stripe_customer_id AS "Stripe Customer ID",
-          CONCAT('https://dashboard.stripe.com/test/customers/',msu.stripe_customer_id) as "Stripe URL"
-        FROM
-          "MySQL Orders" mso
-        LEFT JOIN
-          "MySQL Users" msu ON mso.customer_id = msu.id
-        LEFT JOIN
-            "total_order_value_by_customer" tovbc ON tovbc.customer_id = msu.id;
-    `,
-  });
+          mso.customer_id,
+          SUM(mso."order_value") as "total_order_value"
+        FROM "mysql_orders" mso
+        GROUP BY ("customer_id")
+      )
+      SELECT
+        mso.order_id AS "order_id",
+        mso.customer_id AS "customer_id",
+        mso.delivery_status AS "delivery_status",
+        mso.order_placed_at AS "order_placed_at",
+        mso.delivery_time AS "delivery_time_mins",
+        mso.rating AS "user_rating",
+        mso.user_rating_comment AS "user_rating_comment",
+        mso.order_value AS "order_value",
+        msu.phone AS "phone",
+        msu.email AS "email",
+        msu.name AS "name",
+        tovbc.total_order_value AS "lifetime_order_value",
+        msu.stripe_customer_id AS "stripe_customer_id",
+        CONCAT('https://dashboard.stripe.com/test/customers/',msu.stripe_customer_id) as "stripe_url"
+      FROM
+        "mysql_orders" mso
+      LEFT JOIN
+        "mysql_users" msu ON mso.customer_id = msu.id
+      LEFT JOIN
+          "total_order_value_by_customer" tovbc ON tovbc.customer_id = msu.id;
+  `,
+  }).response;
 
   if (joined_query == null) {
     return;
   }
 
-  const syncTable: SyncTable = {
-    tableName: "Orders Credit Workflow",
+  const tableSyncRequest: TableSyncRequest = {
+    tableName: "orders_credit_workflow",
     arrowRecordBatches: joined_query.arrowRecordBatches,
-    identityColumnNames: ["Order ID"],
-    keepExtraColumns: true,
+    primaryKeyColumnNames: ["order_id"],
+    dropExtraColumns: false,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
   };
-  try {
-    await syncTables({
-      syncTables: [syncTable],
-    });
-    console.log("Sync complete");
-  } catch (e) {
-    console.warn(`syncTables failed`, e);
-  }
+
+  await db.tableSync(tableSyncRequest);
 };
 
 registerCronHandler(handler);
