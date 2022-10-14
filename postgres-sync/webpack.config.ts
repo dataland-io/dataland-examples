@@ -5,7 +5,7 @@ const config: Configuration = {
   mode: "production",
   target: "web",
   entry: {
-    postgresSync: "./src/postgresSync.ts",
+    "postgres-sync": "./src/postgres-sync.ts",
   },
   module: {
     rules: [
@@ -31,6 +31,10 @@ const config: Configuration = {
     // for pretty stacktraces
     minimize: false,
   },
+  experiments: {
+    futureDefaults: true,
+  },
 };
 
+// eslint-disable-next-line import/no-default-export
 export default config;
