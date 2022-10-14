@@ -4,7 +4,7 @@ buildCommand: npm run build
 
 info:
   title: MySQL
-  description: Sync a MySQL database into Dataland
+  description: Two-way sync a MySQL database into Dataland
   author: Dataland Devs <devs@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
   readmePath: README.md

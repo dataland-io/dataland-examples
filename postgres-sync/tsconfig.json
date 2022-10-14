@@ -23,5 +23,5 @@
     }
   },
 
-  "include": ["src", "webpack.config.ts"]
+  "include": ["src/**/*", "webpack.config.ts"]
 }

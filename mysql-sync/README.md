@@ -1,10 +1,10 @@
 # Overview
 
-Use Dataland as an admin GUI into your MySQL data. This module discovers and replicates all of your data from your MySQL into Dataland on a recurring 15 minute cadence.
+Use Dataland as an admin GUI into your MySQL data. This module discovers and replicates all of your data from your MySQL into Dataland on a recurring every 30 seconds cadence.
 
 Any changes done in the Dataland UI will execute a transaction that writes back to your MySQL. Dataland always treats your MySQL instance as the source of truth. Any invalid transactions attempted from Dataland will be rejected by your source MySQL.
 
-Data in the Dataland UI will be re-updated every 15 minutes by default. This cadence can be configurable.
+Data in the Dataland UI will be re-updated every 30 seconds by default. This cadence can be configurable.
 
 ## Parameter setup
 
