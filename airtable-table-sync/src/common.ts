@@ -50,7 +50,6 @@ export const fetchRetry = async (
     if (tries !== 0) {
       await wait(Math.pow(2, tries + 1) * 1000);
     }
-
     try {
       const response = await fetch();
       if (response.ok) {

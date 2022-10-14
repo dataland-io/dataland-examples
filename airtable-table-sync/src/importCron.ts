@@ -15,11 +15,10 @@ import {
   RECORD_ID,
 } from "./common";
 
-const airtableToDatalandValue = (value: AirtableImportedValue): Scalar => {
+const airtableValueToDatalandValue = (value: AirtableImportedValue): Scalar => {
   if (value == null) {
     return null;
   }
-
   if (
     typeof value === "string" ||
     typeof value === "number" ||
@@ -27,7 +26,6 @@ const airtableToDatalandValue = (value: AirtableImportedValue): Scalar => {
   ) {
     return value;
   }
-
   // NOTE(gab):
   // The reason these fields are parsed as strings is that when sending an update to Airtable,
   // Airtable expects lists to be in this format: "x,y,z" or '"x","y","z"', and not in its
@@ -51,7 +49,6 @@ const airtableToDatalandValue = (value: AirtableImportedValue): Scalar => {
     }
     return JSON.stringify(value);
   }
-
   if (typeof value === "object") {
     return JSON.stringify(value);
   }
@@ -60,7 +57,7 @@ const airtableToDatalandValue = (value: AirtableImportedValue): Scalar => {
   return null;
 };
 
-const getAirtableRecord = async (): Promise<AirtableImportedRecords> => {
+const getAirtableRecords = async (): Promise<AirtableImportedRecords> => {
   const apiKey = getEnv("AIRTABLE_API_KEY");
   const baseId = getEnv("AIRTABLE_BASE_ID");
   const tableName = getEnv("AIRTABLE_TABLE_NAME");
@@ -100,7 +97,6 @@ const getAirtableRecord = async (): Promise<AirtableImportedRecords> => {
     records.push(...importedRecords);
     offset = json.offset;
   }
-  console.log(records, "records");
   return records;
 };
 
@@ -110,7 +106,7 @@ const readRowsFromAirtable = async (): Promise<{
   rows: Record<string, Scalar>[];
   fieldNameMapping: Record<ColumnName, FieldName>;
 }> => {
-  const records = await getAirtableRecord();
+  const records = await getAirtableRecords();
 
   const columnNameMapping: Record<FieldName, ColumnName> = {};
   const fieldNameMapping: Record<ColumnName, FieldName> = {};
@@ -162,7 +158,7 @@ const readRowsFromAirtable = async (): Promise<{
     for (const fieldName in record.fields) {
       const columnName = columnNameMapping[fieldName]!;
       const airtableValue = record.fields[fieldName]!;
-      const parsedColumnValue = airtableToDatalandValue(airtableValue);
+      const parsedColumnValue = airtableValueToDatalandValue(airtableValue);
       row[columnName] = parsedColumnValue;
     }
     rows.push(row);
@@ -199,6 +195,7 @@ const cronHandler = async () => {
       },
     };
   }
+
   const tableSyncRequest: TableSyncRequest = {
     tableName: getDatalandTableName(),
     arrowRecordBatches: [batch],

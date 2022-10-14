@@ -22,6 +22,7 @@ import {
   getHistoryClient,
 } from "@dataland-io/dataland-sdk";
 
+// NOTE(gab): maximum allowed by airtable
 const AIRTABLE_MAX_UPDATES = 10;
 const chunkAirtablePayload = <T>(payload: T[]) => {
   const chunks: T[][] = [];
@@ -42,6 +43,7 @@ const airtableUpdateRows = async (updateRecords: UpdateRecords) => {
     "Content-Type": "application/json",
   };
 
+  const successfullyUpdated: string[] = [];
   const chunks = chunkAirtablePayload(updateRecords);
   for (const chunk of chunks) {
     const body = JSON.stringify({ records: chunk });
@@ -53,18 +55,26 @@ const airtableUpdateRows = async (updateRecords: UpdateRecords) => {
       })
     );
     if (response === "error") {
-      throw new Error(
-        `Airtable update records request failed: ${JSON.stringify({
+      console.error(
+        "Writeback - Airtable update records request failed. Payload:",
+        {
           url,
           body,
           recordIds: updateRecords.map((record) => record.id),
-        })}`
+        }
       );
+      continue;
     }
+    updateRecords.forEach((record) => successfullyUpdated.push(record.id));
   }
-  console.log("Writeback - Successfully updated Airtable records:", {
-    recordIds: updateRecords.map((record) => record.id),
-  });
+  if (successfullyUpdated.length !== 0) {
+    console.log(
+      "Writeback - Successfully updated the following Airtable records:",
+      {
+        recordIds: successfullyUpdated,
+      }
+    );
+  }
 };
 
 const airtableCreateRows = async (
@@ -91,24 +101,26 @@ const airtableCreateRows = async (
       })
     );
     if (response === "error") {
-      throw new Error(
-        `Airtable create records request failed: ${JSON.stringify({
+      console.error(
+        "Writeback - Airtable create records request failed. Payload:",
+        {
           url,
           body,
-          createRecords,
-        })}`
+        }
       );
+      continue;
     }
 
     const json = await response.json();
     const records: AirtableImportedRecords = json.records;
-    const ids = records.map((record) => record.id);
-    createdRecordIds.push(...ids);
+    records.forEach((record) => createdRecordIds.push(record.id));
   }
-  console.log(
-    "Writeback - Successfully created Airtable records:",
-    createdRecordIds
-  );
+  if (createdRecordIds.length !== 0) {
+    console.log(
+      "Writeback - Successfully created the following Airtable records:",
+      createdRecordIds
+    );
+  }
   return createdRecordIds;
 };
 
@@ -122,6 +134,7 @@ const airtableDestroyRows = async (deleteRecordIds: DeleteRecords) => {
     Authorization: `Bearer ${apiKey}`,
   };
 
+  const successfullyRemoved: string[] = [];
   const chunks = chunkAirtablePayload(deleteRecordIds);
   for (const chunk of chunks) {
     const urlEncodedParams = chunk
@@ -135,18 +148,23 @@ const airtableDestroyRows = async (deleteRecordIds: DeleteRecords) => {
       })
     );
     if (response === "error") {
-      throw new Error(
-        `Airtable delete records request failed: ${JSON.stringify({
+      console.error(
+        "Writeback - Airtable delete records request failed. Payload:",
+        {
           url: uriUrl,
-          recordIds: deleteRecordIds,
-        })}`
+          recordIds: chunk,
+        }
       );
+      continue;
     }
+    successfullyRemoved.push(...chunk);
   }
-  console.log(
-    "Writeback - Successfully deleted Airtable records:",
-    deleteRecordIds
-  );
+  if (successfullyRemoved.length !== 0) {
+    console.log(
+      "Writeback - Successfully deleted the following Airtable records:",
+      successfullyRemoved
+    );
+  }
 };
 
 const insertRowsWriteback = async (
@@ -163,6 +181,7 @@ const insertRowsWriteback = async (
       console.error("Writeback - List value is empty");
       continue;
     }
+
     const values = listValues.values;
     for (let j = 0; j < values.length; j++) {
       const scalar = valueToScalar(values[j]!);
@@ -174,12 +193,10 @@ const insertRowsWriteback = async (
         });
         continue;
       }
-
       if (scalar != null) {
         createRecord.fields[fieldName] = scalar;
       }
     }
-
     createRecords.push(createRecord);
   }
 
@@ -189,7 +206,7 @@ const insertRowsWriteback = async (
   const recordIds = await airtableCreateRows(createRecords);
   if (recordIds.length !== rows.length) {
     console.error(
-      "Writeback - Unexpected erreor: Dataland rows do not have the same length as the created Airtable rows. State will be reconciled in next Airtable Sync",
+      "Writeback - Inserted Dataland rows do not have the same length as the created Airtable rows. State will be reconciled in next Airtable Sync. This will happen if any of the inserted rows failed to create an Airtable row, otherwise it is an unexpected error.",
       {
         datalandRowsLength: rows.length,
         airtableRowsLength: recordIds.length,
@@ -226,7 +243,6 @@ const updateRowsWriteback = async (
       console.error("Writeback - List value is empty");
       continue;
     }
-
     const recordId = recordIdMap[rowId];
     if (recordId == null) {
       console.error(
@@ -249,7 +265,6 @@ const updateRowsWriteback = async (
         );
         continue;
       }
-
       // NOTE(gab): Nulls are used to clear ANY field value from Airtable.
       // The reason it's not in their type system is probably that they "expect"
       // the empty type for that field: "false", "", [] etc and not null. But since
@@ -306,12 +321,11 @@ const transactionHandler = async (transaction: Transaction) => {
     return;
   }
 
-  const DATALAND_TABLE_NAME = getDatalandTableName();
-
+  const datalandTableName = getDatalandTableName();
   const history = getHistoryClient();
   const response = await history.querySqlSnapshot({
     logicalTimestamp: transaction.logicalTimestamp - 1,
-    sqlQuery: `select "_row_id", "${RECORD_ID}" from "${DATALAND_TABLE_NAME}"`,
+    sqlQuery: `select "_row_id", "${RECORD_ID}" from "${datalandTableName}"`,
   }).response;
   const rows = unpackRows(response);
 
@@ -319,20 +333,20 @@ const transactionHandler = async (transaction: Transaction) => {
     logicalTimestamp: transaction.logicalTimestamp - 1,
   }).response;
   const tableDescriptor = tableDescriptors.find(
-    (descriptor) => descriptor.tableName === DATALAND_TABLE_NAME
+    (descriptor) => descriptor.tableName === datalandTableName
   );
   if (tableDescriptor == null) {
     console.error("Writeback - Could not find table descriptor by table name", {
-      tableName: DATALAND_TABLE_NAME,
+      tableName: datalandTableName,
     });
     return;
   }
 
   const recordIdMap: Record<number, string> = {};
   for (const row of rows) {
-    const key = row["_row_id"] as number;
+    const rowId = row["_row_id"] as number;
     const recordId = row[RECORD_ID] as string;
-    recordIdMap[key] = recordId;
+    recordIdMap[rowId] = recordId;
   }
 
   type ColumnName = string;
