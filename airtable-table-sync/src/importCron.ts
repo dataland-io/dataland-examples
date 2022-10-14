@@ -6,17 +6,15 @@ import {
   getDbClient,
   Scalar,
 } from "@dataland-io/dataland-sdk";
-import { fetchRetry, RECORD_ID } from "./common";
+import {
+  AirtableImportedRecords,
+  AirtableImportedValue,
+  AIRTABLE_FIELD_NAME,
+  fetchRetry,
+  RECORD_ID,
+} from "./common";
 
-type AirtableValue =
-  | undefined
-  | string
-  | number
-  | boolean
-  | Record<any, any>
-  | any[];
-
-const parseAirtableValue = (value: AirtableValue): Scalar => {
+const parseAirtableValue = (value: AirtableImportedValue): Scalar => {
   if (value == null) {
     return null;
   }
@@ -61,7 +59,7 @@ const parseAirtableValue = (value: AirtableValue): Scalar => {
   return null;
 };
 
-const getAirtableTableRecords = async (): Promise<Record<string, any>[]> => {
+const getAirtableRecord = async (): Promise<AirtableImportedRecords> => {
   const apiKey = getEnv("AIRTABLE_API_KEY");
   const baseId = getEnv("AIRTABLE_BASE_ID");
   const tableName = getEnv("AIRTABLE_TABLE_NAME");
@@ -72,10 +70,9 @@ const getAirtableTableRecords = async (): Promise<Record<string, any>[]> => {
   if (AIRTABLE_FIELDS_LIST !== "ALL") {
     fields = AIRTABLE_FIELDS_LIST.split(",").map((field) => field.trim());
   }
-
   const fieldParameters = fields.map((field) => `fields[]=${field}`).join("&");
 
-  const records: Record<string, any>[] = [];
+  const records: AirtableImportedRecords = [];
   let offset = "";
   while (offset != null) {
     const url = encodeURI(
@@ -95,20 +92,22 @@ const getAirtableTableRecords = async (): Promise<Record<string, any>[]> => {
       throw new Error(`Airtable import failed: ${JSON.stringify({ url })}`);
     }
 
-    const res = await response.json();
-    records.push(...res.records);
-    offset = res.offset;
+    const json = await response.json();
+    const importedRecords: AirtableImportedRecords = json.records;
+    records.push(...importedRecords);
+    offset = json.offset;
   }
+  console.log(records, "records");
   return records;
 };
 
 type ColumnName = string;
 type FieldName = string;
-const readFromAirtable = async (): Promise<{
+const readRowsFromAirtable = async (): Promise<{
   rows: Record<string, Scalar>[];
   fieldNameMapping: Record<ColumnName, FieldName>;
 }> => {
-  const records = await getAirtableTableRecords();
+  const records = await getAirtableRecord();
 
   const rows: Record<string, Scalar>[] = [];
   const columnNameMapping: Record<FieldName, ColumnName> = {};
@@ -194,7 +193,7 @@ const cronHandler = async () => {
     return;
   }
 
-  const { rows, fieldNameMapping } = await readFromAirtable();
+  const { rows, fieldNameMapping } = await readRowsFromAirtable();
   const table = tableFromJSON(rows);
   const batch = tableToIPC(table);
 
@@ -206,7 +205,7 @@ const cronHandler = async () => {
     const fieldName = fieldNameMapping[columnName]!;
     columnAnnotations[columnName] = {
       columnAnnotations: {
-        "dataland.io/airtable-field-name": fieldName,
+        [AIRTABLE_FIELD_NAME]: fieldName,
       },
     };
   }
@@ -225,4 +224,5 @@ const cronHandler = async () => {
   console.log(`Import - Airtable import complete. Row count: ${rows.length}`);
 };
 
+console.log("register");
 registerCronHandler(cronHandler);

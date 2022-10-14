@@ -1,6 +1,31 @@
 import { wait } from "@dataland-io/dataland-sdk";
 
+export type AirtableImportedValue =
+  | undefined
+  | string
+  | number
+  | boolean
+  | Record<any, any>
+  | any[];
+export interface AirtableImportedRecord {
+  id: string;
+  createdTime: string;
+  fields: Record<string, AirtableImportedValue>;
+}
+export type AirtableImportedRecords = AirtableImportedRecord[];
+
+// NOTE(gab): null: clear any cell, undefined: do nothing
+export type AirtableUpdateValue = string | number | boolean | null | undefined;
+export type UpdateRecord = {
+  id: string;
+  fields: Record<string, AirtableUpdateValue>;
+};
+export type UpdateRecords = UpdateRecord[];
+export type CreateRecord = { fields: Record<string, AirtableUpdateValue> };
+export type CreateRecords = CreateRecord[];
+
 export const RECORD_ID = "record_id";
+export const AIRTABLE_FIELD_NAME = "dataland.io/airtable-field-name";
 
 export const fetchRetry = async (
   fetch: () => Promise<Response>,

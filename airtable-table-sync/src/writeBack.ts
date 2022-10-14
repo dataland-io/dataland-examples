@@ -1,4 +1,13 @@
-import { fetchRetry, RECORD_ID } from "./common";
+import {
+  AirtableImportedRecords,
+  AIRTABLE_FIELD_NAME,
+  CreateRecord,
+  CreateRecords,
+  fetchRetry,
+  RECORD_ID,
+  UpdateRecord,
+  UpdateRecords,
+} from "./common";
 import {
   Transaction,
   unpackRows,
@@ -11,11 +20,6 @@ import {
   getHistoryClient,
 } from "@dataland-io/dataland-sdk";
 
-import {
-  FieldSet as AirtableFieldSet,
-  RecordData as AirtableRecordData,
-} from "airtable";
-
 const AIRTABLE_MAX_UPDATES = 10;
 const chunkAirtablePayload = <T>(payload: T[]) => {
   const chunks: T[][] = [];
@@ -26,9 +30,7 @@ const chunkAirtablePayload = <T>(payload: T[]) => {
   return chunks;
 };
 
-const airtableUpdateRows2 = async (
-  updateRecords: AirtableRecordData<Partial<AirtableFieldSet>>[]
-) => {
+const airtableUpdateRows = async (updateRecords: UpdateRecords) => {
   const baseId = getEnv("AIRTABLE_BASE_ID");
   const tableName = getEnv("AIRTABLE_TABLE_NAME");
   const apiKey = getEnv("AIRTABLE_API_KEY");
@@ -64,7 +66,7 @@ const airtableUpdateRows2 = async (
 };
 
 const airtableCreateRows = async (
-  createRecords: { fields: AirtableFieldSet }[]
+  createRecords: CreateRecords
 ): Promise<string[]> => {
   const baseId = getEnv("AIRTABLE_BASE_ID");
   const tableName = getEnv("AIRTABLE_TABLE_NAME");
@@ -94,8 +96,11 @@ const airtableCreateRows = async (
         })}`
       );
     }
-    const jsonBody = await response.json();
-    const ids = jsonBody.records.map((record: any) => record.id);
+
+    const json = await response.json();
+    const records: AirtableImportedRecords = json.records;
+    console.log(records, "HERE");
+    const ids = records.map((record) => record.id);
     createdRecordIds.push(...ids);
   }
   console.log(
@@ -146,11 +151,11 @@ const insertRowsWriteback = async (
   fieldNameMap: Record<string, string>,
   recordIdMap: Record<number, string>
 ) => {
-  const createRecords: { fields: AirtableFieldSet }[] = [];
+  const createRecords: CreateRecords = [];
   const { rows, columnNames } = mutation.insertRows;
 
   for (let i = 0; i < rows.length; i++) {
-    const createRecord: AirtableFieldSet = {};
+    const createRecord: CreateRecord = { fields: {} };
     const { values: listValues } = rows[i]!;
     if (listValues == null) {
       continue;
@@ -167,10 +172,12 @@ const insertRowsWriteback = async (
         continue;
       }
 
-      createRecord[fieldName] = scalar ?? undefined; // NOTE(gab): accepts undefined, not null
+      if (scalar != null) {
+        createRecord.fields[fieldName] = scalar;
+      }
     }
 
-    createRecords.push({ fields: createRecord });
+    createRecords.push(createRecord);
   }
 
   if (createRecords.length === 0) {
@@ -211,15 +218,24 @@ const updateRowsWriteback = async (
   fieldNameMap: Record<string, string>,
   recordIdMap: Record<number, string>
 ) => {
-  const updateRecords: AirtableRecordData<Partial<AirtableFieldSet>>[] = [];
+  const updateRecords: UpdateRecords = [];
   const { rows, columnNames } = mutation.updateRows;
   for (let i = 0; i < rows.length; i++) {
-    const updateRecord: Partial<AirtableFieldSet> = {};
     const { rowId, values: listValues } = rows[i]!;
     if (listValues == null) {
+      console.error("List value is empty");
       continue;
     }
 
+    const recordId = recordIdMap[rowId];
+    if (recordId == null) {
+      console.error("Writeback - Could not find record id by dataland rowId", {
+        rowId,
+      });
+      continue;
+    }
+
+    const updateRecord: UpdateRecord = { id: recordId, fields: {} };
     const values = listValues.values;
     for (let j = 0; j < values.length; j++) {
       const scalar = valueToScalar(values[j]!);
@@ -233,27 +249,20 @@ const updateRowsWriteback = async (
       }
 
       // @ts-ignore - NOTE(gab): Nulls are used to clear ANY field value from Airtable.
-      // The reason it's not in their type system is probably that they"expect"
+      // The reason it's not in their type system is probably that they "expect"
       // the empty type for that field: "false", "", [] etc and not null. But since
       // no schema is provided from their side, the correct "empty type" cannot be known,
       // and null is used.
-      updateRecord[fieldName] = scalar ?? null;
+      updateRecord.fields[fieldName] = scalar ?? null;
     }
 
-    const recordId = recordIdMap[rowId];
-    if (recordId == null) {
-      console.error("Writeback - Could not find record id by dataland rowId", {
-        rowId,
-      });
-      continue;
-    }
-    updateRecords.push({ id: recordId, fields: updateRecord });
+    updateRecords.push(updateRecord);
   }
 
   if (updateRecords.length === 0) {
     return;
   }
-  await airtableUpdateRows2(updateRecords);
+  await airtableUpdateRows(updateRecords);
 };
 
 const deleteRowsWriteback = async (
@@ -280,6 +289,7 @@ const deleteRowsWriteback = async (
 };
 
 const transactionHandler = async (transaction: Transaction) => {
+  console.log("transactions");
   const ALLOW_WRITEBACK_BOOLEAN = getEnv("AIRTABLE_ALLOW_WRITEBACK_BOOLEAN");
   if (
     ALLOW_WRITEBACK_BOOLEAN !== "true" &&
@@ -329,8 +339,7 @@ const transactionHandler = async (transaction: Transaction) => {
     if (columnDescriptor.columnName === "record_id") {
       continue;
     }
-    const fieldName =
-      columnDescriptor.columnAnnotations["dataland.io/airtable-field-name"];
+    const fieldName = columnDescriptor.columnAnnotations[AIRTABLE_FIELD_NAME];
     // NOTE(gab): this makes users unable to add arbitrary columns to the table,
     // as they will not have a field name annotation.
     if (fieldName == null) {
