@@ -2,6 +2,14 @@ moduleId: hubspot-example
 
 buildCommand: npm run build
 
+info:
+  title: Hubspot
+  description: Sync with all companies, deals, and contacts
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: hubspot-icon.svg
+
 parameters:
   - hubspot-api-key
 
@@ -87,6 +95,14 @@ tables:
                 }
               ]
             }
+      - columnName: deal_url
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
+          dataland.io/column-width: "120"
       - columnName: deal_owner
         dataType: string
         columnAnnotations:

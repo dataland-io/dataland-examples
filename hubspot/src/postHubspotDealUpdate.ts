@@ -27,6 +27,7 @@ const postHubspotUpdate = async (
   };
 
   const existing_deal = await fetch(url, options);
+
   const existing_deal_json = await existing_deal.json();
   if (existing_deal_json.properties.dealstage === "closedwon") {
     console.log("Update aborted. Deal already closed");

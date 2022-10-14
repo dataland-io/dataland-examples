@@ -117,9 +117,10 @@ const fetchHubspotDeals = async (hubspot_api_key: string) => {
 
       const result_processed = {
         id: result.id,
-        amount: result.properties.amount,
+        amount: Number(result.properties.amount),
         deal_name: result.properties.dealname,
         deal_stage: result.properties.dealstage,
+        deal_url: "https://app.hubspot.com/contacts/22355263/deal/" + result.id,
         deal_owner: hubspot_owner,
         close_date: result.properties.closedate,
         pipeline: result.properties.pipeline,
@@ -139,7 +140,6 @@ const fetchHubspotDeals = async (hubspot_api_key: string) => {
 
 const handler = async () => {
   const db = await getDbClient();
-  const history = await getHistoryClient();
 
   const hubspot_api_key = getEnv("HUBSPOT_API_KEY");
 
