@@ -1,0 +1,34 @@
+moduleId: hubspot-example
+
+buildCommand: npm run build
+
+parameters:
+  - hubspot-api-key
+
+workers:
+  - workerId: hubspot-contacts-worker
+    scriptPath: dist/fetchHubspotContacts.bundle.js
+    env:
+      HUBSPOT_API_KEY: hubspot-api-key
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
+      transaction: {}
+
+  - workerId: hubspot-companies-worker
+    scriptPath: dist/fetchHubspotCompanies.bundle.js
+    env:
+      HUBSPOT_API_KEY: hubspot-api-key
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
+      transaction: {}
+
+  - workerId: hubspot-deals-worker
+    scriptPath: dist/fetchHubspotDeals.bundle.js
+    env:
+      HUBSPOT_API_KEY: hubspot-api-key
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
+      transaction: {}

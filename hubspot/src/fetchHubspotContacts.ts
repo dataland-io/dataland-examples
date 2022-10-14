@@ -1,24 +1,14 @@
 import {
-  getCatalogSnapshot,
   getEnv,
-  Mutation,
-  querySqlSnapshot,
-  KeyGenerator,
-  OrdinalGenerator,
-  registerTransactionHandler,
-  runMutations,
-  Schema,
-  Transaction,
-  unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+  registerCronHandler,
+  getDbClient,
+  getHistoryClient,
+  TableSyncRequest,
+} from "@dataland-io/dataland-sdk";
+
+import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-cjs";
 
 import { isString, isNumber } from "lodash-es";
-
-const hubspot_api_key = getEnv("HUBSPOT_ACCESS_TOKEN");
-
-if (hubspot_api_key == null) {
-  throw new Error("Missing environment variable - HUBSPOT_ACCESS_TOKEN");
-}
 
 interface HubspotContact {
   id: number;
@@ -35,7 +25,7 @@ interface HubspotContact {
   archived: boolean;
 }
 
-const fetchHubspotContacts = async () => {
+const fetchHubspotContacts = async (hubspot_api_key: string) => {
   var headers = new Headers();
   headers.append("Authorization", `Bearer ${hubspot_api_key}`);
 
@@ -44,6 +34,8 @@ const fetchHubspotContacts = async () => {
 
   let url = "https://api.hubapi.com/crm/v3/objects/contacts?limit=100";
   let has_next = true;
+
+  console.log("fetching Hubspot contacts...");
   do {
     const hubspot_response = await fetch(url, {
       method: "GET",
@@ -76,15 +68,15 @@ const fetchHubspotContacts = async () => {
         },
       }) => ({
         id,
-        createdAt,
-        updatedAt,
+        created_at: createdAt,
+        updated_at: updatedAt,
         archived,
-        createdate,
+        create_date: createdate,
         email,
-        firstname,
+        first_name: firstname,
         hs_object_id,
-        lastmodifieddate,
-        lastname,
+        last_modified_date: lastmodifieddate,
+        last_name: lastname,
       })
     );
 
@@ -96,142 +88,42 @@ const fetchHubspotContacts = async () => {
     }
   } while (has_next);
 
+  console.log("Finished fetching ", total_counter, " Hubspot contacts");
   return full_results;
 };
 
-const handler = async (transaction: Transaction) => {
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
+const handler = async () => {
+  const db = await getDbClient();
+  const history = await getHistoryClient();
 
-  const schema = new Schema(tableDescriptors);
+  const hubspot_api_key = getEnv("HUBSPOT_API_KEY");
 
-  const affectedRows = schema.getAffectedRows(
-    "hubspot-contacts-trigger",
-    "Trigger",
-    transaction
-  );
-
-  const lookupKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number") {
-      lookupKeys.push(key);
-      console.log("key noticed: ", key);
-    }
+  if (hubspot_api_key == null) {
+    throw new Error("Missing environment variable - HUBSPOT_API_KEY");
   }
 
-  if (lookupKeys.length === 0) {
-    console.log("No lookup keys found");
-    return;
-  }
-  const keyList = `(${lookupKeys.join(",")})`;
-  console.log("keyList: ", keyList);
+  // fetch Hubspot companies from Hubspot
+  const records = await fetchHubspotContacts(hubspot_api_key);
 
-  const keyGenerator = new KeyGenerator();
-  const ordinalGenerator = new OrdinalGenerator();
-
-  // fetch Hubspot contacts from Hubspot
-  const hubspotContacts = await fetchHubspotContacts();
-
-  if (hubspotContacts == null) {
+  if (records == null) {
     return;
   }
 
-  // fetch existing Hubspot contacts
-  const existing_hubspot_data = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `select
-      _dataland_key, id
-    from "hubspot-contacts"`,
-  });
+  const table = tableFromJSON(records);
+  const batch = tableToIPC(table);
 
-  const existing_hubspot_rows = unpackRows(existing_hubspot_data);
+  const tableSyncRequest: TableSyncRequest = {
+    tableName: "hubspot_contacts",
+    arrowRecordBatches: [batch],
+    primaryKeyColumnNames: ["id"],
+    dropExtraColumns: false,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
+  };
 
-  const existing_hubspot_ids = [];
-  const existing_hubspot_keys = [];
-
-  for (const existing_hubspot_row of existing_hubspot_rows) {
-    existing_hubspot_keys.push(existing_hubspot_row._dataland_key);
-    existing_hubspot_ids.push(Number(existing_hubspot_row.id));
-  }
-
-  let mutations_batch: Mutation[] = [];
-  let batch_counter = 0;
-  let batch_size = 100; // push 100 at a time
-  let total_counter = 0;
-
-  for (const hubspotContact of hubspotContacts) {
-    // Generate a new _dataland_key and _dataland_ordinal value
-    const id = await keyGenerator.nextKey();
-    const ordinal = await ordinalGenerator.nextOrdinal();
-
-    const hubspot_contact_id = Number(hubspotContact.id);
-
-    if (hubspot_contact_id == null) {
-      continue;
-    }
-
-    // check if the Hubspot contact already exists
-    if (existing_hubspot_ids.includes(hubspot_contact_id)) {
-      const position = existing_hubspot_ids.indexOf(hubspot_contact_id);
-      const existing_key = existing_hubspot_keys[position];
-
-      if (!isNumber(existing_key)) {
-        continue;
-      }
-
-      const update = schema.makeUpdateRows("hubspot-contacts", existing_key, {
-        id: hubspotContact.id,
-        email: hubspotContact.email,
-        firstname: hubspotContact.firstname,
-        lastname: hubspotContact.lastname,
-        createdate: hubspotContact.createdate,
-        lastmodifieddate: hubspotContact.lastmodifieddate,
-        createdAt: hubspotContact.createdAt,
-        updatedAt: hubspotContact.updatedAt,
-        archived: hubspotContact.archived,
-      });
-
-      if (update == null) {
-        continue;
-      }
-      mutations_batch.push(update);
-
-      batch_counter++;
-      total_counter++;
-    } else {
-      const insert = schema.makeInsertRows("hubspot-contacts", id, {
-        _dataland_ordinal: ordinal,
-        id: hubspotContact.id,
-        email: hubspotContact.email,
-        firstname: hubspotContact.firstname,
-        lastname: hubspotContact.lastname,
-        createdate: hubspotContact.createdate,
-        lastmodifieddate: hubspotContact.lastmodifieddate,
-        createdAt: hubspotContact.createdAt,
-        updatedAt: hubspotContact.updatedAt,
-        archived: hubspotContact.archived,
-      });
-
-      if (insert == null) {
-        continue;
-      }
-      mutations_batch.push(insert);
-
-      batch_counter++;
-      total_counter++;
-    }
-
-    if (batch_counter >= batch_size) {
-      await runMutations({ mutations: mutations_batch });
-      mutations_batch = [];
-      batch_counter = 0;
-    } else if (total_counter + batch_size > hubspotContacts.length) {
-      await runMutations({ mutations: mutations_batch });
-      mutations_batch = [];
-      batch_counter = 0;
-    }
-  }
+  await db.tableSync(tableSyncRequest);
 };
 
-registerTransactionHandler(handler);
+registerCronHandler(handler);

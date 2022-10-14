@@ -1,24 +1,14 @@
 import {
-  getCatalogSnapshot,
   getEnv,
-  Mutation,
-  querySqlSnapshot,
-  KeyGenerator,
-  OrdinalGenerator,
-  registerTransactionHandler,
-  runMutations,
-  Schema,
-  Transaction,
-  unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+  registerCronHandler,
+  getDbClient,
+  getHistoryClient,
+  TableSyncRequest,
+} from "@dataland-io/dataland-sdk";
+
+import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-cjs";
 
 import { isString, isNumber } from "lodash-es";
-
-const hubspot_api_key = getEnv("HUBSPOT_ACCESS_TOKEN");
-
-if (hubspot_api_key == null) {
-  throw new Error("Missing environment variable - HUBSPOT_ACCESS_TOKEN");
-}
 
 interface HubspotCompany {
   id: number;
@@ -34,7 +24,7 @@ interface HubspotCompany {
   archived: boolean;
 }
 
-const fetchHubspotCompanies = async () => {
+const fetchHubspotCompanies = async (hubspot_api_key: string) => {
   var headers = new Headers();
   headers.append("Authorization", `Bearer ${hubspot_api_key}`);
 
@@ -43,6 +33,7 @@ const fetchHubspotCompanies = async () => {
 
   let url = "https://api.hubapi.com/crm/v3/objects/companies?limit=100";
   let has_next = true;
+  console.log("fetching hubspot companies...");
   do {
     const hubspot_response = await fetch(url, {
       method: "GET",
@@ -77,10 +68,10 @@ const fetchHubspotCompanies = async () => {
         domain,
         name,
         hs_object_id,
-        hs_lastmodifieddate,
-        createdate,
-        createdAt,
-        updatedAt,
+        hs_last_modified_date: hs_lastmodifieddate,
+        create_date: createdate,
+        created_at: createdAt,
+        updated_at: updatedAt,
         archived,
       })
     );
@@ -93,140 +84,43 @@ const fetchHubspotCompanies = async () => {
     }
   } while (has_next);
 
+  console.log("Finished fetching ", full_results.length, " Hubspot companies");
+
   return full_results;
 };
 
-const handler = async (transaction: Transaction) => {
-  const { tableDescriptors } = await getCatalogSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-  });
+const handler = async () => {
+  const db = await getDbClient();
+  const history = await getHistoryClient();
 
-  const schema = new Schema(tableDescriptors);
+  const hubspot_api_key = getEnv("HUBSPOT_API_KEY");
 
-  const affectedRows = schema.getAffectedRows(
-    "hubspot-companies-trigger",
-    "Trigger",
-    transaction
-  );
-
-  const lookupKeys: number[] = [];
-  for (const [key, value] of affectedRows) {
-    if (typeof value === "number") {
-      lookupKeys.push(key);
-      console.log("key noticed: ", key);
-    }
+  if (hubspot_api_key == null) {
+    throw new Error("Missing environment variable - HUBSPOT_API_KEY");
   }
-
-  if (lookupKeys.length === 0) {
-    console.log("No lookup keys found");
-    return;
-  }
-  const keyList = `(${lookupKeys.join(",")})`;
-  console.log("keyList: ", keyList);
-
-  const keyGenerator = new KeyGenerator();
-  const ordinalGenerator = new OrdinalGenerator();
 
   // fetch Hubspot companies from Hubspot
-  const hubspotCompanies = await fetchHubspotCompanies();
+  const records = await fetchHubspotCompanies(hubspot_api_key);
 
-  if (hubspotCompanies == null) {
+  if (records == null) {
     return;
   }
 
-  // fetch existing Hubspot companies
-  const existing_hubspot_data = await querySqlSnapshot({
-    logicalTimestamp: transaction.logicalTimestamp,
-    sqlQuery: `select
-      _dataland_key, id
-    from "hubspot-companies"`,
-  });
+  const table = tableFromJSON(records);
+  const batch = tableToIPC(table);
 
-  const existing_hubspot_rows = unpackRows(existing_hubspot_data);
+  const tableSyncRequest: TableSyncRequest = {
+    tableName: "hubspot_companies",
+    arrowRecordBatches: [batch],
+    primaryKeyColumnNames: ["id"],
+    dropExtraColumns: false,
+    deleteExtraRows: true,
+    transactionAnnotations: {},
+    tableAnnotations: {},
+    columnAnnotations: {},
+  };
 
-  const existing_hubspot_ids = [];
-  const existing_hubspot_keys = [];
-
-  for (const existing_hubspot_row of existing_hubspot_rows) {
-    existing_hubspot_keys.push(existing_hubspot_row._dataland_key);
-    existing_hubspot_ids.push(Number(existing_hubspot_row.id));
-  }
-
-  let mutations_batch: Mutation[] = [];
-  let batch_counter = 0;
-  let batch_size = 100; // push 100 at a time
-  let total_counter = 0;
-
-  for (const hubspotCompany of hubspotCompanies) {
-    // Generate a new _dataland_key and _dataland_ordinal value
-    const id = await keyGenerator.nextKey();
-    const ordinal = await ordinalGenerator.nextOrdinal();
-
-    const hubspot_company_id = Number(hubspotCompany.id);
-
-    if (hubspot_company_id == null) {
-      continue;
-    }
-
-    // check if the Hubspot company already exists
-    if (existing_hubspot_ids.includes(hubspot_company_id)) {
-      const position = existing_hubspot_ids.indexOf(hubspot_company_id);
-      const existing_key = existing_hubspot_keys[position];
-
-      if (!isNumber(existing_key)) {
-        continue;
-      }
-
-      const update = schema.makeUpdateRows("hubspot-companies", existing_key, {
-        id: hubspotCompany.id,
-        domain: hubspotCompany.domain,
-        name: hubspotCompany.name,
-        createdate: hubspotCompany.createdate,
-        hs_lastmodifieddate: hubspotCompany.hs_lastmodifieddate,
-        createdAt: hubspotCompany.createdAt,
-        updatedAt: hubspotCompany.updatedAt,
-        archived: hubspotCompany.archived,
-      });
-
-      if (update == null) {
-        continue;
-      }
-      mutations_batch.push(update);
-
-      batch_counter++;
-      total_counter++;
-    } else {
-      const insert = schema.makeInsertRows("hubspot-companies", id, {
-        _dataland_ordinal: ordinal,
-        id: hubspotCompany.id,
-        domain: hubspotCompany.domain,
-        name: hubspotCompany.name,
-        createdate: hubspotCompany.createdate,
-        hs_lastmodifieddate: hubspotCompany.hs_lastmodifieddate,
-        createdAt: hubspotCompany.createdAt,
-        updatedAt: hubspotCompany.updatedAt,
-        archived: hubspotCompany.archived,
-      });
-
-      if (insert == null) {
-        continue;
-      }
-      mutations_batch.push(insert);
-
-      batch_counter++;
-      total_counter++;
-    }
-
-    if (batch_counter >= batch_size) {
-      await runMutations({ mutations: mutations_batch });
-      mutations_batch = [];
-      batch_counter = 0;
-    } else if (total_counter + batch_size > hubspotCompanies.length) {
-      await runMutations({ mutations: mutations_batch });
-      mutations_batch = [];
-      batch_counter = 0;
-    }
-  }
+  await db.tableSync(tableSyncRequest);
 };
 
-registerTransactionHandler(handler);
+registerCronHandler(handler);
