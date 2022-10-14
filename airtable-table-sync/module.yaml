@@ -35,7 +35,8 @@ workers:
     triggers:
       transaction: {}
       cron:
-        cronExpression: "0 */5 * * * * *"
+        # cronExpression: "0 */5 * * * * *"
+        cronExpression: "*/30 * * * * * *"
     env:
       AIRTABLE_API_KEY: airtable-api-key
       AIRTABLE_BASE_ID: airtable-base-id
