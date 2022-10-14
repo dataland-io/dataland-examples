@@ -78,9 +78,11 @@ const getAirtableTableRecords = async (): Promise<Record<string, any>[]> => {
   const records: Record<string, any>[] = [];
   let offset = "";
   while (offset != null) {
-    const url = `https://api.airtable.com/v0/${baseId}/${tableName}?offset=${offset}&pageSize=100&view=${viewId}&${fieldParameters}`;
+    const url = encodeURI(
+      `https://api.airtable.com/v0/${baseId}/${tableName}?offset=${offset}&pageSize=100&view=${viewId}&${fieldParameters}`
+    );
     const response = await fetchRetry(() =>
-      fetch(encodeURI(url), {
+      fetch(url, {
         method: "GET",
         headers: {
           Accept: "application/json",
