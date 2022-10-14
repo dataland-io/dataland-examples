@@ -3,7 +3,9 @@ import {
   AIRTABLE_FIELD_NAME,
   CreateRecord,
   CreateRecords,
+  DeleteRecords,
   fetchRetry,
+  getDatalandTableName,
   RECORD_ID,
   UpdateRecord,
   UpdateRecords,
@@ -55,14 +57,14 @@ const airtableUpdateRows = async (updateRecords: UpdateRecords) => {
         `Airtable update records request failed: ${JSON.stringify({
           url,
           body,
+          recordIds: updateRecords.map((record) => record.id),
         })}`
       );
     }
   }
-  console.log(
-    "Writeback - Successfully updated Airtable records:",
-    updateRecords.map((record) => record.id)
-  );
+  console.log("Writeback - Successfully updated Airtable records:", {
+    recordIds: updateRecords.map((record) => record.id),
+  });
 };
 
 const airtableCreateRows = async (
@@ -93,13 +95,13 @@ const airtableCreateRows = async (
         `Airtable create records request failed: ${JSON.stringify({
           url,
           body,
+          createRecords,
         })}`
       );
     }
 
     const json = await response.json();
     const records: AirtableImportedRecords = json.records;
-    console.log(records, "HERE");
     const ids = records.map((record) => record.id);
     createdRecordIds.push(...ids);
   }
@@ -110,7 +112,7 @@ const airtableCreateRows = async (
   return createdRecordIds;
 };
 
-const airtableDestroyRows = async (deleteRecordIds: string[]) => {
+const airtableDestroyRows = async (deleteRecordIds: DeleteRecords) => {
   const baseId = getEnv("AIRTABLE_BASE_ID");
   const tableName = getEnv("AIRTABLE_TABLE_NAME");
   const apiKey = getEnv("AIRTABLE_API_KEY");
@@ -136,6 +138,7 @@ const airtableDestroyRows = async (deleteRecordIds: string[]) => {
       throw new Error(
         `Airtable delete records request failed: ${JSON.stringify({
           url: uriUrl,
+          recordIds: deleteRecordIds,
         })}`
       );
     }
@@ -151,13 +154,13 @@ const insertRowsWriteback = async (
   fieldNameMap: Record<string, string>,
   recordIdMap: Record<number, string>
 ) => {
-  const createRecords: CreateRecords = [];
   const { rows, columnNames } = mutation.insertRows;
-
+  const createRecords: CreateRecords = [];
   for (let i = 0; i < rows.length; i++) {
     const createRecord: CreateRecord = { fields: {} };
     const { values: listValues } = rows[i]!;
     if (listValues == null) {
+      console.error("Writeback - List value is empty");
       continue;
     }
     const values = listValues.values;
@@ -186,10 +189,10 @@ const insertRowsWriteback = async (
   const recordIds = await airtableCreateRows(createRecords);
   if (recordIds.length !== rows.length) {
     console.error(
-      "Writeback - Created rows of different lengths. State will be reconciled in next Airtable Sync",
+      "Writeback - Unexpected erreor: Dataland rows do not have the same length as the created Airtable rows. State will be reconciled in next Airtable Sync",
       {
-        datalandRowsLength: mutation.insertRows.columnNames.length,
-        airtableRecordsLength: recordIds.length,
+        datalandRowsLength: rows.length,
+        airtableRowsLength: recordIds.length,
       }
     );
     return;
@@ -198,17 +201,14 @@ const insertRowsWriteback = async (
   const mutations = new MutationsBuilder();
   for (let i = 0; i < recordIds.length; i++) {
     // NOTE(gab): Record ids are returned from Airtable in the same order
-    // as the records were sent, therefore we can safely assume the first index
-    // of recordIds corresponds to the first index of the rows.
+    // as the records were sent, therefore we can safely assume that a index
+    // of recordIds corresponds to the same index of the rows.
     const recordId = recordIds[i]!;
     const rowKey = rows[i]!.rowId;
     recordIdMap[rowKey] = recordId;
-
-    // TODO: move out
-    mutations.updateRow(getEnv("AIRTABLE_DATALAND_TABLE_NAME"), rowKey, {
+    mutations.updateRow(getDatalandTableName(), rowKey, {
       [RECORD_ID]: recordId,
     });
-    // mutations.push(update);
   }
   await mutations.run(getDbClient());
 };
@@ -218,20 +218,21 @@ const updateRowsWriteback = async (
   fieldNameMap: Record<string, string>,
   recordIdMap: Record<number, string>
 ) => {
-  const updateRecords: UpdateRecords = [];
   const { rows, columnNames } = mutation.updateRows;
+  const updateRecords: UpdateRecords = [];
   for (let i = 0; i < rows.length; i++) {
     const { rowId, values: listValues } = rows[i]!;
     if (listValues == null) {
-      console.error("List value is empty");
+      console.error("Writeback - List value is empty");
       continue;
     }
 
     const recordId = recordIdMap[rowId];
     if (recordId == null) {
-      console.error("Writeback - Could not find record id by dataland rowId", {
-        rowId,
-      });
+      console.error(
+        "Writeback - Could not find Airtable record id by Dataland rowId",
+        { rowId }
+      );
       continue;
     }
 
@@ -242,20 +243,20 @@ const updateRowsWriteback = async (
       const columnName = columnNames[j]!;
       const fieldName = fieldNameMap[columnName];
       if (fieldName == null) {
-        console.error("Writeback - Could not find column name by column uuid", {
-          columnName,
-        });
+        console.error(
+          "Writeback - Could not find Airtable field name by Dataland column name",
+          { columnName }
+        );
         continue;
       }
 
-      // @ts-ignore - NOTE(gab): Nulls are used to clear ANY field value from Airtable.
+      // NOTE(gab): Nulls are used to clear ANY field value from Airtable.
       // The reason it's not in their type system is probably that they "expect"
       // the empty type for that field: "false", "", [] etc and not null. But since
       // no schema is provided from their side, the correct "empty type" cannot be known,
       // and null is used.
       updateRecord.fields[fieldName] = scalar ?? null;
     }
-
     updateRecords.push(updateRecord);
   }
 
@@ -269,14 +270,15 @@ const deleteRowsWriteback = async (
   mutation: Extract<Mutation["kind"], { oneofKind: "deleteRows" }>,
   recordIdMap: Record<number, string>
 ) => {
-  const deleteRecordIds: string[] = [];
+  const deleteRecordIds: DeleteRecords = [];
   const rowIds = mutation.deleteRows.rowIds;
   for (const rowId of rowIds) {
     const recordId = recordIdMap[rowId];
     if (recordId == null) {
-      console.error("Writeback - Could not find record id by dataland key", {
-        rowId,
-      });
+      console.error(
+        "Writeback - Could not find Airtable record id by Dataland row id",
+        { rowId }
+      );
       continue;
     }
     deleteRecordIds.push(recordId);
@@ -300,12 +302,11 @@ const transactionHandler = async (transaction: Transaction) => {
     );
     return;
   }
-
   if (ALLOW_WRITEBACK_BOOLEAN !== "true") {
     return;
   }
 
-  const DATALAND_TABLE_NAME = getEnv("AIRTABLE_DATALAND_TABLE_NAME");
+  const DATALAND_TABLE_NAME = getDatalandTableName();
 
   const history = getHistoryClient();
   const response = await history.querySqlSnapshot({
@@ -334,9 +335,11 @@ const transactionHandler = async (transaction: Transaction) => {
     recordIdMap[key] = recordId;
   }
 
-  const fieldNameMap: Record<string, string> = {};
+  type ColumnName = string;
+  type FieldName = string;
+  const fieldNameMap: Record<ColumnName, FieldName> = {};
   for (const columnDescriptor of tableDescriptor.columnDescriptors) {
-    if (columnDescriptor.columnName === "record_id") {
+    if (columnDescriptor.columnName === RECORD_ID) {
       continue;
     }
     const fieldName = columnDescriptor.columnAnnotations[AIRTABLE_FIELD_NAME];
