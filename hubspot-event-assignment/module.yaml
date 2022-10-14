@@ -8,3 +8,5 @@ workers:
     triggers:
       transaction:
         enabled: true
+      cron:
+        cronExpression: "*/30 * * * * * *"
