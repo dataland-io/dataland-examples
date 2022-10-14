@@ -60,7 +60,7 @@ const airtableUpdateRows = async (updateRecords: UpdateRecords) => {
     }
   }
   console.log(
-    "Writeback - Successfully update Airtable records:",
+    "Writeback - Successfully updated Airtable records:",
     updateRecords.map((record) => record.id)
   );
 };
