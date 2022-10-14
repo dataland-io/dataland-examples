@@ -1,0 +1,10 @@
+moduleId: hubspot-event-assignment-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: hubspot-event-assignment
+    scriptPath: dist/hubspotEventAssignment.bundle.js
+    triggers:
+      transaction:
+        enabled: true
