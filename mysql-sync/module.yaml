@@ -2,6 +2,14 @@ moduleId: mysql-sync
 
 buildCommand: npm run build
 
+info:
+  title: MySQL
+  description: Sync a MySQL database into Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: mysql-icon.svg
+
 parameters:
   - mysql-host
   - mysql-port
@@ -10,14 +18,6 @@ parameters:
   - mysql-db
   - mysql-table-mapping
   - mysql-do-writeback
-
-info:
-  title: MySQL
-  description: Sync a MySQL database into Dataland
-  author: Dataland Devs <devs@dataland.io>
-  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
-  readmePath: README.md
-  iconPath: mysql-icon.svg
 
 # To deploy this module locally, create a .env file in the root of this folder
 # with the following contents, and add your values.
