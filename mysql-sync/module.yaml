@@ -11,6 +11,24 @@ parameters:
   - mysql-table-mapping
   - mysql-do-writeback
 
+info:
+  title: MySQL
+  description: Sync a MySQL database into Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: mysql-icon.svg
+
+# To deploy this module locally, create a .env file in the root of this folder
+# with the following contents, and add your values.
+# DL_PARAM_MYSQL_HOST=
+# DL_PARAM_MYSQL_PORT=
+# DL_PARAM_MYSQL_USER=
+# DL_PARAM_MYSQL_PASSWORD=
+# DL_PARAM_MYSQL_DB=
+# DL_PARAM_MYSQL_TABLE_MAPPING=
+# DL_PARAM_MYSQL_DO_WRITEBACK=
+
 workers:
   - workerId: mysql-sync-worker
     scriptPath: dist/mysql-sync.bundle.js
