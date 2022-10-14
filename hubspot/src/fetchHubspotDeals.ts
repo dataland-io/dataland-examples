@@ -18,6 +18,7 @@ interface HubspotDeal {
     pipeline: string;
     dealname: string;
     dealstage: string;
+    hubspot_owner_id: string;
     hs_object_id: number;
     hs_lastmodifieddate: string;
     createdate: string;
@@ -27,6 +28,38 @@ interface HubspotDeal {
   archived: boolean;
 }
 
+const fetchHubspotOwner = async (
+  hubspot_api_key: string,
+  hubspot_owner_id: string
+) => {
+  if (hubspot_owner_id == null) {
+    return null;
+  }
+  const response = await fetch(
+    "https://api.hubapi.com/crm/v3/owners/?idProperty=" +
+      hubspot_owner_id +
+      "&archived=false",
+    {
+      headers: {
+        Authorization: `Bearer ${hubspot_api_key}`,
+      },
+    }
+  );
+  const result = await response.json();
+  if (result == null) {
+    return "";
+  } else {
+    return (
+      result?.results[0]?.firstName +
+      " " +
+      result?.results[0]?.lastName +
+      " (" +
+      result?.results[0]?.email +
+      ")"
+    );
+  }
+};
+
 const fetchHubspotDeals = async (hubspot_api_key: string) => {
   var headers = new Headers();
   headers.append("Authorization", `Bearer ${hubspot_api_key}`);
@@ -34,9 +67,26 @@ const fetchHubspotDeals = async (hubspot_api_key: string) => {
   let total_counter = 0;
   const full_results = [];
 
-  let url = "https://api.hubapi.com/crm/v3/objects/deals?limit=100";
+  const properties = [
+    "amount",
+    "dealname",
+    "dealstage",
+    "hubspot_owner_id",
+    "closedate",
+    "pipeline",
+    "createdAt",
+    "updatedAt",
+  ];
+
+  const properties_string = properties.join(",");
+  const properties_string_encoded = encodeURIComponent(properties_string);
+
+  let url =
+    "https://api.hubapi.com/crm/v3/objects/deals?limit=100&properties=" +
+    properties_string_encoded;
   let has_next = true;
   console.log("fetching Hubspot deals...");
+
   do {
     const hubspot_response = await fetch(url, {
       method: "GET",
@@ -53,47 +103,36 @@ const fetchHubspotDeals = async (hubspot_api_key: string) => {
 
     const results: HubspotDeal[] = data.results;
 
-    const results_processed = results.map(
-      ({
-        id,
-        properties: {
-          amount,
-          closedate,
-          pipeline,
-          dealname,
-          dealstage,
-          createdate,
-          hs_object_id,
-          hs_lastmodifieddate,
-        },
-        createdAt,
-        updatedAt,
-        archived,
-      }) => ({
-        id,
-        amount,
-        close_date: closedate,
-        pipeline,
-        deal_name: dealname,
-        deal_stage: dealstage,
-        hs_object_id,
-        hs_last_modified_date: hs_lastmodifieddate,
-        create_date: createdate,
-        created_at: createdAt,
-        updated_at: updatedAt,
-        archived,
-      })
-    );
+    for (const result of results) {
+      const hubspot_owner_id = result.properties.hubspot_owner_id;
 
-    if (results_processed) {
-      for (const result of results_processed) {
-        full_results.push(result);
-        total_counter++;
+      let hubspot_owner = await fetchHubspotOwner(
+        hubspot_api_key,
+        hubspot_owner_id
+      );
+
+      if (hubspot_owner == null) {
+        hubspot_owner = "";
       }
+
+      const result_processed = {
+        id: result.id,
+        amount: result.properties.amount,
+        deal_name: result.properties.dealname,
+        deal_stage: result.properties.dealstage,
+        deal_owner: hubspot_owner,
+        close_date: result.properties.closedate,
+        pipeline: result.properties.pipeline,
+        created_at: result.createdAt,
+        updated_at: result.updatedAt,
+      };
+      full_results.push(result_processed);
+      total_counter++;
     }
   } while (has_next);
 
   console.log("Finished fetching ", full_results.length, " Hubspot deals");
+  console.log("preview:", full_results[0]);
 
   return full_results;
 };
