@@ -1,6 +1,6 @@
 # Pushing content to Strapi
 
-> This module is out of date as of the Oct 12, 2022 Dataland API changes.
+> As of Oct 12, 2022 - this module uses unsupported APIs.
 
 Dataland can be a better admin panel for a headless CMS, like Strapi (used in this example), Ghost, or Contentful. Dataland gives you an intuitive table-like UI to edit data, and smart content enrichment via Dataland workers.
 

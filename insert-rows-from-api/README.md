@@ -1,5 +1,7 @@
 # Insert rows into Dataland from API response
 
+> As of Oct 12, 2022 - this module uses unsupported Dataland APIs.
+
 This example walks through how you can issue a GET request with a Dataland worker, and insert each response item as a new row in Dataland. We'll use the JSON Placeholder API for this example.
 
 Here's a Loom video of how it works after `dataland deploy`:
