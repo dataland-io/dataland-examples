@@ -202,18 +202,12 @@ const cronHandler = async () => {
   }
   const syncTargets = syncMappingJsonT.parse(syncMapping).sync_targets;
 
-  for (const {
-    base_id,
-    table_id,
-    table_name,
-    view_id,
-    read_field_list,
-  } of syncTargets) {
+  for (const syncTarget of syncTargets) {
     const { rows, fieldNameMapping } = await readRowsFromAirtable(
-      base_id,
-      table_id,
-      view_id,
-      read_field_list
+      syncTarget.base_id,
+      syncTarget.table_id,
+      syncTarget.view_id,
+      syncTarget.read_field_list
     );
     const table = tableFromJSON(rows);
     const batch = tableToIPC(table);
@@ -232,7 +226,7 @@ const cronHandler = async () => {
     }
 
     const tableSyncRequest: TableSyncRequest = {
-      tableName: validateTableName(table_name),
+      tableName: validateTableName(syncTarget.table_name),
       arrowRecordBatches: [batch],
       primaryKeyColumnNames: [RECORD_ID],
       transactionAnnotations: {},
@@ -247,4 +241,5 @@ const cronHandler = async () => {
   }
 };
 
+console.log("reg");
 registerCronHandler(cronHandler);

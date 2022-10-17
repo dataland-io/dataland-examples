@@ -197,7 +197,7 @@ const insertRowsWriteback = async (
   const recordIds = await airtableCreateRows(createRecords);
   if (recordIds.length !== rows.length) {
     console.error(
-      "Writeback - Inserted Dataland rows do not have the same length as the created Airtable rows. State will be reconciled in next Airtable Sync. This will happen if any of the inserted rows failed to create an Airtable row, otherwise it is an unexpected error.",
+      "Writeback - Inserted Dataland rows do not have the same length as the inserted Airtable rows. This will happen if any of the inserted rows failed to insert an Airtable row, otherwise it is an unexpected error. Data state will be reconciled in next Airtable Sync.",
       {
         datalandRowsLength: rows.length,
         airtableRowsLength: recordIds.length,
@@ -212,9 +212,9 @@ const insertRowsWriteback = async (
     // as the records were sent, therefore we can safely assume that a index
     // in recordIds corresponds to the same index in the rows.
     const recordId = recordIds[i]!;
-    const rowKey = rows[i]!.rowId;
-    recordIdMap[rowKey] = recordId;
-    mutations.updateRow(getDatalandTableName(), rowKey, {
+    const rowId = rows[i]!.rowId;
+    recordIdMap[rowId] = recordId;
+    mutations.updateRow(getDatalandTableName(), rowId, {
       [RECORD_ID]: recordId,
     });
   }
@@ -351,7 +351,7 @@ const transactionHandler = async (transaction: Transaction) => {
     // as they will not have a field name annotation.
     if (fieldName == null) {
       throw new Error(
-        "Aborting: Missing field name annotation on column descriptor"
+        "Writeback - Aborting: Missing field name annotation on column descriptor"
       );
     }
     fieldNameMap[columnDescriptor.columnName] = fieldName;

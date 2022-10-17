@@ -10,21 +10,22 @@ export type AirtableImportedValue =
   | any[];
 export type AirtableImportedRecord = {
   id: string;
-  createdTime: string;
   fields: Record<string, AirtableImportedValue>;
 };
 export type AirtableImportedRecords = AirtableImportedRecord[];
 
 // NOTE(gab): null: clear cell, undefined: do nothing
-export type AirtableUpdateValue = string | number | boolean | null | undefined;
+export type AirtableUpdateValue = string | number | boolean | undefined;
 export type UpdateRecord = {
   id: string;
   fields: Record<string, AirtableUpdateValue>;
 };
-export type UpdateRecords = UpdateRecord[];
-export type CreateRecord = { fields: Record<string, AirtableUpdateValue> };
-export type CreateRecords = CreateRecord[];
-export type DeleteRecords = string[];
+export type AirtableUpdateRecords = UpdateRecord[];
+export type AirtableCreateRecord = {
+  fields: Record<string, AirtableUpdateValue>;
+};
+export type AirtableCreateRecords = AirtableCreateRecord[];
+export type AirtableDeleteRecords = string[];
 
 export const RECORD_ID = "record_id";
 export const AIRTABLE_FIELD_NAME = "dataland.io/airtable-field-name";
@@ -67,7 +68,7 @@ export const fetchRetry = async (
   return "error";
 };
 
-const targetT = z.object({
+const syncTargetT = z.object({
   base_id: z.string(),
   table_name: z.string(),
   table_id: z.string(),
@@ -75,7 +76,40 @@ const targetT = z.object({
   read_field_list: z.array(z.string()),
   allowed_writeback_field_list: z.array(z.string()),
 });
-export const syncTargetsT = z.array(targetT);
+export const syncTargetsT = z.array(syncTargetT);
 export const syncMappingJsonT = z.object({
   sync_targets: syncTargetsT,
 });
+
+export interface SyncTarget {
+  base_id: string;
+  table_name: string;
+  table_id: string;
+  view_id: string;
+  read_field_list: string[];
+  allowed_writeback_field_list: Set<string>;
+}
+
+export const getSyncTargets = (): SyncTarget[] => {
+  const syncMappingJson = getEnv("AIRTABLE_SYNC_MAPPING_JSON");
+  let syncMapping;
+  try {
+    syncMapping = JSON.parse(syncMappingJson);
+  } catch (e) {
+    console.error(
+      `Failed to parse json of AIRTABLE_SYNC_MAPPING_JSON: ${syncMappingJson}`
+    );
+  }
+  const syncTargets = syncMappingJsonT
+    .parse(syncMapping)
+    .sync_targets.map((target) => {
+      validateTableName(target.table_name);
+      return {
+        ...target,
+        allowed_writeback_field_list: new Set(
+          target.allowed_writeback_field_list
+        ),
+      };
+    });
+  return syncTargets;
+};

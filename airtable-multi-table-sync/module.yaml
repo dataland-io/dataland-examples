@@ -1,0 +1,43 @@
+moduleId: airtable-base-sync
+
+info:
+  title: Airtable Multi-Table Sync
+  description: Sync multiple tables from Airtable to Dataland
+  author: Dataland Devs <support@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: icon.svg
+
+buildCommand: npm run build
+
+parameters:
+  - airtable-api-key
+  - airtable-allow-writeback-boolean
+  - airtable-sync-mapping-json
+
+# Create a .env file in the root of this folder
+# with the following contents:
+# DL_PARAM_AIRTABLE_API_KEY=<your-api-key>
+# DL_PARAM_AIRTABLE_ALLOW_WRITEBACK_BOOLEAN=<your-allow-writeback-boolean>
+# DL_PARAM_AIRTABLE_SYNC_MAPPING_JSON=<your-sync-mapping-json>
+# See readme for the format of the SYNC MAPPING JSON
+
+workers:
+  - workerId: airtable-import-cron
+    scriptPath: dist/importCron.bundle.js
+    triggers:
+      cron:
+        cronExpression: "*/30 * * * * * *"
+    env:
+      AIRTABLE_API_KEY: airtable-api-key
+      AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
+      AIRTABLE_SYNC_MAPPING_JSON: airtable-sync-mapping-json
+
+  - workerId: airtable-writeback
+    scriptPath: dist/writeback.bundle.js
+    triggers:
+      transaction: {}
+    env:
+      AIRTABLE_API_KEY: airtable-api-key
+      AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
+      AIRTABLE_SYNC_MAPPING_JSON: airtable-sync-mapping-json

@@ -4,7 +4,10 @@ import type { Configuration } from "webpack";
 const config: Configuration = {
   mode: "production",
   target: "web",
-  entry: ["./src/importCron.ts", "./src/writeBack.ts"],
+  entry: {
+    importCron: "./src/importCron.ts",
+    writeback: "./src/writeback.ts",
+  },
   module: {
     rules: [
       {
@@ -18,7 +21,7 @@ const config: Configuration = {
   },
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "bundle.js",
+    filename: "[name].bundle.js",
     clean: true,
   },
   performance: {
