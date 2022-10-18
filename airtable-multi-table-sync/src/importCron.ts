@@ -209,7 +209,9 @@ const cronHandler = async () => {
     successfulImports[syncTarget.dataland_table_name] = rows.length;
   }
   console.log(
-    `Successfully imported tables in ${performance.now() - t0}ms. Row count:`,
+    `Import - Successfully imported tables in ${
+      (performance.now() - t0) / 1000
+    }s. Row count:`,
     successfulImports
   );
 };

@@ -76,7 +76,17 @@ export const getSyncTargets = (): SyncTarget[] | "error" => {
     );
     return "error";
   }
-  const syncMapping = SyncMappingJson.parse(syncMappingParsed);
+
+  const response = SyncMappingJson.safeParse(syncMappingParsed);
+  if (response.success !== true) {
+    console.error(
+      "Aborting sync: AIRTABLE_SYNC_MAPPING_JSON is invalid:",
+      response.error.issues
+    );
+    return "error";
+  }
+
+  const syncMapping = response.data;
   const syncTargets: SyncTarget[] = [];
   for (const syncTarget of syncMapping.sync_targets) {
     if (!validateTableName(syncTarget.dataland_table_name)) {
