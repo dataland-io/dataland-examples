@@ -111,3 +111,4 @@ export const getSyncTargets = (): SyncTarget[] | "error" => {
   }
   return syncTargets;
 };
+//
