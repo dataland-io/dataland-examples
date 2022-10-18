@@ -1,0 +1,142 @@
+moduleId: hubspot-example
+
+buildCommand: npm run build
+
+info:
+  title: Hubspot
+  description: Sync with all companies, deals, and contacts
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: hubspot-icon.svg
+
+parameters:
+  - hubspot-api-key
+
+workers:
+  - workerId: hubspot-contacts-worker
+    scriptPath: dist/fetchHubspotContacts.bundle.js
+    env:
+      HUBSPOT_API_KEY: hubspot-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */5 * * * * *"
+      transaction: {}
+
+  - workerId: hubspot-companies-worker
+    scriptPath: dist/fetchHubspotCompanies.bundle.js
+    env:
+      HUBSPOT_API_KEY: hubspot-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */5 * * * * *"
+      transaction: {}
+
+  - workerId: hubspot-deals-worker
+    scriptPath: dist/fetchHubspotDeals.bundle.js
+    env:
+      HUBSPOT_API_KEY: hubspot-api-key
+    triggers:
+      cron:
+        cronExpression: "0 */5 * * * * *"
+      transaction: {}
+
+  - workerId: post-hubspot-deal
+    scriptPath: dist/postHubspotDealUpdate.bundle.js
+    triggers:
+      transaction: {}
+    env:
+      HUBSPOT_API_KEY: hubspot-api-key
+
+tables:
+  - tableName: hubspot_deals
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: id
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
+      - columnName: deal_name
+        dataType: string
+      - columnName: deal_stage
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "closedwon",
+                  "theme": "green"
+                },
+                {
+                  "value": "qualifiedtobuy",
+                  "theme": "silver"
+                },
+                {
+                  "value": "appointmentscheduled",
+                  "theme": "silver"
+                },
+                {
+                  "value": "presentationscheduled",
+                  "theme": "silver"
+                },
+                {
+                  "value": "decisionmakerbroughtin",
+                  "theme": "orange"
+                },
+                {
+                  "value": "contractsent",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "closedlost",
+                  "theme": "ruby"
+                }
+              ]
+            }
+      - columnName: deal_url
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "url"
+            }
+          dataland.io/column-width: "120"
+      - columnName: deal_owner
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "200"
+      - columnName: amount
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
+      - columnName: pipeline
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
+      - columnName: created_at
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
+      - columnName: updated_at
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
+      - columnName: close_date
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
+      - columnName: "push_to_hubspot"
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Update Hubspot",
+              "theme": "blue"
+            }
+      - columnName: "status_message"
+        dataType: string
+      - columnName: "processed_at"
+        dataType: string

@@ -5,15 +5,25 @@ import {
   TableSyncRequest,
 } from "@dataland-io/dataland-sdk";
 
+import { createOAuth2Token } from "./gcpAuth";
+
 import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
+
+const getOAuth2Token = async () => {
+  const serviceAccountKeysJson = getEnv("GCP_SERVICE_ACCOUNT_KEYS_JSON");
+  const serviceAccountKeys = JSON.parse(serviceAccountKeysJson);
+  const oauth2Token = await createOAuth2Token(
+    serviceAccountKeys,
+    "https://www.googleapis.com/auth/bigquery"
+  );
+
+  return oauth2Token.toString();
+};
 
 const fetchFromBigQuery = async () => {
   const myHeaders = new Headers();
 
-  const gcp_access_token = getEnv("GCP_ACCESS_TOKEN");
-  if (gcp_access_token == null) {
-    throw new Error("Missing environment variable - GCP_ACCESS_TOKEN");
-  }
+  const gcp_access_token = await getOAuth2Token();
 
   const gcp_project_id = getEnv("GCP_PROJECT_ID");
   if (gcp_project_id == null) {
@@ -35,7 +45,7 @@ const fetchFromBigQuery = async () => {
     throw new Error("Missing environment variable - GCP_API_KEY");
   }
 
-  myHeaders.append("Authorization", "Bearer " + gcp_access_token);
+  myHeaders.append("Authorization", gcp_access_token);
 
   const requestOptions = {
     method: "GET",
