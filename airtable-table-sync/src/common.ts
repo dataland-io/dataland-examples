@@ -14,7 +14,6 @@ export type AirtableImportedRecord = {
 };
 export type AirtableImportedRecords = AirtableImportedRecord[];
 
-// NOTE(gab): null: clear cell, undefined: do nothing
 export type AirtableUpdateValue = string | number | boolean | null | undefined;
 export type UpdateRecord = {
   id: string;

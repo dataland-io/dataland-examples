@@ -1,5 +1,5 @@
 {
-  "name": "@dataland-examples/airtable-base-sync",
+  "name": "@dataland-examples/airtable-multi-table-sync",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
@@ -7,8 +7,10 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
-    "@dataland-io/dataland-sdk-worker": "0.16.0",
-    "airtable": "0.11.4"
+    "@dataland-io/dataland-api-proto": "0.17.0",
+    "@dataland-io/dataland-sdk": "0.17.0",
+    "airtable": "0.11.5",
+    "zod": "3.19.1"
   },
   "devDependencies": {
     "@types/webpack": "5.28.0",
