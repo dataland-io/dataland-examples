@@ -1,5 +1,5 @@
 {
-  "name": "@dataland-examples/airtable-table-sync",
+  "name": "@dataland-examples/airtable-multi-table-sync",
   "version": "1.0.0",
   "private": true,
   "license": "MIT",

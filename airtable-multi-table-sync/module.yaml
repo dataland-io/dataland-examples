@@ -28,7 +28,7 @@ workers:
     triggers:
       transaction: {}
       cron:
-        cronExpression: "* */5 * * * * *"
+        cronExpression: "0 */5 * * * * *"
     env:
       AIRTABLE_API_KEY: airtable-api-key
       AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean

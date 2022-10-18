@@ -14,9 +14,10 @@ import {
   SyncTarget,
   AirtableRecord,
   getSyncTargets,
+  validateSqlIdentifier,
 } from "./common";
 
-const airtableValueToDatalandValue = (value: AirtableRecordValue): Scalar => {
+const airtableValueToScalar = (value: AirtableRecordValue): Scalar => {
   if (value == null) {
     return null;
   }
@@ -66,6 +67,7 @@ const getAirtableRecords = async (
   }).base(syncTarget.base_id);
   const airtableTable = airtableBase(syncTarget.table_id);
 
+  // NOTE(gab): Airtable response is of readonly type
   const records: readonly AirtableRecord[] = await airtableTable
     .select({
       pageSize: 100,
@@ -75,15 +77,15 @@ const getAirtableRecords = async (
   return records;
 };
 
-type ColumnName = string;
-type FieldName = string;
-type Rows = Record<string, Scalar>[];
-type FieldNameMapping = Record<ColumnName, FieldName>;
-const readRowsFromAirtable = async (
-  syncTarget: SyncTarget
-): Promise<[Rows, FieldNameMapping] | "error"> => {
-  const records = await getAirtableRecords(syncTarget);
-
+const getColumnMappings = (
+  syncTarget: SyncTarget,
+  records: readonly AirtableRecord[]
+):
+  | {
+      columnNameMapping: Record<FieldName, ColumnName>;
+      fieldNameMapping: Record<ColumnName, FieldName>;
+    }
+  | "error" => {
   const columnNameMapping: Record<FieldName, ColumnName> = {};
   const fieldNameMapping: Record<ColumnName, FieldName> = {};
   for (const record of records) {
@@ -125,10 +127,39 @@ const readRowsFromAirtable = async (
         );
         return "error";
       }
+      if (!validateSqlIdentifier(columnName)) {
+        console.error(
+          `Import - Skipping sync of dataland table name "${syncTarget.dataland_table_name}": Unexpected parsed Dataland column name of parsed Airtable field name. Dataland column name must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`,
+          {
+            datalandColumnName: columnName,
+            airtableFieldName: fieldName,
+          }
+        );
+        return "error";
+      }
       columnNameMapping[fieldName] = columnName;
       fieldNameMapping[columnName] = fieldName;
     }
   }
+  return { columnNameMapping, fieldNameMapping };
+};
+type ColumnName = string;
+type FieldName = string;
+const readRowsFromAirtable = async (
+  syncTarget: SyncTarget
+): Promise<
+  | {
+      rows: Record<string, Scalar>[];
+      fieldNameMapping: Record<ColumnName, FieldName>;
+    }
+  | "error"
+> => {
+  const records = await getAirtableRecords(syncTarget);
+  const mappingResponse = getColumnMappings(syncTarget, records);
+  if (mappingResponse === "error") {
+    return "error";
+  }
+  const { columnNameMapping, fieldNameMapping } = mappingResponse;
 
   const rows: Record<string, Scalar>[] = [];
   for (const record of records) {
@@ -142,7 +173,7 @@ const readRowsFromAirtable = async (
         continue;
       }
       const airtableValue = record.fields[fieldName]!;
-      const parsedColumnValue = airtableValueToDatalandValue(airtableValue);
+      const parsedColumnValue = airtableValueToScalar(airtableValue);
       row[columnName] = parsedColumnValue;
     }
     rows.push(row);
@@ -159,7 +190,7 @@ const readRowsFromAirtable = async (
       row[columnName] = null;
     }
   }
-  return [rows, fieldNameMapping];
+  return { rows, fieldNameMapping };
 };
 
 const cronHandler = async () => {
@@ -176,7 +207,7 @@ const cronHandler = async () => {
       // NOTE(gab): Skip failing table and continue to next.
       continue;
     }
-    const [rows, fieldNameMapping] = response;
+    const { rows, fieldNameMapping } = response;
 
     const table = tableFromJSON(rows);
     const batch = tableToIPC(table);

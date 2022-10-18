@@ -1,5 +1,5 @@
 import z from "zod";
-import { getEnv, wait } from "@dataland-io/dataland-sdk";
+import { getEnv } from "@dataland-io/dataland-sdk";
 
 export type AirtableRecordValue =
   | undefined
@@ -30,12 +30,8 @@ export type AirtableDeleteRecords = string[];
 export const RECORD_ID = "record_id";
 export const AIRTABLE_FIELD_NAME = "dataland.io/airtable-field-name";
 
-const validateSqlIdentifier = (sqlIdentifier: string): boolean => {
+export const validateSqlIdentifier = (sqlIdentifier: string): boolean => {
   return /^[a-z][_a-z0-9]{0,62}$/.test(sqlIdentifier);
-};
-
-export const validateTableName = (tableName: string): boolean => {
-  return validateSqlIdentifier(tableName);
 };
 
 const SyncTarget = z.object({
@@ -70,10 +66,17 @@ export const getSyncTargets = (): SyncTarget[] | "error" => {
   try {
     syncMappingParsed = JSON.parse(syncMappingJson);
   } catch (e) {
-    console.error(
-      `Aborting sync: Failed to parse json of AIRTABLE_SYNC_MAPPING_JSON:`,
-      e
-    );
+    if (e instanceof SyntaxError) {
+      console.error(
+        `Aborting sync: Failed to parse AIRTABLE_SYNC_MAPPING_JSON:`,
+        e.message
+      );
+    } else {
+      console.error(
+        `Aborting sync: Unexpected error when parsing AIRTABLE_SYNC_MAPPING_JSON:`,
+        e
+      );
+    }
     return "error";
   }
 
@@ -89,7 +92,7 @@ export const getSyncTargets = (): SyncTarget[] | "error" => {
   const syncMapping = response.data;
   const syncTargets: SyncTarget[] = [];
   for (const syncTarget of syncMapping.sync_targets) {
-    if (!validateTableName(syncTarget.dataland_table_name)) {
+    if (!validateSqlIdentifier(syncTarget.dataland_table_name)) {
       console.error(
         `Aborting sync: Invalid dataland table name for table: "${syncTarget.dataland_table_name}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
       );
