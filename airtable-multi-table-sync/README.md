@@ -1,8 +1,8 @@
 # Overview
 
-Set up a two-way sync for your Airtable table in Dataland.
+Set up a two-way sync for multiple Airtable tables and Dataland.
 
-If the `ALLOW_WRITEBACK_BOOLEAN` is set to `true`, any changes done in the Dataland UI will execute a transaction that writes back to your Airtable.
+This can also be a read-only sync; read on below for details.
 
 This includes:
 
@@ -13,6 +13,8 @@ This includes:
 Dataland always treats your Airtable instance as the source of truth. Any invalid transactions attempted from Dataland will be rejected by your source Airtable, and then overriden in Dataland by the next sync from Airtable. For example, since the Airtable API prevents updates to formula column values, any change from Dataland to a formula column will be rejected.
 
 Data in the Dataland UI will be re-updated every 5 minutes by default. This cadence can be configurable.
+
+To make a "read-only" sync, set the value of `AIRTABLE_ALLOW_WRITEBACK_BOOLEAN` to `false`.
 
 ## Parameter setup
 
@@ -25,6 +27,38 @@ Data in the Dataland UI will be re-updated every 5 minutes by default. This cade
 | `dataland-table-name`              | Dataland will create a table with this name, and replicate Airtable data into it                                                                  |
 | `airtable-allow-writeback-boolean` | If `true`, row updates/creation/deletion in Dataland will attempt writebacks to your Airtable table. If `false`, no writeback is attempted.       |
 | `airtable-fields-list`             | A comma separated string of the subset of fields you'd like to sync from an Airtable view. Case-sensitive. To use all fields, simply write `ALL`. |
+
+## Parameter explanation
+
+The parameter `AIRTABLE_SYNC_MAPPING_JSON` has a JSON format like so:
+
+```json
+{
+  "sync_targets": [
+    {
+      "base_id": "appB5C0P7ihcpAkkO",
+      "table_name": "support_tickets",
+      "table_id": "tblbXqDJIHroaitOP",
+      "view_id": "viwIbjQaNkNZUZwXC",
+      "read_field_list": [
+        "support_ticket_id",
+        "ticket_message",
+        "ticket_category",
+        "order_id"
+      ],
+      "allowed_writeback_field_list": ["ticket_message", "order_id"]
+    },
+    {
+      "base_id": "appB5C0P7ihcpAkkO",
+      "table_name": "orders",
+      "table_id": "tblNKt1iT5OFf7IjR",
+      "view_id": "viwfCixmEdpyGJ621",
+      "read_field_list": ["order_id", "order_total", "order_date"],
+      "allowed_writeback_field_list": []
+    }
+  ]
+}
+```
 
 ### How to get the Airtable IDs for base, table, and view
 
