@@ -209,5 +209,5 @@ const cronHandler = async () => {
     );
   }
 };
-console.log("HEEYEYY");
+
 registerCronHandler(cronHandler);

@@ -70,19 +70,18 @@ export const getSyncTargets = (): SyncTarget[] | "error" => {
   try {
     syncMappingParsed = JSON.parse(syncMappingJson);
   } catch (e) {
-    console.error(`Failed to parse json of AIRTABLE_SYNC_MAPPING_JSON:`, e);
+    console.error(
+      `Aborting sync: Failed to parse json of AIRTABLE_SYNC_MAPPING_JSON:`,
+      e
+    );
     return "error";
   }
   const syncMapping = SyncMappingJson.parse(syncMappingParsed);
   const syncTargets: SyncTarget[] = [];
   for (const syncTarget of syncMapping.sync_targets) {
-    console.log(
-      syncTarget.dataland_table_name,
-      !validateTableName(syncTarget.dataland_table_name)
-    );
     if (!validateTableName(syncTarget.dataland_table_name)) {
       console.error(
-        `Import - Aborting sync: Invalid dataland table name for table: "${syncTarget.dataland_table_name}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
+        `Aborting sync: Invalid dataland table name for table: "${syncTarget.dataland_table_name}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
       );
       return "error";
     }
