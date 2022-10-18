@@ -10,14 +10,7 @@ const handler = async () => {
   const db = await getDbClient();
   const history = await getHistoryClient();
 
-  const test_query = await history.querySqlMirror({
-    sqlQuery: `select * from "mysql_orders" limit 1`,
-  }).response;
-
-  const last_logical_timestamp = test_query.logicalTimestamp;
-
-  const joined_query = await history.querySqlSnapshot({
-    logicalTimestamp: last_logical_timestamp,
+  const joined_query = await history.querySqlMirror({
     sqlQuery: `
     WITH total_order_value_by_customer AS (
         SELECT
