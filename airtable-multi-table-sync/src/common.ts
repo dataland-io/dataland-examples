@@ -8,11 +8,11 @@ export type AirtableImportedValue =
   | boolean
   | Record<any, any>
   | any[];
-export type AirtableImportedRecord = {
+export type AirtableRecord = {
   id: string;
   fields: Record<string, AirtableImportedValue>;
 };
-export type AirtableImportedRecords = AirtableImportedRecord[];
+export type AirtableRecords = AirtableRecord[];
 
 // NOTE(gab): null: clear cell, undefined: do nothing
 export type AirtableUpdateValue = string | number | boolean | undefined;
@@ -34,13 +34,8 @@ const validateSqlIdentifier = (sqlIdentifier: string): boolean => {
   return /^[a-z][_a-z0-9]{0,62}$/.test(sqlIdentifier);
 };
 
-export const validateTableName = (tableName: string): string => {
-  if (!validateSqlIdentifier(tableName)) {
-    throw new Error(
-      `Import - Aborting: Invalid table name: "${tableName}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
-    );
-  }
-  return tableName;
+export const validateTableName = (tableName: string): boolean => {
+  return validateSqlIdentifier(tableName);
 };
 
 export const fetchRetry = async (
@@ -70,11 +65,13 @@ export const fetchRetry = async (
 
 const syncTargetT = z.object({
   base_id: z.string(),
-  table_name: z.string(),
   table_id: z.string(),
   view_id: z.string(),
-  read_field_list: z.array(z.string()),
-  allowed_writeback_field_list: z.array(z.string()),
+  dataland_table_name: z.string(),
+  disallow_insertion: z.boolean().optional(),
+  disallow_deletion: z.boolean().optional(),
+  omit_fields: z.array(z.string()).optional(),
+  read_only_fields: z.array(z.string()).optional(),
 });
 export const syncTargetsT = z.array(syncTargetT);
 export const syncMappingJsonT = z.object({
@@ -83,33 +80,38 @@ export const syncMappingJsonT = z.object({
 
 export interface SyncTarget {
   base_id: string;
-  table_name: string;
   table_id: string;
   view_id: string;
-  read_field_list: string[];
-  allowed_writeback_field_list: Set<string>;
+  dataland_table_name: string;
+  disallow_insertion?: boolean | undefined;
+  disallow_deletion?: boolean | undefined;
+  omit_fields?: Set<string> | undefined;
+  read_only_fields?: Set<string> | undefined;
 }
 
 export const getSyncTargets = (): SyncTarget[] => {
   const syncMappingJson = getEnv("AIRTABLE_SYNC_MAPPING_JSON");
   let syncMapping;
   try {
-    syncMapping = JSON.parse(syncMappingJson);
-  } catch (e) {
-    console.error(
-      `Failed to parse json of AIRTABLE_SYNC_MAPPING_JSON: ${syncMappingJson}`
+    syncMapping = syncMappingJsonT.parse(JSON.parse(syncMappingJson));
+  } catch (error) {
+    throw new Error(
+      `Failed to parse json of AIRTABLE_SYNC_MAPPING_JSON: ${syncMappingJson} - ${JSON.stringify(
+        error
+      )}`
     );
   }
-  const syncTargets = syncMappingJsonT
-    .parse(syncMapping)
-    .sync_targets.map((target) => {
-      validateTableName(target.table_name);
-      return {
-        ...target,
-        allowed_writeback_field_list: new Set(
-          target.allowed_writeback_field_list
-        ),
-      };
-    });
+
+  const syncTargets = syncMapping.sync_targets.map((target) => {
+    return {
+      ...target,
+      read_only_fields:
+        target.read_only_fields != null
+          ? new Set(target.read_only_fields)
+          : undefined,
+      omit_fields:
+        target.omit_fields != null ? new Set(target.omit_fields) : undefined,
+    };
+  });
   return syncTargets;
 };

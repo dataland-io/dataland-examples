@@ -1,13 +1,11 @@
 import {
-  AirtableImportedRecords as AirtableRecords,
+  AirtableRecords as AirtableRecords,
   AIRTABLE_FIELD_NAME,
   AirtableCreateRecord,
   AirtableCreateRecords,
   AirtableDeleteRecords,
-  fetchRetry,
   getSyncTargets,
   RECORD_ID,
-  syncMappingJsonT,
   SyncTarget,
   UpdateRecord,
   AirtableUpdateRecords,
@@ -23,6 +21,7 @@ import {
   getDbClient,
   valueToScalar,
   getHistoryClient,
+  isEmptyFast,
 } from "@dataland-io/dataland-sdk";
 import Airtable from "airtable";
 
@@ -152,6 +151,13 @@ const insertRowsWriteback = async (
         continue;
       }
       const columnName = columnNames[j]!;
+      if (columnName === RECORD_ID) {
+        console.log(
+          "Writeback - Cannot update record_id column. Skipping cell:",
+          { columnName, value: scalar }
+        );
+        continue;
+      }
       const fieldName = fieldNameMap[columnName];
       if (fieldName == null) {
         console.error("Writeback - Could not find field name by column name", {
@@ -160,9 +166,9 @@ const insertRowsWriteback = async (
         continue;
       }
 
-      if (!syncTarget.allowed_writeback_field_list.has(fieldName)) {
+      if (syncTarget.read_only_fields?.has(fieldName)) {
         console.log(
-          "Writeback - Tried to insert a field that does not allow writeback. Skipping value",
+          "Writeback - Tried to insert a field that does not allow writeback. Skipping cell:",
           {
             fieldName,
             value: scalar,
@@ -198,7 +204,7 @@ const insertRowsWriteback = async (
     const recordId = recordIds[i]!;
     const rowId = rows[i]!.rowId;
     recordIdMap[rowId] = recordId;
-    mutations.updateRow(syncTarget.table_name, rowId, {
+    mutations.updateRow(syncTarget.dataland_table_name, rowId, {
       [RECORD_ID]: recordId,
     });
   }
@@ -233,21 +239,25 @@ const updateRowsWriteback = async (
     for (let j = 0; j < values.length; j++) {
       const scalar = valueToScalar(values[j]!);
       const columnName = columnNames[j]!;
+      if (columnName === RECORD_ID) {
+        console.log(
+          "Writeback - Cannot update record_id column. Skipping cell:",
+          { recordId, columnName, value: scalar }
+        );
+        continue;
+      }
       const fieldName = fieldNameMap[columnName];
       if (fieldName == null) {
         console.error(
           "Writeback - Could not find Airtable field name by Dataland column name",
-          { columnName }
+          { recordId, columnName, value: scalar }
         );
         continue;
       }
-      if (!syncTarget.allowed_writeback_field_list.has(fieldName)) {
+      if (syncTarget.read_only_fields?.has(fieldName)) {
         console.log(
-          "Writeback - Tried to insert a field that does not allow writeback. Skipping value",
-          {
-            fieldName,
-            value: scalar,
-          }
+          "Writeback - Tried to update a field that does not allow writeback. Skipping cell:",
+          { recordId, fieldName, value: scalar }
         );
         continue;
       }
@@ -257,6 +267,9 @@ const updateRowsWriteback = async (
       // there is no schema from Airtable, the correct "empty type" cannot be known,
       // and null is used.
       updateRecord.fields[fieldName] = scalar ?? null;
+    }
+    if (isEmptyFast(updateRecord.fields)) {
+      continue;
     }
     updateRecords.push(updateRecord);
   }
@@ -299,7 +312,7 @@ const transactionHandler = async (transaction: Transaction) => {
     ALLOW_WRITEBACK_BOOLEAN !== "false"
   ) {
     console.error(
-      `Writeback - ABORTING: 'ALLOW_WRITEBACK_BOOLEAN' invalid value '${ALLOW_WRITEBACK_BOOLEAN}', expected 'true' or 'false'.`
+      `Writeback - ABORTING: 'ALLOW_WRITEBACK_BOOLEAN' invalid value "${ALLOW_WRITEBACK_BOOLEAN}", expected 'true' or 'false'.`
     );
     return;
   }
@@ -308,13 +321,21 @@ const transactionHandler = async (transaction: Transaction) => {
   }
 
   const syncTargets = getSyncTargets();
+  // NOTE(gab): instantly check table names so that the user gets instant feedback that something is wrong
   for (const syncTarget of syncTargets) {
-    const datalandTableName = validateTableName(syncTarget.table_name);
+    if (!validateTableName(syncTarget.dataland_table_name)) {
+      console.error(
+        `Import - Aborting sync: Invalid dataland table name for table: "${syncTarget.dataland_table_name}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
+      );
+      return;
+    }
+  }
 
+  for (const syncTarget of syncTargets) {
     const history = getHistoryClient();
     const response = await history.querySqlSnapshot({
       logicalTimestamp: transaction.logicalTimestamp - 1,
-      sqlQuery: `select "_row_id", "${RECORD_ID}" from "${datalandTableName}"`,
+      sqlQuery: `select "_row_id", "${RECORD_ID}" from "${syncTarget.dataland_table_name}"`,
     }).response;
     const rows = unpackRows(response);
 
@@ -322,14 +343,26 @@ const transactionHandler = async (transaction: Transaction) => {
       logicalTimestamp: transaction.logicalTimestamp - 1,
     }).response;
     const tableDescriptor = tableDescriptors.find(
-      (descriptor) => descriptor.tableName === datalandTableName
+      (descriptor) => descriptor.tableName === syncTarget.dataland_table_name
     );
     if (tableDescriptor == null) {
       console.error(
         "Writeback - Could not find table descriptor. Table might have been deleted.",
-        { tableName: datalandTableName }
+        { tableName: syncTarget.dataland_table_name }
       );
       return;
+    }
+
+    type ColumnName = string;
+    type FieldName = string;
+    const fieldNameMap: Record<ColumnName, FieldName> = {};
+    for (const columnDescriptor of tableDescriptor.columnDescriptors) {
+      const fieldName = columnDescriptor.columnAnnotations[AIRTABLE_FIELD_NAME];
+      // TODO(gab): do we allow users to add columns of their own?
+      if (fieldName == null) {
+        continue;
+      }
+      fieldNameMap[columnDescriptor.columnName] = fieldName;
     }
 
     const recordIdMap: Record<number, string> = {};
@@ -339,29 +372,19 @@ const transactionHandler = async (transaction: Transaction) => {
       recordIdMap[rowId] = recordId;
     }
 
-    type ColumnName = string;
-    type FieldName = string;
-    const fieldNameMap: Record<ColumnName, FieldName> = {};
-    for (const columnDescriptor of tableDescriptor.columnDescriptors) {
-      if (columnDescriptor.columnName === RECORD_ID) {
-        continue;
-      }
-      const fieldName = columnDescriptor.columnAnnotations[AIRTABLE_FIELD_NAME];
-      // NOTE(gab): this makes users unable to add arbitrary columns to the table,
-      // as they will not have a field name annotation.
-      if (fieldName == null) {
-        throw new Error(
-          "Writeback - Aborting: Missing field name annotation on column descriptor"
-        );
-      }
-      fieldNameMap[columnDescriptor.columnName] = fieldName;
-    }
-
     for (const protoMutation of transaction.mutations) {
       const mutation = protoMutation.kind;
       switch (mutation.oneofKind) {
         case "insertRows": {
-          if (tableDescriptor.tableName !== mutation.insertRows.tableName) {
+          if (
+            syncTarget.dataland_table_name !== mutation.insertRows.tableName
+          ) {
+            continue;
+          }
+          if (syncTarget.disallow_insertion) {
+            console.log(
+              "Writeback - Insertion skipped, disallow_insertion is set to true"
+            );
             continue;
           }
           await insertRowsWriteback(
@@ -373,7 +396,9 @@ const transactionHandler = async (transaction: Transaction) => {
           break;
         }
         case "updateRows": {
-          if (tableDescriptor.tableName !== mutation.updateRows.tableName) {
+          if (
+            syncTarget.dataland_table_name !== mutation.updateRows.tableName
+          ) {
             continue;
           }
           await updateRowsWriteback(
@@ -385,7 +410,15 @@ const transactionHandler = async (transaction: Transaction) => {
           break;
         }
         case "deleteRows": {
-          if (tableDescriptor.tableName !== mutation.deleteRows.tableName) {
+          if (
+            syncTarget.dataland_table_name !== mutation.deleteRows.tableName
+          ) {
+            continue;
+          }
+          if (syncTarget.disallow_deletion) {
+            console.log(
+              "Writeback - Deletion skipped, disallow_deletion is set to true"
+            );
             continue;
           }
           await deleteRowsWriteback(syncTarget, mutation, recordIdMap);

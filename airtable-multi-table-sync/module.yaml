@@ -1,4 +1,4 @@
-moduleId: airtable-base-sync
+moduleId: airtable-multi-table-sync
 
 info:
   title: Airtable Multi-Table Sync
@@ -23,9 +23,10 @@ parameters:
 # See readme for the format of the SYNC MAPPING JSON
 
 workers:
-  - workerId: airtable-import-cron
-    scriptPath: dist/importCron.bundle.js
+  - workerId: airtable-multi-table-sync-worker
+    scriptPath: dist/main.bundle.js
     triggers:
+      transaction: {}
       cron:
         cronExpression: "*/30 * * * * * *"
     env:
@@ -33,11 +34,11 @@ workers:
       AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
       AIRTABLE_SYNC_MAPPING_JSON: airtable-sync-mapping-json
 
-  - workerId: airtable-writeback
-    scriptPath: dist/writeback.bundle.js
-    triggers:
-      transaction: {}
-    env:
-      AIRTABLE_API_KEY: airtable-api-key
-      AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
-      AIRTABLE_SYNC_MAPPING_JSON: airtable-sync-mapping-json
+  # - workerId: airtable-writeback
+  #   scriptPath: dist/writeback.bundle.js
+  #   triggers:
+  #     transaction: {}
+  #   env:
+  #     AIRTABLE_API_KEY: airtable-api-key
+  #     AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
+  #     AIRTABLE_SYNC_MAPPING_JSON: airtable-sync-mapping-json
