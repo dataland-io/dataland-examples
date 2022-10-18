@@ -11,12 +11,12 @@ info:
   iconPath: bigquery-icon.png
 
 parameters:
-  - gcp-access-token
   - gcp-project-id
   - gcp-dataset-id
   - gcp-table-id
   - gcp-api-key
   - gcp-table-identity-column
+  - gcp-service-account-keys-json
 
 workers:
   - workerId: bigquery-table-sync
@@ -27,9 +27,9 @@ workers:
       cron:
         cronExpression: "*/30 * * * * * *"
     env:
-      GCP_ACCESS_TOKEN: gcp-access-token
       GCP_PROJECT_ID: gcp-project-id
       GCP_DATASET_ID: gcp-dataset-id
       GCP_TABLE_ID: gcp-table-id
       GCP_API_KEY: gcp-api-key
       GCP_TABLE_IDENTITY_COLUMN: gcp-table-identity-column
+      GCP_SERVICE_ACCOUNT_KEYS_JSON: gcp-service-account-keys-json
