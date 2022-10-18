@@ -77,6 +77,8 @@ const getAirtableRecords = async (
   return records;
 };
 
+type ColumnName = string;
+type FieldName = string;
 const getColumnMappings = (
   syncTarget: SyncTarget,
   records: readonly AirtableRecord[]
@@ -143,8 +145,7 @@ const getColumnMappings = (
   }
   return { columnNameMapping, fieldNameMapping };
 };
-type ColumnName = string;
-type FieldName = string;
+
 const readRowsFromAirtable = async (
   syncTarget: SyncTarget
 ): Promise<

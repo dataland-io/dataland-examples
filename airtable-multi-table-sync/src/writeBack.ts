@@ -58,10 +58,9 @@ const airtableUpdateRows = async (
     }
   }
   if (updatedRecords.length !== 0) {
-    console.log(
-      "Writeback - Successfully updated the following Airtable rows:",
-      { recordIds: updatedRecords.map((record) => record.id) }
-    );
+    console.log("Writeback - Successfully updated Airtable rows:", {
+      recordIds: updatedRecords.map((record) => record.id),
+    });
   }
 };
 
@@ -88,10 +87,9 @@ const airtableCreateRows = async (
     }
   }
   if (createdRecords.length !== 0) {
-    console.log(
-      "Writeback - Successfully created the following Airtable rows:",
-      { recordIds: createdRecords.map((record) => record.id) }
-    );
+    console.log("Writeback - Successfully created Airtable rows:", {
+      recordIds: createdRecords.map((record) => record.id),
+    });
   }
   return createdRecords.map((record) => record.id);
 };
@@ -119,10 +117,9 @@ const airtableDestroyRows = async (
     }
   }
   if (destroyedRecords.length !== 0) {
-    console.log(
-      "Writeback - Successfully deleted the following Airtable rows:",
-      { recordIds: destroyedRecords.map((record) => record.id) }
-    );
+    console.log("Writeback - Successfully deleted Airtable rows:", {
+      recordIds: destroyedRecords.map((record) => record.id),
+    });
   }
 };
 
