@@ -163,11 +163,13 @@ const readRowsFromAirtable = async (
 };
 
 const cronHandler = async () => {
+  const t0 = performance.now();
   const syncTargets = getSyncTargets();
   if (syncTargets === "error") {
     return;
   }
 
+  const successfulImports: Record<string, number> = {};
   for (const syncTarget of syncTargets) {
     const response = await readRowsFromAirtable(syncTarget);
     if (response === "error") {
@@ -204,10 +206,12 @@ const cronHandler = async () => {
     };
     const db = getDbClient();
     await db.tableSync(tableSyncRequest);
-    console.log(
-      `Import - Successfully imported dataland table "${syncTarget.dataland_table_name}". Row count: ${rows.length}`
-    );
+    successfulImports[syncTarget.dataland_table_name] = rows.length;
   }
+  console.log(
+    `Successfully imported tables in ${performance.now() - t0}ms. Row count:`,
+    successfulImports
+  );
 };
 
 registerCronHandler(cronHandler);
