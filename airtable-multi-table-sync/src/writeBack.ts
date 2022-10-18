@@ -1,5 +1,5 @@
 import {
-  AirtableRecords as AirtableRecords,
+  AirtableRecords,
   AIRTABLE_FIELD_NAME,
   AirtableCreateRecord,
   AirtableCreateRecords,
@@ -7,9 +7,8 @@ import {
   getSyncTargets,
   RECORD_ID,
   SyncTarget,
-  UpdateRecord,
+  AirtableUpdateRecord,
   AirtableUpdateRecords,
-  validateTableName,
 } from "./common";
 import {
   Transaction,
@@ -25,7 +24,7 @@ import {
 } from "@dataland-io/dataland-sdk";
 import Airtable from "airtable";
 
-// NOTE(gab): 10 is maximum allowed by airtable
+// NOTE(gab): 10 is the maximum allowed updates per call in Airtable.
 const AIRTABLE_MAX_UPDATES = 10;
 const chunkAirtablePayload = <T>(payload: T[]) => {
   const chunks: T[][] = [];
@@ -146,7 +145,7 @@ const insertRowsWriteback = async (
     const values = listValues.values;
     for (let j = 0; j < values.length; j++) {
       const scalar = valueToScalar(values[j]!);
-      // NOTE(gab): Airtable expects no value for empty cells
+      // NOTE(gab): Airtable expects no value for empty cells.
       if (scalar == null) {
         continue;
       }
@@ -234,7 +233,7 @@ const updateRowsWriteback = async (
       continue;
     }
 
-    const updateRecord: UpdateRecord = { id: recordId, fields: {} };
+    const updateRecord: AirtableUpdateRecord = { id: recordId, fields: {} };
     const values = listValues.values;
     for (let j = 0; j < values.length; j++) {
       const scalar = valueToScalar(values[j]!);
@@ -321,14 +320,8 @@ const transactionHandler = async (transaction: Transaction) => {
   }
 
   const syncTargets = getSyncTargets();
-  // NOTE(gab): instantly check table names so that the user gets instant feedback that something is wrong
-  for (const syncTarget of syncTargets) {
-    if (!validateTableName(syncTarget.dataland_table_name)) {
-      console.error(
-        `Import - Aborting sync: Invalid dataland table name for table: "${syncTarget.dataland_table_name}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
-      );
-      return;
-    }
+  if (syncTargets === "error") {
+    return;
   }
 
   for (const syncTarget of syncTargets) {

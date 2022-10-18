@@ -8,16 +8,15 @@ import {
 } from "@dataland-io/dataland-sdk";
 import Airtable from "airtable";
 import {
-  AirtableImportedValue,
+  AirtableRecordValue,
   AIRTABLE_FIELD_NAME,
   RECORD_ID,
   SyncTarget,
   AirtableRecord,
   getSyncTargets,
-  validateTableName,
 } from "./common";
 
-const airtableValueToDatalandValue = (value: AirtableImportedValue): Scalar => {
+const airtableValueToDatalandValue = (value: AirtableRecordValue): Scalar => {
   if (value == null) {
     return null;
   }
@@ -89,11 +88,11 @@ const readRowsFromAirtable = async (
   const fieldNameMapping: Record<ColumnName, FieldName> = {};
   for (const record of records) {
     for (const fieldName in record.fields) {
-      // NOTE(gab): skip omitted fields
+      // NOTE(gab): Skip omitted fields.
       if (syncTarget.omit_fields?.has(fieldName)) {
         continue;
       }
-      // NOTE(gab): skip already added fields
+      // NOTE(gab): Skip already added fields.
       if (fieldName in columnNameMapping) {
         continue;
       }
@@ -138,7 +137,7 @@ const readRowsFromAirtable = async (
     };
     for (const fieldName in record.fields) {
       const columnName = columnNameMapping[fieldName];
-      // NOTE(gab): skip omitted fields
+      // NOTE(gab): Skip omitted fields.
       if (columnName == null) {
         continue;
       }
@@ -151,7 +150,7 @@ const readRowsFromAirtable = async (
 
   // NOTE(gab): Fields containing empty values (false, "", [], {}) are never
   // sent from Airtable. These fields need to be are added as null explicitly,
-  // due to syncTables setting number columns to NaN if a value is missing
+  // due to syncTables setting number columns to NaN if a value is missing.
   for (const row of rows) {
     for (const columnName in fieldNameMapping) {
       if (columnName in row) {
@@ -165,20 +164,14 @@ const readRowsFromAirtable = async (
 
 const cronHandler = async () => {
   const syncTargets = getSyncTargets();
-  // NOTE(gab): instantly check table names so that the user gets instant feedback that something is wrong
-  for (const syncTarget of syncTargets) {
-    if (!validateTableName(syncTarget.dataland_table_name)) {
-      console.error(
-        `Import - Aborting sync for all tables: Invalid dataland table name for table: "${syncTarget.dataland_table_name}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
-      );
-      return;
-    }
+  if (syncTargets === "error") {
+    return;
   }
 
   for (const syncTarget of syncTargets) {
     const response = await readRowsFromAirtable(syncTarget);
     if (response === "error") {
-      // NOTE(gab): skip erroring table and continue to next
+      // NOTE(gab): Skip failing table and continue to next.
       continue;
     }
     const [rows, fieldNameMapping] = response;
@@ -216,5 +209,5 @@ const cronHandler = async () => {
     );
   }
 };
-
+console.log("HEEYEYY");
 registerCronHandler(cronHandler);

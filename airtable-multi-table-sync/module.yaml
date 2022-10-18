@@ -33,12 +33,3 @@ workers:
       AIRTABLE_API_KEY: airtable-api-key
       AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
       AIRTABLE_SYNC_MAPPING_JSON: airtable-sync-mapping-json
-
-  # - workerId: airtable-writeback
-  #   scriptPath: dist/writeback.bundle.js
-  #   triggers:
-  #     transaction: {}
-  #   env:
-  #     AIRTABLE_API_KEY: airtable-api-key
-  #     AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
-  #     AIRTABLE_SYNC_MAPPING_JSON: airtable-sync-mapping-json

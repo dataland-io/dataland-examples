@@ -1,7 +1,7 @@
 import z from "zod";
 import { getEnv, wait } from "@dataland-io/dataland-sdk";
 
-export type AirtableImportedValue =
+export type AirtableRecordValue =
   | undefined
   | string
   | number
@@ -10,17 +10,17 @@ export type AirtableImportedValue =
   | any[];
 export type AirtableRecord = {
   id: string;
-  fields: Record<string, AirtableImportedValue>;
+  fields: Record<string, AirtableRecordValue>;
 };
 export type AirtableRecords = AirtableRecord[];
 
 // NOTE(gab): null: clear cell, undefined: do nothing
 export type AirtableUpdateValue = string | number | boolean | undefined;
-export type UpdateRecord = {
+export type AirtableUpdateRecord = {
   id: string;
   fields: Record<string, AirtableUpdateValue>;
 };
-export type AirtableUpdateRecords = UpdateRecord[];
+export type AirtableUpdateRecords = AirtableUpdateRecord[];
 export type AirtableCreateRecord = {
   fields: Record<string, AirtableUpdateValue>;
 };
@@ -38,32 +38,7 @@ export const validateTableName = (tableName: string): boolean => {
   return validateSqlIdentifier(tableName);
 };
 
-export const fetchRetry = async (
-  fetch: () => Promise<Response>,
-  maxTries: number = 4
-): Promise<Response | "error"> => {
-  for (let tries = 0; tries < maxTries; tries++) {
-    if (tries !== 0) {
-      await wait(Math.pow(2, tries + 1) * 1000);
-    }
-    try {
-      const response = await fetch();
-      if (response.ok) {
-        return response;
-      }
-      console.error(
-        `Failed Airtable request - ${response.status}: ${
-          response.statusText
-        }. Attempt: ${tries + 1} of ${maxTries}`
-      );
-    } catch (e) {
-      console.error(`Network error. Attempt: ${tries + 1} of ${maxTries}`);
-    }
-  }
-  return "error";
-};
-
-const syncTargetT = z.object({
+const SyncTarget = z.object({
   base_id: z.string(),
   table_id: z.string(),
   view_id: z.string(),
@@ -73,11 +48,12 @@ const syncTargetT = z.object({
   omit_fields: z.array(z.string()).optional(),
   read_only_fields: z.array(z.string()).optional(),
 });
-export const syncTargetsT = z.array(syncTargetT);
-export const syncMappingJsonT = z.object({
-  sync_targets: syncTargetsT,
+export const SyncMappingJson = z.object({
+  sync_targets: z.array(SyncTarget),
 });
 
+// NOTE(gab): Cannot infer the type of the record from zod,
+// since sets are needed for performant lookups in nested loops later.
 export interface SyncTarget {
   base_id: string;
   table_id: string;
@@ -88,30 +64,41 @@ export interface SyncTarget {
   omit_fields?: Set<string> | undefined;
   read_only_fields?: Set<string> | undefined;
 }
-
-export const getSyncTargets = (): SyncTarget[] => {
+export const getSyncTargets = (): SyncTarget[] | "error" => {
   const syncMappingJson = getEnv("AIRTABLE_SYNC_MAPPING_JSON");
-  let syncMapping;
+  let syncMappingParsed;
   try {
-    syncMapping = syncMappingJsonT.parse(JSON.parse(syncMappingJson));
-  } catch (error) {
-    throw new Error(
-      `Failed to parse json of AIRTABLE_SYNC_MAPPING_JSON: ${syncMappingJson} - ${JSON.stringify(
-        error
-      )}`
-    );
+    syncMappingParsed = JSON.parse(syncMappingJson);
+  } catch (e) {
+    console.error(`Failed to parse json of AIRTABLE_SYNC_MAPPING_JSON:`, e);
+    return "error";
   }
-
-  const syncTargets = syncMapping.sync_targets.map((target) => {
-    return {
-      ...target,
-      read_only_fields:
-        target.read_only_fields != null
-          ? new Set(target.read_only_fields)
-          : undefined,
-      omit_fields:
-        target.omit_fields != null ? new Set(target.omit_fields) : undefined,
-    };
-  });
+  const syncMapping = SyncMappingJson.parse(syncMappingParsed);
+  const syncTargets: SyncTarget[] = [];
+  for (const syncTarget of syncMapping.sync_targets) {
+    console.log(
+      syncTarget.dataland_table_name,
+      !validateTableName(syncTarget.dataland_table_name)
+    );
+    if (!validateTableName(syncTarget.dataland_table_name)) {
+      console.error(
+        `Import - Aborting sync: Invalid dataland table name for table: "${syncTarget.dataland_table_name}". Must begin with a-z, only contain a-z, 0-9, and _, and have a maximum of 63 characters.`
+      );
+      return "error";
+    }
+    const readOnlyFields =
+      syncTarget.read_only_fields != null
+        ? new Set(syncTarget.read_only_fields)
+        : undefined;
+    const omitFields =
+      syncTarget.omit_fields != null
+        ? new Set(syncTarget.omit_fields)
+        : undefined;
+    syncTargets.push({
+      ...syncTarget,
+      read_only_fields: readOnlyFields,
+      omit_fields: omitFields,
+    });
+  }
   return syncTargets;
 };
