@@ -16,6 +16,10 @@ Data in the Dataland UI will be synced every 5 minutes by default. This cadence 
 
 To make a "read-only" sync, set the value of `AIRTABLE_ALLOW_WRITEBACK_BOOLEAN` to `false`.
 
+## Video walkthrough
+
+This [video](https://www.loom.com/share/4e5bea9c6a6343d68cb2c23851c48cb2) walks through the installation setup fully.
+
 ## Parameter setup
 
 | Name                               | About                                                                                                                                       |
