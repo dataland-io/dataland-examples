@@ -10,6 +10,9 @@ const handler = async () => {
   const db = await getDbClient();
   const history = await getHistoryClient();
 
+  // --------------------------------------------------------
+  // (awu): Define the "orders_credit_workflow" table
+  // --------------------------------------------------------
   const joined_query = await history.querySqlMirror({
     sqlQuery: `
     WITH total_order_value_by_customer AS (
@@ -47,6 +50,9 @@ const handler = async () => {
     return;
   }
 
+  // --------------------------------------------------------
+  // (awu): Write the data to Dataland
+  // --------------------------------------------------------
   const tableSyncRequest: TableSyncRequest = {
     tableName: "orders_credit_workflow",
     arrowRecordBatches: joined_query.arrowRecordBatches,
