@@ -39,7 +39,7 @@ const fetchStripeInvoices = async () => {
           currency: result.currency ?? "",
           customer: result.customer ?? "",
           description: result.description ?? "",
-          hosted_invoice_url: result.hosted_invoice_url ?? "",
+          // hosted_invoice_url: result.hosted_invoice_url ?? "",
           metadata: JSON.stringify(result.metadata) ?? "",
           payment_intent: result.payment_intent ?? "",
           period_end: result.period_end,

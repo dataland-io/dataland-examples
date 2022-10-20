@@ -323,13 +323,6 @@ tables:
         dataType: string
       - columnName: description
         dataType: string
-      - columnName: hosted_invoice_url
-        dataType: string
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "url"
-            }
       - columnName: metadata
         dataType: string
       - columnName: payment_intent
