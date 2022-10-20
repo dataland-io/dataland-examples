@@ -7,6 +7,7 @@
     "build": "webpack --config webpack.config.ts"
   },
   "dependencies": {
+    "@apache-arrow/es2015-esm": "9.0.0",
     "@dataland-io/dataland-sdk": "0.19.4",
     "airtable": "0.11.5",
     "zod": "3.19.1"
