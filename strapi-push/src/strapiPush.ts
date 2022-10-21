@@ -9,7 +9,7 @@ import {
   Schema,
   Transaction,
   unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+} from "@dataland-io/dataland-sdk";
 import { isNumber } from "lodash-es";
 import * as t from "io-ts";
 

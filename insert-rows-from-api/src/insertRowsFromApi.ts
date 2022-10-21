@@ -9,7 +9,7 @@ import {
   Schema,
   Transaction,
   unpackRows,
-} from "@dataland-io/dataland-sdk-worker";
+} from "@dataland-io/dataland-sdk";
 
 const getRecordsFromJsonPlaceholder = async () => {
   const url = "https://jsonplaceholder.typicode.com/posts";

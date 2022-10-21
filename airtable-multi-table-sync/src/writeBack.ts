@@ -20,7 +20,7 @@ import {
   getDbClient,
   valueToScalar,
   getHistoryClient,
-  isEmptyFast,
+  isObjectEmpty,
 } from "@dataland-io/dataland-sdk";
 import Airtable from "airtable";
 
@@ -264,7 +264,7 @@ const updateRowsWriteback = async (
       // and null is used.
       updateRecord.fields[fieldName] = scalar ?? null;
     }
-    if (isEmptyFast(updateRecord.fields)) {
+    if (isObjectEmpty(updateRecord.fields)) {
       continue;
     }
     updateRecords.push(updateRecord);

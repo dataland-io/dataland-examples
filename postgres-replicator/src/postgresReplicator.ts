@@ -21,7 +21,7 @@ import {
   Transaction,
   tryGetEnv,
   UpdateRows,
-} from "@dataland-io/dataland-sdk-worker";
+} from "@dataland-io/dataland-sdk";
 import {
   DatabaseSchema,
   transitionDatabaseSchema_mutations,
