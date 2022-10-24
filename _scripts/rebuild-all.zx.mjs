@@ -6,8 +6,16 @@ cd(repoRoot);
 
 const entries = await fs.readdir(".");
 
+// TODO(hzuo): Fix these modules
+const ignoreList = new Set([
+  "insert-rows-from-api",
+  "postgres-replicator",
+  "shippo-track-shipment",
+  "strapi-push",
+]);
+
 for (const entry of entries) {
-  if (entry.startsWith("_") || entry.startsWith(".")) {
+  if (ignoreList.has(entry) || entry.startsWith("_") || entry.startsWith(".")) {
     continue;
   }
   const stats = await fs.stat(entry);
