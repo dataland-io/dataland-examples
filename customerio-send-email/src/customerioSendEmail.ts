@@ -7,7 +7,7 @@ import {
   isString,
 } from "@dataland-io/dataland-sdk";
 
-const sendCustomerioEmail = async (name: string, email: string) => {
+const sendCustomerioEmail = async (id: string, name: string, email: string) => {
   const CUSTOMERIO_API_KEY = getEnv("CUSTOMERIO_API_KEY");
 
   const body = {
@@ -23,10 +23,8 @@ const sendCustomerioEmail = async (name: string, email: string) => {
     identifiers: {
       id: email,
     },
-    from: "parrot@redparrot.io",
+    from: "redparrot@parrot.io",
   };
-
-  console.log("body " + JSON.stringify(body));
 
   const response = await fetch("https://api.customer.io/v1/send/email", {
     method: "POST",
@@ -77,6 +75,7 @@ const handler = async (transaction: Transaction) => {
     sqlQuery: `
     SELECT
       _row_id,
+      id,
       name,
       email
     FROM
@@ -94,10 +93,10 @@ const handler = async (transaction: Transaction) => {
 
   // for each row, run the logic
   for (const row of rows) {
-    if (!isString(row.name) || !isString(row.email)) {
+    if (!isString(row.id) || !isString(row.name) || !isString(row.email)) {
       continue;
     }
-    await sendCustomerioEmail(row.name, row.email);
+    await sendCustomerioEmail(row.id, row.name, row.email);
   }
 };
 
