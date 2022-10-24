@@ -4,26 +4,31 @@ import {
   getHistoryClient,
   unpackRows,
   Transaction,
+  isString,
 } from "@dataland-io/dataland-sdk";
 
-const sendCustomerioEmail = async (id: string, name: string, email: string) => {
+const sendCustomerioEmail = async (name: string, email: string) => {
   const CUSTOMERIO_API_KEY = getEnv("CUSTOMERIO_API_KEY");
-
-  const email_body =
-    "Hi please reset your password here: https://example.com/reset-password";
 
   const body = {
     to: email,
-    transactional_message_id: "2",
+    transactional_message_id: "3",
+    message_data: {
+      customer: {
+        name: name,
+        link: "https://example.com/reset-password/" + id,
+        email: email,
+      },
+    },
     identifiers: {
-      id: id,
+      id: email,
     },
     from: "parrot@redparrot.io",
-    subject: "Password Reset",
-    body: email_body,
   };
 
-  const response = await fetch("https://track.customer.io/api/v1/email", {
+  console.log("body " + JSON.stringify(body));
+
+  const response = await fetch("https://api.customer.io/v1/send/email", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -32,8 +37,10 @@ const sendCustomerioEmail = async (id: string, name: string, email: string) => {
     body: JSON.stringify(body),
   });
 
+  console.log(response);
+
   if (response.status !== 200) {
-    throw new Error("Error sending email to: " + email);");
+    throw new Error("Error sending email to: " + email);
   }
 
   console.log("Email sent to " + email);
@@ -70,9 +77,8 @@ const handler = async (transaction: Transaction) => {
     sqlQuery: `
     SELECT
       _row_id,
-      id,
       name,
-      email,
+      email
     FROM
       "users"
     WHERE
@@ -88,6 +94,10 @@ const handler = async (transaction: Transaction) => {
 
   // for each row, run the logic
   for (const row of rows) {
+    if (!isString(row.name) || !isString(row.email)) {
+      continue;
+    }
+    await sendCustomerioEmail(row.name, row.email);
   }
 };
 

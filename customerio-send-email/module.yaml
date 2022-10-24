@@ -2,12 +2,17 @@ moduleId: customerio-send-email-example
 
 buildCommand: npm run build
 
+parameters:
+  - customerio-api-key
+
 workers:
   - workerId: customerio-send-email
     scriptPath: dist/customerioSendEmail.bundle.js
     triggers:
       transaction:
         enabled: true
+    env:
+      CUSTOMERIO_API_KEY: customerio-api-key
 
 tables:
   - tableName: users
@@ -31,3 +36,6 @@ tables:
               "label": "Send password reset link",
               "theme": "blue"
             }
+
+      - columnName: processed_at
+        dataType: string
