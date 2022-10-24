@@ -5,3 +5,5 @@ This module allows you to send a transactional email to a user by clicking a but
 It comes with an example template for a users table (with `id`, `name`, and `email`), and a button column that initiates the email.
 
 This module requires some tweaking to use the appropriate `transactional_message_id` and the parameters.
+
+To tailor this for your own user, search for `TODO` in the `customerioSendEmail.ts` file.

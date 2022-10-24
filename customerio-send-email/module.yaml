@@ -23,7 +23,7 @@ workers:
       CUSTOMERIO_API_KEY: customerio-api-key
 
 tables:
-  - tableName: users
+  - tableName: customer_io_users
     autoMigrate: true
     columnDescriptors:
       - columnName: id
