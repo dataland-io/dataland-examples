@@ -142,3 +142,89 @@ tables:
         dataType: float64
         columnAnnotations:
           dataland.io/column-width: "120"
+
+      - columnName: json_cell_contents
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "json",
+              "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "Notes": {
+                    "type": "string"
+                  },
+                  "number": {
+                    "title": "Number",
+                    "type": "number"
+                  },
+                  "integer": {
+                    "title": "Integer",
+                    "type": "integer"
+                  },
+                  "numberEnum": {
+                    "type": "number",
+                    "title": "Number enum",
+                    "enum": [
+                      1,
+                      2,
+                      3
+                    ]
+                  },
+                  "Grocery Items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "Item Name": {
+                          "type": "string"
+                        },
+                        "Quantity": {
+                          "type": "number"
+                        },
+                        "done": {
+                          "type": "boolean",
+                          "title": "Done?",
+                          "default": false
+                        }
+                      },
+                      "required": ["Item Name", "Quantity"]
+                    }
+                  },
+                  "native_datepicker": {
+                    "title": "Native Date Picker",
+                    "description": "May not work on some browsers, notably Firefox Desktop and IE.",
+                    "type": "object",
+                    "properties": {
+                      "datetime": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date"
+                      }
+                    }
+                  },
+                  "listOfStrings": {
+                    "type": "array",
+                    "title": "A list of strings",
+                    "items": {
+                      "type": "string",
+                      "default": "bazinga"
+                    }
+                  }
+                },
+                "required": [
+                  "Notes"
+                ]
+              },
+              "uiSchema": {
+                "Notes": {
+                  "ui:widget": "textarea",
+                  "ui:rows": 2
+                }
+              }
+            }
