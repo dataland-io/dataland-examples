@@ -1,0 +1,33 @@
+moduleId: customerio-send-email-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: customerio-send-email
+    scriptPath: dist/customerioSendEmail.bundle.js
+    triggers:
+      transaction:
+        enabled: true
+
+tables:
+  - tableName: users
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: id
+        dataType: string
+
+      - columnName: email
+        dataType: string
+
+      - columnName: name
+        dataType: string
+
+      - columnName: send_password_reset
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Send password reset link",
+              "theme": "blue"
+            }
