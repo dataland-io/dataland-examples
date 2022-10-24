@@ -2,9 +2,12 @@ import {
   registerTransactionHandler,
   getEnv,
   getHistoryClient,
+  getDbClient,
+  MutationsBuilder,
   unpackRows,
   Transaction,
   isString,
+  isNumber,
 } from "@dataland-io/dataland-sdk";
 
 // TODO: Reference the right parameters as arguments
@@ -53,6 +56,8 @@ const sendCustomerioEmail = async (id: string, name: string, email: string) => {
 };
 
 const handler = async (transaction: Transaction) => {
+  const db = await getDbClient();
+
   const affected_row_ids = [];
 
   for (const mutation of transaction.mutations) {
@@ -60,7 +65,7 @@ const handler = async (transaction: Transaction) => {
       if (
         // TODO: Update to the right table name and column name
         mutation.kind.updateRows.columnNames.includes("send_password_reset") &&
-        mutation.kind.updateRows.tableName === "customer_io_users"
+        mutation.kind.updateRows.tableName === "postgres_users"
       ) {
         for (const row of mutation.kind.updateRows.rows) {
           affected_row_ids.push(row.rowId);
@@ -86,7 +91,7 @@ const handler = async (transaction: Transaction) => {
       name,
       email
     FROM
-      "customer_io_users"
+      "postgres_users"
     WHERE
       _row_id in (${affected_row_ids_key_list})
     `,
@@ -104,6 +109,15 @@ const handler = async (transaction: Transaction) => {
       continue;
     }
     await sendCustomerioEmail(row.id, row.name, row.email);
+
+    if (!isNumber(row._row_id)) {
+      continue;
+    }
+    await new MutationsBuilder()
+      .updateRow("postgres_users", row._row_id, {
+        processed_at: new Date().toISOString(),
+      })
+      .run(db);
   }
 };
 

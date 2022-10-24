@@ -1,4 +1,4 @@
-moduleId: customerio-send-email-example
+moduleId: customerio-send-email-example-end
 
 buildCommand: npm run build
 
@@ -6,7 +6,7 @@ parameters:
   - customerio-api-key
 
 info:
-  title: Customer.io Transactional Email
+  title: Custom Customer.io module
   description: Send a user a transactional email using Customer.io
   author: Dataland Devs <devs@dataland.io>
   sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
@@ -14,36 +14,10 @@ info:
   iconPath: customerio-icon.svg
 
 workers:
-  - workerId: customerio-send-email
+  - workerId: customerio-send-email-custom
     scriptPath: dist/customerioSendEmail.bundle.js
     triggers:
       transaction:
         enabled: true
     env:
       CUSTOMERIO_API_KEY: customerio-api-key
-
-tables:
-  - tableName: customer_io_users
-    autoMigrate: true
-    columnDescriptors:
-      - columnName: id
-        dataType: string
-
-      - columnName: email
-        dataType: string
-
-      - columnName: name
-        dataType: string
-
-      - columnName: send_password_reset
-        dataType: int32
-        columnAnnotations:
-          dataland.io/column-display-config: |
-            {
-              "type": "button",
-              "label": "Send password reset link",
-              "theme": "blue"
-            }
-
-      - columnName: processed_at
-        dataType: string
