@@ -5,6 +5,14 @@ buildCommand: npm run build
 parameters:
   - customerio-api-key
 
+info:
+  title: Customer.io Transactional Email
+  description: Send a user a transactional email using Customer.io
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: customerio-icon.svg
+
 workers:
   - workerId: customerio-send-email
     scriptPath: dist/customerioSendEmail.bundle.js
