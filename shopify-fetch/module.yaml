@@ -2,6 +2,14 @@ moduleId: shopify-fetch-example
 
 buildCommand: npm run build
 
+info:
+  title: Shopify
+  description: See all customers, orders, and products from Shopify
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-examples/tree/main/shopify-fetch
+  readmePath: README.md
+  iconPath: shopify-icon.svg
+
 parameters:
   - shopify-access-token
   - shopify-store-name
@@ -14,7 +22,7 @@ workers:
       SHOPIFY_STORE_NAME: shopify-store-name
     triggers:
       cron:
-        cronExpression: "*/15 * * * * * *"
+        cronExpression: "0 * * * * * *"
       transaction: {}
 
   - workerId: fetch-shopify-orders
@@ -24,7 +32,7 @@ workers:
       SHOPIFY_STORE_NAME: shopify-store-name
     triggers:
       cron:
-        cronExpression: "*/15 * * * * * *"
+        cronExpression: "0 * * * * * *"
       transaction: {}
 
   - workerId: fetch-shopify-products
