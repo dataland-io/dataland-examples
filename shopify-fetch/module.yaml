@@ -1,0 +1,10 @@
+moduleId: shopify-fetch-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: shopify-fetch
+    scriptPath: dist/shopifyFetch.bundle.js
+    triggers:
+      transaction:
+        enabled: true
