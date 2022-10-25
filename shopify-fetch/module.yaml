@@ -2,9 +2,37 @@ moduleId: shopify-fetch-example
 
 buildCommand: npm run build
 
+parameters:
+  - shopify-access-token
+  - shopify-store-name
+
 workers:
-  - workerId: shopify-fetch
-    scriptPath: dist/shopifyFetch.bundle.js
+  - workerId: fetch-shopify-customers
+    scriptPath: dist/fetchShopifyCustomers.bundle.js
+    env:
+      SHOPIFY_ACCESS_TOKEN: shopify-access-token
+      SHOPIFY_STORE_NAME: shopify-store-name
     triggers:
-      transaction:
-        enabled: true
+      cron:
+        cronExpression: "*/15 * * * * * *"
+      transaction: {}
+
+  - workerId: fetch-shopify-orders
+    scriptPath: dist/fetchShopifyOrders.bundle.js
+    env:
+      SHOPIFY_ACCESS_TOKEN: shopify-access-token
+      SHOPIFY_STORE_NAME: shopify-store-name
+    triggers:
+      cron:
+        cronExpression: "*/15 * * * * * *"
+      transaction: {}
+
+  - workerId: fetch-shopify-products
+    scriptPath: dist/fetchShopifyProducts.bundle.js
+    env:
+      SHOPIFY_ACCESS_TOKEN: shopify-access-token
+      SHOPIFY_STORE_NAME: shopify-store-name
+    triggers:
+      cron:
+        cronExpression: "*/15 * * * * * *"
+      transaction: {}

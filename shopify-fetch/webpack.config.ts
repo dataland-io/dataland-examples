@@ -5,7 +5,9 @@ const config: Configuration = {
   mode: "production",
   target: "web",
   entry: {
-    shopifyFetch: "./src/shopifyFetch.ts",
+    fetchShopifyCustomers: "./src/fetchShopifyCustomers.ts",
+    fetchShopifyProducts: "./src/fetchShopifyProducts.ts",
+    fetchShopifyOrders: "./src/fetchShopifyOrders.ts",
   },
   module: {
     rules: [
