@@ -6,14 +6,14 @@ Use Dataland as an admin panel into your Stripe data. See all key Stripe objects
 
 This module replicates the following objects from Stripe into Dataland as tables:
 
-| Tables                    | Sync schedule | Manual trigger                 | Stripe object                                                               |
-| ------------------------- | ------------- | ------------------------------ | --------------------------------------------------------------------------- |
-| stripe-customers          | Every 15 mins | stripe-customers-trigger       | [Customers](https://stripe.com/docs/api/customers/object)                   |
-| stripe-subscriptions      | Every 15 mins | stripe-subscriptions-trigger   | [Subscriptions](https://stripe.com/docs/api/subscriptions/object)           |
-| stripe-subscription-items | Every 15 mins | stripe-subscription-trigger    | [Subscription items](https://stripe.com/docs/api/subscription_items/object) |
-| stripe-invoices           | Every 15 mins | stripe-invoices                | [Invoices](https://stripe.com/docs/api/invoices/object)                     |
-| stripe-payment-intents    | Every 15 mins | stripe-payment-intents-trigger | [Payment intents](https://stripe.com/docs/api/payment_intents/object)       |
-| stripe-refunds            | Every 15 mins | stripe-refunds-trigger         | [Refunds](https://stripe.com/docs/api/refunds/object)                       |
+| Tables                    | Sync schedule | Stripe object                                                               |
+| ------------------------- | ------------- | --------------------------------------------------------------------------- |
+| stripe-customers          | Every 15 mins | [Customers](https://stripe.com/docs/api/customers/object)                   |
+| stripe-subscriptions      | Every 15 mins | [Subscriptions](https://stripe.com/docs/api/subscriptions/object)           |
+| stripe-subscription-items | Every 15 mins | [Subscription items](https://stripe.com/docs/api/subscription_items/object) |
+| stripe-invoices           | Every 15 mins | [Invoices](https://stripe.com/docs/api/invoices/object)                     |
+| stripe-payment-intents    | Every 15 mins | [Payment intents](https://stripe.com/docs/api/payment_intents/object)       |
+| stripe-refunds            | Every 15 mins | [Refunds](https://stripe.com/docs/api/refunds/object)                       |
 
 ### Actions
 
