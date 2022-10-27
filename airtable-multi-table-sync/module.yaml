@@ -33,3 +33,104 @@ workers:
       AIRTABLE_API_KEY: airtable-api-key
       AIRTABLE_ALLOW_WRITEBACK_BOOLEAN: airtable-allow-writeback-boolean
       AIRTABLE_SYNC_MAPPING_JSON: airtable-sync-mapping-json
+
+tables:
+  - tableName: airtable_orders
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: record_id
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "100"
+      - columnName: order_id
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "100"
+      - columnName: status
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "Todo",
+                  "theme": "silver"
+                },
+                {
+                  "value": "Fulfilled",
+                  "theme": "green"
+                },
+                {
+                  "value": "Refunded",
+                  "theme": "ruby"
+                }
+              ]
+            }
+      - columnName: amount
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "100"
+
+      - columnName: order_item
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "100"
+
+      - columnName: size
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "100"
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "S",
+                  "theme": "silver"
+                },
+                {
+                  "value": "M",
+                  "theme": "silver"
+                },
+                {
+                  "value": "L",
+                  "theme": "silver"
+                },
+                {
+                  "value": "XL",
+                  "theme": "silver"
+                }
+              ]
+            }
+
+      - columnName: shipping_provider
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "140"
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "UPS",
+                  "theme": "light-blue"
+                },
+                {
+                  "value": "FedEx",
+                  "theme": "light-blue"
+                },
+                {
+                  "value": "USPS",
+                  "theme": "light-blue"
+                }
+              ]
+            }
+      - columnName: customers
+        dataType: string
+
+      - columnName: customization_notes
+        dataType: string
+
+      - columnName: notes_from_staff
+        dataType: string
