@@ -1,10 +1,13 @@
 import {
   registerTransactionHandler,
   getEnv,
+  getDbClient,
+  MutationsBuilder,
   getHistoryClient,
   unpackRows,
   Transaction,
   isString,
+  isNumber,
 } from "@dataland-io/dataland-sdk";
 
 // TODO: Reference the right parameters as arguments
@@ -53,6 +56,8 @@ const sendCustomerioEmail = async (id: string, name: string, email: string) => {
 };
 
 const handler = async (transaction: Transaction) => {
+  const db = await getDbClient();
+
   const affected_row_ids = [];
 
   for (const mutation of transaction.mutations) {
@@ -100,10 +105,23 @@ const handler = async (transaction: Transaction) => {
 
   for (const row of rows) {
     // TODO: Reference the right parameters
-    if (!isString(row.id) || !isString(row.name) || !isString(row.email)) {
+    if (
+      !isNumber(row._row_id) ||
+      !isString(row.id) ||
+      !isString(row.name) ||
+      !isString(row.email)
+    ) {
       continue;
     }
     await sendCustomerioEmail(row.id, row.name, row.email);
+
+    const db = await getDbClient();
+
+    await new MutationsBuilder()
+      .updateRow("customer_io_users", row._row_id, {
+        processed_at: new Date().toISOString(),
+      })
+      .run(db);
   }
 };
 

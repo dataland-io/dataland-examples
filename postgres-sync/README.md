@@ -8,16 +8,16 @@ Data in the Dataland UI will be re-updated every 30 seconds by default. This cad
 
 ## Parameter setup
 
-| Name                  | About                                                                                                                                                                                                                      |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pg-host`             | Database host                                                                                                                                                                                                              |
-| `pg-port`             | Database port                                                                                                                                                                                                              |
-| `pg-database`         | Database name                                                                                                                                                                                                              |
-| `pg-user`             | Database user                                                                                                                                                                                                              |
-| `pg-password`         | Database password                                                                                                                                                                                                          |
-| `pg-schema`           | Database schema                                                                                                                                                                                                            |
-| `mysql-table-mapping` | The list of synced tables from MySQL. See below for format details.                                                                                                                                                        |
-| `pg-do-writeback`     | If `true`, row updates/creation/deletion in Dataland will attempt the same transactions in the source Postgres. Otherwise if `false` (or any other value), Dataland is just a read-only interface to your source Postgres. |
+| Name               | About                                                                                                                                                                                                                      |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pg-host`          | Database host                                                                                                                                                                                                              |
+| `pg-port`          | Database port                                                                                                                                                                                                              |
+| `pg-database`      | Database name                                                                                                                                                                                                              |
+| `pg-user`          | Database user                                                                                                                                                                                                              |
+| `pg-password`      | Database password                                                                                                                                                                                                          |
+| `pg-schema`        | Database schema                                                                                                                                                                                                            |
+| `pg-table-mapping` | The list of synced tables from Postgres. See below for format details.                                                                                                                                                     |
+| `pg-do-writeback`  | If `true`, row updates/creation/deletion in Dataland will attempt the same transactions in the source Postgres. Otherwise if `false` (or any other value), Dataland is just a read-only interface to your source Postgres. |
 
 ### Inputting `pg-table-mapping`
 
@@ -33,7 +33,7 @@ The JSON follows the format:
 }
 ```
 
-For example, let's say we want to sync three tables from MySQL database into Dataland. In MySQL, the desired tables are titled `Customers`, `Orders`, and `Products`. We want to sync them into Dataland with the names `synced_customers`, `synced_orders`, and `synced_products` respectively. The resulting JSON would be:
+For example, let's say we want to sync three tables from Postgres database into Dataland. In Postgres, the desired tables are titled `Customers`, `Orders`, and `Products`. We want to sync them into Dataland with the names `synced_customers`, `synced_orders`, and `synced_products` respectively. The resulting JSON would be:
 
 ```json
 {
