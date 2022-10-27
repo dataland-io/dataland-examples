@@ -42,10 +42,12 @@ tables:
         dataType: string
         columnAnnotations:
           dataland.io/column-width: "100"
+
       - columnName: order_id
         dataType: float64
         columnAnnotations:
           dataland.io/column-width: "100"
+
       - columnName: status
         dataType: string
         columnAnnotations:
@@ -67,14 +69,17 @@ tables:
                 }
               ]
             }
+
       - columnName: amount
         dataType: float64
         columnAnnotations:
+          dataland.io/is-read-only: true
           dataland.io/column-width: "100"
 
       - columnName: order_item
         dataType: string
         columnAnnotations:
+          dataland.io/is-read-only: true
           dataland.io/column-width: "100"
 
       - columnName: size
@@ -126,11 +131,14 @@ tables:
                 }
               ]
             }
+
       - columnName: customers
         dataType: string
 
       - columnName: customization_notes
         dataType: string
+        columnAnnotations:
+          dataland.io/is-read-only: true
 
       - columnName: notes_from_staff
         dataType: string
