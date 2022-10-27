@@ -1,20 +1,15 @@
 # Dataland Examples
 
-This is a collection of example database applications that can be built built on top of the Dataland platform.
+This is a collection of example Dataland modules that can be deployed to your Dataland workspace.
 You can learn more about Dataland at <https://docs.dataland.io>.
+
+Example modules include [MySQL sync](https://github.com/dataland-io/dataland-examples/tree/main/mysql-sync), [Postgres sync](https://github.com/dataland-io/dataland-examples/tree/main/postgres-sync), [Stripe sync](https://github.com/dataland-io/dataland-examples/tree/main/stripe-fetch), [Airtable sync](https://github.com/dataland-io/dataland-examples/tree/main/airtable-multi-table-sync), and [Shopify sync](https://github.com/dataland-io/dataland-examples/tree/main/shopify-fetch). The Dataland core team releases new "beta" modules here on a regular basis.
+
+Feel free to fork and remix modules to include your own custom logic.
 
 ## Getting started
 
-Deploying the Quickstart example to your Dataland workspace is as easy as:
-
-```sh
-cd quickstart
-npm install
-dataland deploy
-```
-
-Deploying any other example should be similarly easy, though if the example application integrates
-with an external API you may be prompted to provide an API key.
+Follow this [guide to install modules](https://dataland-io.notion.site/Deploying-a-module-via-Dataland-CLI-76f8be34a04149aeaa1ee92563075a61) in this repo.
 
 ## Repo structure
 
