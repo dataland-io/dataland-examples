@@ -73,13 +73,13 @@ tables:
       - columnName: amount
         dataType: float64
         columnAnnotations:
-          dataland.io/is-read-only: true
+          dataland.io/read-only: true
           dataland.io/column-width: "100"
 
       - columnName: order_item
         dataType: string
         columnAnnotations:
-          dataland.io/is-read-only: true
+          dataland.io/read-only: true
           dataland.io/column-width: "100"
 
       - columnName: size
@@ -138,7 +138,7 @@ tables:
       - columnName: customization_notes
         dataType: string
         columnAnnotations:
-          dataland.io/is-read-only: true
+          dataland.io/read-only: true
 
       - columnName: notes_from_staff
         dataType: string
