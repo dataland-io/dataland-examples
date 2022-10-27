@@ -38,3 +38,165 @@ workers:
         cronExpression: "*/30 * * * * * *"
       transaction:
         enabled: true
+
+tables:
+  - tableName: postgres_users
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: id
+        dataType: string
+        columnAnnotations:
+          dataland.io/read-only: true
+          dataland.io/column-width: "100"
+
+      - columnName: name
+        dataType: string
+
+      - columnName: email
+        dataType: string
+
+      - columnName: phone
+        dataType: string
+
+      - columnName: metro_area
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "New York",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "London",
+                  "theme": "orange"
+                },
+                {
+                  "value": "Paris",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "Kuala Lumpur",
+                  "theme": "green"
+                },
+                {
+                  "value": "Los Angeles",
+                  "theme": "light-blue"
+                },
+                {
+                  "value": "San Francisco",
+                  "theme": "dark-blue"
+                }
+              ]
+            }
+
+      - columnName: stripe_customer_id
+        dataType: string
+        columnAnnotations:
+          dataland.io/read-only: true
+
+      - columnName: source
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "organic",
+                  "theme": "silver"
+                },
+                {
+                  "value": "referral_ooh_subway",
+                  "theme": "silver"
+                },
+                {
+                  "value": "referral_wom",
+                  "theme": "silver"
+                },
+                {
+                  "value": "referral_affilliate",
+                  "theme": "silver"
+                },
+                {
+                  "value": "referral_ooh_billboard",
+                  "theme": "silver"
+                }
+              ]
+            }
+
+  - tableName: postgres_orders
+    autoMigrate: true
+    columnDescriptors:
+      # id
+      - columnName: "id"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
+
+      # customer_id
+      - columnName: "customer_id"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "120"
+
+      # delivery-status
+      - columnName: "delivery_status"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "Unable to get delivered",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "In warehouse",
+                  "theme": "orange"
+                },
+                {
+                  "value": "In transit",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "Delivered",
+                  "theme": "green"
+                }
+              ]
+            }
+
+      # order_placed_at
+      - columnName: "order_placed_at"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "180"
+
+      - columnName: "order_delivered_at"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "180"
+
+      # delivery_time
+      - columnName: "delivery_time"
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
+
+      # rating
+      - columnName: "user_rating"
+        dataType: float64
+        columnAnnotations:
+          dataland.io/column-width: "120"
+
+      # user_rating_comment
+      - columnName: "user_rating_comment"
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-width: "180"
+
+      - columnName: order_value
+        dataType: float64
