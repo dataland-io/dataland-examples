@@ -1,0 +1,18 @@
+moduleId: firestore-example
+
+buildCommand: npm run build
+
+parameters:
+  - service-account-keys-json
+
+workers:
+  - workerId: firestore-sync
+    scriptPath: dist/firestoreSync.bundle.js
+    env:
+      SERVICE_ACCOUNT_KEYS_JSON: service-account-keys-json
+    triggers:
+      cron:
+        enabled: true
+        cronExpression: "0 * * * * * *"
+      transaction:
+        enabled: true
