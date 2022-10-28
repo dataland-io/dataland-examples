@@ -55,8 +55,8 @@ export const user_rowToDoc = (row: UserRow): UserDoc => {
 };
 
 export const UserTypeDef: TypeDefinition<UserDoc, UserRow> = {
-  collectionId: "user",
-  tableName: "user",
+  collectionId: "users",
+  tableName: "users",
   docType: UserDoc,
   rowType: UserRow,
   docToRow: user_docToRow,

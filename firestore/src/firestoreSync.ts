@@ -33,7 +33,10 @@ import {
 } from "./schema/typeDefinition";
 
 // can also use getEnv to make this pluggable
-export const PROJECT_ID = "gcp-project-id-with-firestore";
+
+const SERVICE_ACCOUNT_KEYS_JSON = getEnv("SERVICE_ACCOUNT_KEYS_JSON");
+const SERVICE_ACCOUNT_KEYS_JSON_OBJ = JSON.parse(SERVICE_ACCOUNT_KEYS_JSON);
+export const PROJECT_ID = SERVICE_ACCOUNT_KEYS_JSON_OBJ.project_id;
 
 const db = getDbClient();
 
@@ -83,6 +86,8 @@ async function ingestTable<
     const startTime = Date.now();
 
     const documents = await listDocuments(typeDef.collectionId, context);
+
+    console.log("fetched documents", documents);
 
     let numFailed = 0;
     const rows: Map<string, RowType> = new Map();
