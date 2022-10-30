@@ -1,0 +1,60 @@
+moduleId: firestore-example
+
+buildCommand: npm run build
+
+parameters:
+  - service-account-keys-json
+
+info:
+  title: Firestore sync
+  description: Sync your Firestore collections to Dataland
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: firestore-icon.svg
+
+workers:
+  - workerId: firestore-sync
+    scriptPath: dist/firestoreSync.bundle.js
+    env:
+      SERVICE_ACCOUNT_KEYS_JSON: service-account-keys-json
+    triggers:
+      cron:
+        enabled: true
+        cronExpression: "0 * * * * * *"
+      transaction:
+        enabled: true
+
+tables:
+  - tableName: grocery_lists
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: firestore_document_id
+        dataType: string
+      - columnName: grocery_list
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "json",
+              "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                  "list": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "item_name": {
+                          "type": "string"
+                        },
+                        "quantity": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }

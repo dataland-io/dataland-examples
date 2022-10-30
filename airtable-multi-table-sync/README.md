@@ -37,7 +37,7 @@ The following is an example `AIRTABLE_SYNC_MAPPING_JSON`:
   "sync_targets": [
     {
       "base_id": "appB5C0P7ihcpAkkO",
-      "table_id": "tblbXqDJIHroaitOP"
+      "table_id": "tblbXqDJIHroaitOP",
       "view_id": "viwIbjQaNkNZUZwXC",
       "dataland_table_name": "airtable_support_tickets",
       "omit_fields": ["Last name"],
