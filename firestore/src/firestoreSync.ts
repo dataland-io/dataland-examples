@@ -177,6 +177,9 @@ const transactionHandler = async (transaction: Transaction) => {
   if (mutations.length > 0) {
     await db.runMutations({ mutations, transactionAnnotations: {} }).response;
   }
+  console.log("xx start");
+  console.log("xx writes", writes);
+
   if (writes.length > 0) {
     console.log("propagating writes to firestore", writes.length);
 
@@ -197,12 +200,14 @@ const transactionToWrites = (
   const writes: Write[] = [];
 
   for (const tableName in TYPE_DEFINITIONS) {
+    console.log("xx tableName", tableName);
     const dataChangeRecord = transaction.dataChangeRecords[tableName];
+    console.log("xx2: ", dataChangeRecord);
     if (dataChangeRecord == null) {
       // This table/collection was not unaffected by this transaction.
       continue;
     }
-
+    console.log("xx4");
     const typeDefinition = TYPE_DEFINITIONS[tableName]!;
     const collectionId = typeDefinition.collectionId;
     const collectionName = getCollectionName(collectionId, PROJECT_ID);
@@ -244,6 +249,8 @@ const transactionToWrites = (
       if (row.values == null) {
         continue;
       }
+
+      console.log("xx handling update", row);
 
       const rowObject = zipRowObject(dataChangeRecord.columnNames, row.values);
 
