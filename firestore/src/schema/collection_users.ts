@@ -1,5 +1,4 @@
 import { z } from "zod";
-import zodToJsonSchema from "zod-to-json-schema";
 import {
   Document,
   IntegerValue,
@@ -10,16 +9,15 @@ import {
 import { TypeDefinition } from "./typeDefinition";
 import { isNotNull } from "./util";
 
-// Assumes there's a simple user document with a name email and phone
-export const User = z.object({
-  user_name: z.string(),
-  email: z.string(),
-  phone: z.string(),
-  age: z.number().int(),
-});
+// TODO: This code references an example Firestore collection named "users"
+// You should rename UserDoc, UserRow, UserTypeDef, user_rowToDoc and user_docToRow
+// to use the name of your collection instead as the prefix.
 
-export const UserJsonSchema = zodToJsonSchema(User);
+// ----------------------------------
 
+// TODO: Define the Firestore document format.
+// Create a new line for each field in the Firestore document.
+// We use the zod library for schema-validation and security.
 export const UserDoc = z.object({
   user_name: z.union([StringValue, NullValue]).optional(),
   email: z.union([StringValue, NullValue]).optional(),
@@ -29,6 +27,9 @@ export const UserDoc = z.object({
 
 export type UserDoc = z.infer<typeof UserDoc>;
 
+// TODO: Define the Dataland row schema fortmat.
+// The "firestore_document_id" column is required.
+// Create a new line for each field in the Firestore document.
 export const UserRow = z.object({
   firestore_document_id: z.string().nullish(),
   user_name: z.string().nullish(),
@@ -43,6 +44,8 @@ export const user_docToRow = (
   doc: UserDoc,
   fullDocument: Document
 ): UserRow => {
+  // TODO: Convert the Firestore document to a Dataland row.
+  // Return an object with the same keys as the Row schema.
   const firestore_document_id = getDocumentId(fullDocument.name);
   const user_name = isNotNull(doc.user_name) ? doc.user_name.stringValue : null;
   const email = isNotNull(doc.email) ? doc.email.stringValue : null;
@@ -58,6 +61,8 @@ export const user_docToRow = (
   };
 };
 
+// TODO: Convert the Dataland row to a Firestore document.
+// Return an object with the same keys as the Firestore document.
 export const user_rowToDoc = (row: UserRow): UserDoc => {
   const user_name =
     row.user_name != null
