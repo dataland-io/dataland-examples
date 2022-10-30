@@ -1,6 +1,3 @@
-# Firestore Example
+# Firestore Setup
 
-```sh
-npm install
-dataland deploy
-```
+See this [guide](https://dataland-io.notion.site/Dataland-Firestore-setup-7363f8499b234342a761d83396bdfb47) for setup instructions.
