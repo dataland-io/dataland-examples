@@ -1,9 +1,9 @@
-import { UserTypeDef } from "./exampleCollection";
+import { UserTypeDef } from "./usersCollection";
 import { TypeDefinition } from "./typeDefinition";
 
 // Table Name => Type Definition
 export const TYPE_DEFINITIONS: Record<string, TypeDefinition<any, any>> = {
-  exampleCollection: UserTypeDef,
+  users: UserTypeDef,
 };
 
 export type FirestoreTable = keyof typeof TYPE_DEFINITIONS;
