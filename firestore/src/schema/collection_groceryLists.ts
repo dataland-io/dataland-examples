@@ -27,7 +27,7 @@ export const GroceryListRow = z.object({
 
 export type GroceryListRow = z.infer<typeof GroceryListRow>;
 
-export const strengthPlan_docToRow = (
+export const groceryList_docToRow = (
   doc: GroceryListDoc,
   fullDocument: Document
 ): GroceryListRow => {
@@ -40,7 +40,7 @@ export const strengthPlan_docToRow = (
   };
 };
 
-export const strengthPlan_rowToDoc = (row: GroceryListRow): GroceryListDoc => {
+export const groceryList_rowToDoc = (row: GroceryListRow): GroceryListDoc => {
   const { grocery_list } = row;
 
   if (grocery_list == null) {
@@ -67,6 +67,6 @@ export const GroceryListTypeDef: TypeDefinition<
   tableName: "grocery_lists",
   docType: GroceryListDoc,
   rowType: GroceryListRow,
-  docToRow: strengthPlan_docToRow,
-  rowToDoc: strengthPlan_rowToDoc,
+  docToRow: groceryList_docToRow,
+  rowToDoc: groceryList_rowToDoc,
 };
