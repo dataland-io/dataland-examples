@@ -1,0 +1,31 @@
+moduleId: peopledatalabs-example
+
+buildCommand: npm run build
+
+parameters:
+  - peopledatalabs-api-key
+
+workers:
+  - workerId: peopledatalabs
+    scriptPath: dist/peopledatalabs.bundle.js
+    triggers:
+      transaction:
+        enabled: true
+    env:
+      PEOPLEDATALABS_API_KEY: peopledatalabs-api-key
+
+tables:
+  - tableName: contacts
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: linkedin_url
+        dataType: string
+
+      - columnName: processed_at
+        dataType: string
+
+      - columnName: enrichment_json
+        dataType: string
+
+      - columnName: full_name
+        dataType: string
