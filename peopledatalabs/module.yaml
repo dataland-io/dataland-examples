@@ -5,6 +5,14 @@ buildCommand: npm run build
 parameters:
   - peopledatalabs-api-key
 
+info:
+  title: People Data Labs Enrichment
+  description: Enrich your data with People Data Labs
+  author: Dataland Devs <devs@dataland.io>
+  sourceCodeUrl: https://github.com/dataland-io/dataland-builtin-modules
+  readmePath: README.md
+  iconPath: pdl-icon.png
+
 workers:
   - workerId: peopledatalabs
     scriptPath: dist/peopledatalabs.bundle.js
@@ -21,11 +29,676 @@ tables:
       - columnName: linkedin_url
         dataType: string
 
+      - columnName: status
+        dataType: string
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "API Error",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "API Success",
+                  "theme": "green"
+                }
+              ]
+            }
+
       - columnName: processed_at
         dataType: string
+        columnAnnotations:
+          dataland.io/options/readonly: true
 
       - columnName: enrichment_json
         dataType: string
+        columnAnnotations:
+          dataland.io/options/readonly: true
+          dataland.io/column-display-config: |
+            {
+              "type": "json",
+              "schema": {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "title": "Generated schema for Root",
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "number"
+                  },
+                  "likelihood": {
+                    "type": "number"
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "full_name": {
+                        "type": "string"
+                      },
+                      "first_name": {
+                        "type": "string"
+                      },
+                      "middle_initial": {},
+                      "middle_name": {},
+                      "last_initial": {
+                        "type": "string"
+                      },
+                      "last_name": {
+                        "type": "string"
+                      },
+                      "gender": {
+                        "type": "string"
+                      },
+                      "birth_year": {},
+                      "birth_date": {},
+                      "linkedin_url": {
+                        "type": "string"
+                      },
+                      "linkedin_username": {
+                        "type": "string"
+                      },
+                      "linkedin_id": {
+                        "type": "string"
+                      },
+                      "facebook_url": {
+                        "type": "string"
+                      },
+                      "facebook_username": {
+                        "type": "string"
+                      },
+                      "facebook_id": {
+                        "type": "string"
+                      },
+                      "twitter_url": {},
+                      "twitter_username": {},
+                      "github_url": {},
+                      "github_username": {},
+                      "work_email": {},
+                      "personal_emails": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "mobile_phone": {},
+                      "industry": {
+                        "type": "string"
+                      },
+                      "job_title": {
+                        "type": "string"
+                      },
+                      "job_title_role": {},
+                      "job_title_sub_role": {},
+                      "job_title_levels": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "job_company_id": {},
+                      "job_company_name": {
+                        "type": "string"
+                      },
+                      "job_company_website": {},
+                      "job_company_size": {},
+                      "job_company_founded": {},
+                      "job_company_industry": {},
+                      "job_company_linkedin_url": {},
+                      "job_company_linkedin_id": {},
+                      "job_company_facebook_url": {},
+                      "job_company_twitter_url": {},
+                      "job_company_location_name": {},
+                      "job_company_location_locality": {},
+                      "job_company_location_metro": {},
+                      "job_company_location_region": {},
+                      "job_company_location_geo": {},
+                      "job_company_location_street_address": {},
+                      "job_company_location_address_line_2": {},
+                      "job_company_location_postal_code": {},
+                      "job_company_location_country": {},
+                      "job_company_location_continent": {},
+                      "job_last_updated": {
+                        "type": "string"
+                      },
+                      "job_start_date": {
+                        "type": "string"
+                      },
+                      "location_name": {
+                        "type": "string"
+                      },
+                      "location_locality": {
+                        "type": "string"
+                      },
+                      "location_metro": {
+                        "type": "string"
+                      },
+                      "location_region": {
+                        "type": "string"
+                      },
+                      "location_country": {
+                        "type": "string"
+                      },
+                      "location_continent": {
+                        "type": "string"
+                      },
+                      "location_street_address": {},
+                      "location_address_line_2": {},
+                      "location_postal_code": {},
+                      "location_geo": {
+                        "type": "string"
+                      },
+                      "location_last_updated": {
+                        "type": "string"
+                      },
+                      "phone_numbers": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "emails": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "address": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "address",
+                            "type"
+                          ]
+                        }
+                      },
+                      "interests": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "skills": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "location_names": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "regions": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "countries": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "street_addresses": {
+                        "type": "array",
+                        "items": {}
+                      },
+                      "experience": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "company": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "size": {
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "founded": {
+                                  "type": "number"
+                                },
+                                "industry": {
+                                  "type": "string"
+                                },
+                                "location": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "locality": {
+                                      "type": "string"
+                                    },
+                                    "region": {
+                                      "type": "string"
+                                    },
+                                    "metro": {
+                                      "type": "string"
+                                    },
+                                    "country": {
+                                      "type": "string"
+                                    },
+                                    "continent": {
+                                      "type": "string"
+                                    },
+                                    "street_address": {
+                                      "type": "string"
+                                    },
+                                    "address_line_2": {},
+                                    "postal_code": {
+                                      "type": "string"
+                                    },
+                                    "geo": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "name",
+                                    "locality",
+                                    "region",
+                                    "country",
+                                    "continent",
+                                    "address_line_2",
+                                    "geo"
+                                  ]
+                                },
+                                "linkedin_url": {
+                                  "type": "string"
+                                },
+                                "linkedin_id": {
+                                  "type": "string"
+                                },
+                                "facebook_url": {
+                                  "type": "string"
+                                },
+                                "twitter_url": {
+                                  "type": "string"
+                                },
+                                "website": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "name"
+                              ]
+                            },
+                            "location_names": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "end_date": {
+                              "type": "string"
+                            },
+                            "start_date": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "role": {
+                                  "type": "string"
+                                },
+                                "sub_role": {
+                                  "type": "string"
+                                },
+                                "levels": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              },
+                              "required": [
+                                "name",
+                                "levels"
+                              ]
+                            },
+                            "is_primary": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "company",
+                            "location_names",
+                            "start_date",
+                            "title",
+                            "is_primary"
+                          ]
+                        }
+                      },
+                      "education": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "school": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "type": "string"
+                                },
+                                "id": {
+                                  "type": "string"
+                                },
+                                "location": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    },
+                                    "locality": {
+                                      "type": "string"
+                                    },
+                                    "region": {
+                                      "type": "string"
+                                    },
+                                    "country": {
+                                      "type": "string"
+                                    },
+                                    "continent": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "name",
+                                    "locality",
+                                    "region",
+                                    "country",
+                                    "continent"
+                                  ]
+                                },
+                                "linkedin_url": {
+                                  "type": "string"
+                                },
+                                "facebook_url": {
+                                  "type": "string"
+                                },
+                                "twitter_url": {
+                                  "type": "string"
+                                },
+                                "linkedin_id": {
+                                  "type": "string"
+                                },
+                                "website": {
+                                  "type": "string"
+                                },
+                                "domain": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "name"
+                              ]
+                            },
+                            "degrees": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "start_date": {
+                              "type": "string"
+                            },
+                            "end_date": {
+                              "type": "string"
+                            },
+                            "majors": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "minors": {
+                              "type": "array",
+                              "items": {}
+                            },
+                            "gpa": {}
+                          },
+                          "required": [
+                            "school",
+                            "degrees",
+                            "majors",
+                            "minors",
+                            "gpa"
+                          ]
+                        }
+                      },
+                      "profiles": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "network": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "url": {
+                              "type": "string"
+                            },
+                            "username": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "network",
+                            "url",
+                            "username"
+                          ]
+                        }
+                      },
+                      "version_status": {
+                        "type": "object",
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          },
+                          "contains": {
+                            "type": "array",
+                            "items": {}
+                          },
+                          "previous_version": {
+                            "type": "string"
+                          },
+                          "current_version": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "status",
+                          "contains",
+                          "previous_version",
+                          "current_version"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "full_name",
+                      "first_name",
+                      "middle_initial",
+                      "middle_name",
+                      "last_initial",
+                      "last_name",
+                      "gender",
+                      "birth_year",
+                      "birth_date",
+                      "linkedin_url",
+                      "linkedin_username",
+                      "linkedin_id",
+                      "facebook_url",
+                      "facebook_username",
+                      "facebook_id",
+                      "twitter_url",
+                      "twitter_username",
+                      "github_url",
+                      "github_username",
+                      "work_email",
+                      "personal_emails",
+                      "mobile_phone",
+                      "industry",
+                      "job_title",
+                      "job_title_role",
+                      "job_title_sub_role",
+                      "job_title_levels",
+                      "job_company_id",
+                      "job_company_name",
+                      "job_company_website",
+                      "job_company_size",
+                      "job_company_founded",
+                      "job_company_industry",
+                      "job_company_linkedin_url",
+                      "job_company_linkedin_id",
+                      "job_company_facebook_url",
+                      "job_company_twitter_url",
+                      "job_company_location_name",
+                      "job_company_location_locality",
+                      "job_company_location_metro",
+                      "job_company_location_region",
+                      "job_company_location_geo",
+                      "job_company_location_street_address",
+                      "job_company_location_address_line_2",
+                      "job_company_location_postal_code",
+                      "job_company_location_country",
+                      "job_company_location_continent",
+                      "job_last_updated",
+                      "job_start_date",
+                      "location_name",
+                      "location_locality",
+                      "location_metro",
+                      "location_region",
+                      "location_country",
+                      "location_continent",
+                      "location_street_address",
+                      "location_address_line_2",
+                      "location_postal_code",
+                      "location_geo",
+                      "location_last_updated",
+                      "phone_numbers",
+                      "emails",
+                      "interests",
+                      "skills",
+                      "location_names",
+                      "regions",
+                      "countries",
+                      "street_addresses",
+                      "experience",
+                      "education",
+                      "profiles",
+                      "version_status"
+                    ]
+                  },
+                  "dataset_version": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status",
+                  "likelihood",
+                  "data",
+                  "dataset_version"
+                ]
+              }
+            }
+
+      - columnName: likelihood
+        dataType: string
+        columnAnnotations:
+          dataland.io/options/readonly: true
+          dataland.io/column-display-config: |
+            {
+              "type": "select",
+              "options": [
+                {
+                  "value": "10",
+                  "theme": "green"
+                },
+                {
+                  "value": "9",
+                  "theme": "green"
+                },
+                {
+                  "value": "8",
+                  "theme": "green"
+                },
+                {
+                  "value": "7",
+                  "theme": "yellow"
+                },
+                {
+                  "value": "6",
+                  "theme": "orange"
+                },
+                {
+                  "value": "5",
+                  "theme": "orange"
+                },
+                {
+                  "value": "4",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "3",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "2",
+                  "theme": "ruby"
+                },
+                {
+                  "value": "1",
+                  "theme": "ruby"
+                }
+              ]
+            }
 
       - columnName: full_name
         dataType: string
+        columnAnnotations:
+          dataland.io/options/readonly: true
+
+        # work_email: work_email,
+      - columnName: work_email
+        dataType: string
+        columnAnnotations:
+          dataland.io/options/readonly: true
+
+        # personal_emails: personal_emails,
+      - columnName: personal_emails
+        dataType: string
+        columnAnnotations:
+          dataland.io/options/readonly: true
+
+        # job_title: job_title,
+      - columnName: job_title
+        dataType: string
+        columnAnnotations:
+          dataland.io/options/readonly: true
+
+        # job_company_name: job_company_name,
+      - columnName: job_company_name
+        dataType: string
+        columnAnnotations:
+          dataland.io/options/readonly: true

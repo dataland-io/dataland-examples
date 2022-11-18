@@ -75,25 +75,37 @@ const handler = async (transaction: Transaction) => {
     const enrichment = await getPeopleEnrichment(linkedin_url);
     console.log("enrichment", enrichment);
 
-    if (enrichment.status !== "200") {
+    if (enrichment.status !== 200) {
       await new MutationsBuilder()
         .updateRow("contacts", row._row_id, {
           processed_at: new Date().toISOString(),
           enrichment_json: JSON.stringify(enrichment),
+          status: "API Error",
         })
         .run(db);
       continue;
     }
 
-    const first_enrichment_match = enrichment.data[0];
+    const enrichment_match = enrichment.data;
 
-    const full_name = first_enrichment_match.first_name;
+    const full_name = enrichment_match.first_name;
+    const likelihood = String(enrichment.likelihood);
+    const work_email = enrichment_match.work_email;
+    const personal_emails = JSON.stringify(enrichment_match.personal_emails);
+    const job_title = enrichment_match.job_title;
+    const job_company_name = enrichment_match.job_company_name;
 
     await new MutationsBuilder()
       .updateRow("contacts", row._row_id, {
         processed_at: new Date().toISOString(),
         enrichment_json: JSON.stringify(enrichment),
+        status: "API Success",
+        likelihood: likelihood,
         full_name: full_name,
+        work_email: work_email,
+        personal_emails: personal_emails,
+        job_title: job_title,
+        job_company_name: job_company_name,
       })
       .run(db);
   }
