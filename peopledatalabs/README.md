@@ -1,6 +1,3 @@
-# Peopledatalabs Example
+# People Data Labs Overview
 
-```sh
-npm install
-dataland deploy
-```
+Enrich leads with People Data Labs, right from a Dataland workspace.
