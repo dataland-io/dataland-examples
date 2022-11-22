@@ -1,0 +1,29 @@
+moduleId: button-example # not `quickstart-end-state-example` because we want same module as the starting state
+
+buildCommand: npm run build
+
+workers:
+  - workerId: get-weather
+    scriptPath: dist/getWeather.bundle.js
+    triggers:
+      transaction: {}
+
+tables:
+  - tableName: weather_table
+    autoMigrate: true
+    columnDescriptors:
+      - columnName: location
+        dataType: string
+      - columnName: get_weather
+        dataType: int32
+        columnAnnotations:
+          dataland.io/column-display-config: |
+            {
+              "type": "button",
+              "label": "Fetch the weather!",
+              "theme": "blue"
+            }
+      - columnName: weather_result
+        dataType: string
+      - columnName: checked_at
+        dataType: string
