@@ -75,7 +75,7 @@ const handler = async (transaction: Transaction) => {
   }
 };
 
-// TOOD: Define your own API call
+// TODO: Define your own API call
 const lookupWeather = async (location: string): Promise<string | null> => {
   const normalizedLocation = location
     .split(/[^a-zA-Z]/)
