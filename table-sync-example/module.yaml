@@ -1,0 +1,13 @@
+moduleId: table-sync-example-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: table-sync-example
+    scriptPath: dist/tableSync_jsonPlaceholder.bundle.js
+    triggers:
+      transaction:
+        enabled: true
+      # Run every 30 seconds
+      cron:
+        cronExpression: "*/30 * * * * * *"
