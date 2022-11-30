@@ -5,7 +5,7 @@ const config: Configuration = {
   mode: "production",
   target: "web",
   entry: {
-    tableSyncExample: "./src/tableSyncExample.ts",
+    tableSync_jsonPlaceholder: "./src/tableSync_jsonPlaceholder.ts",
   },
   module: {
     rules: [
