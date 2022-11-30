@@ -9,6 +9,25 @@ import {
 // JSON → Arrow which Dataland uses to store data
 import { tableFromJSON, tableToIPC } from "apache-arrow";
 
+const getDataFromJSONPlaceholder = async () => {
+  const response = await fetch("https://jsonplaceholder.typicode.com/comments");
+  const records = await response.json();
+
+  // Reformat object keys to match Dataland's column naming conventions
+  // Dataland columns can only contain lowercase [a-z], [0-9], and underscores
+  const records_reformatted = records.map((record: any) => {
+    return {
+      comment_id: record.id,
+      post_id: record.postId,
+      name: record.name,
+      email: record.email,
+      body: record.body,
+    };
+  });
+
+  return records_reformatted;
+};
+
 const handler = async () => {
   // Init Dataland DB client to interact with Dataland
   const db = await getDbClient();
@@ -40,25 +59,6 @@ const handler = async () => {
   };
 
   await db.tableSync(tableSyncRequest);
-};
-
-const getDataFromJSONPlaceholder = async () => {
-  const response = await fetch("https://jsonplaceholder.typicode.com/comments");
-  const records = await response.json();
-
-  // Reformat object keys to match Dataland's column naming conventions
-  // Dataland columns can only contain lowercase [a-z], [0-9], and underscores
-  const records_reformatted = records.map((record: any) => {
-    return {
-      comment_id: record.id,
-      post_id: record.postId,
-      name: record.name,
-      email: record.email,
-      body: record.body,
-    };
-  });
-
-  return records_reformatted;
 };
 
 registerCronHandler(handler);
