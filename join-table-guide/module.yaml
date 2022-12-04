@@ -1,0 +1,12 @@
+moduleId: join-table-guide-example
+
+buildCommand: npm run build
+
+workers:
+  - workerId: join-tables
+    scriptPath: dist/joinTables.bundle.js
+    triggers:
+      transaction:
+        enabled: true
+      cron:
+        cronExpression: "*/30 * * * * * *"
