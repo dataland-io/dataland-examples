@@ -53,7 +53,10 @@ registerCronHandler(async (_: CronEvent) => {
         try {
           await tx.queryObject(sqlStatement);
         } catch (error) {
-          throw new Error(`Writeback failed - query <${sqlStatement}> ${error}`)
+          throw new Error(
+            `Writeback failed - query <> ${JSON.stringify(error)}`,
+            { cause: error }
+          );
         }
       }
       await tx.commit();
@@ -124,6 +127,7 @@ export const rowsToSqlStatements = (
     ...tableDescriptor.columnDescriptors.map((c) => c.columnName),
   ];
 
+  console.log(`Creating statements for table ${tableDescriptor.tableName}`);
   const rowValues: Scalar[][] = [];
 
   for (const row of rows) {
@@ -132,14 +136,23 @@ export const rowsToSqlStatements = (
     for (const column of allColumnNames) {
       let value = row[column];
       if (typeof value == "string") {
+        if (value.includes("for")) {
+          console.log("WARNING: String contains for", { value });
+        }
         // Note that SQL needs us to escape single quotes by providing two of them.
-        value = `'${value.replace("'", "''")}'`;
+        value = `'${value.replaceAll("'", "''")}'`;
       }
       if (value == null) {
         value = "null";
       }
+      if (typeof value == "number") {
+        if (`${value}`.includes("NaN")) {
+          value = "null";
+        }
+      }
       values.push(value);
     }
+
     rowValues.push(values);
   }
 

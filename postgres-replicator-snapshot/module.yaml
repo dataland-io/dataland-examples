@@ -21,7 +21,8 @@ workers:
       transaction:
         enabled: true
       cron:
-        cronExpression: "*/30 * * * * * *"
+        # every day at midnight
+        cronExpression: "0 0 0 * * * *"
     env:
       PGRS_HOST: pgrs-host
       PGRS_PORT: pgrs-port
