@@ -1,0 +1,27 @@
+moduleId: postgres-replicator-snapshot-example
+
+buildCommand: npm run build
+
+parameters:
+  - pgrs-host
+  - pgrs-port
+  - pgrs-user
+  - pgrs-password
+  - pgrs-database
+  - pgrs-schema
+
+workers:
+  - workerId: postgres-replicator-snapshot
+    scriptPath: dist/postgresReplicatorSnapshot.bundle.js
+    triggers:
+      transaction:
+        enabled: true
+      cron:
+        cronExpression: "*/30 * * * * * *"
+    env:
+      PGRS_HOST: pgrs-host
+      PGRS_PORT: pgrs-port
+      PGRS_USER: pgrs-user
+      PGRS_PASSWORD: pgrs-password
+      PGRS_DATABASE: pgrs-database
+      PGRS_SCHEMA: pgrs-schema
