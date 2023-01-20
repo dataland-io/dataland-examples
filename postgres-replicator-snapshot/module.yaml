@@ -1,5 +1,9 @@
 moduleId: postgres-replicator-snapshot-example
 
+info:
+  title: Postgres Replicator - Snapshot
+  description: Used to backup all Dataland tables into Wyndly GCP
+
 buildCommand: npm run build
 
 parameters:

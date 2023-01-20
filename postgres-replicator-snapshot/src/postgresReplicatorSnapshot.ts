@@ -53,9 +53,7 @@ registerCronHandler(async (_: CronEvent) => {
         try {
           await tx.queryObject(sqlStatement);
         } catch (error) {
-          throw new Error(`Writeback failed - query <${sqlStatement}>`, {
-            cause: error,
-          });
+          throw new Error(`Writeback failed - query <${sqlStatement}> ${error}`)
         }
       }
       await tx.commit();
