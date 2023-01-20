@@ -3,8 +3,16 @@ moduleId: db-server-load-example
 buildCommand: npm run build
 
 workers:
-  - workerId: db-server-load
-    scriptPath: dist/dbServerLoad.bundle.js
+  # - workerId: db-server-load
+  #   scriptPath: dist/dbServerLoad.bundle.js
+  #   triggers:
+  #     transaction:
+  #       enabled: true
+  #     cron:
+  #       cronExpression: "*/15 * * * * * *"
+
+  - workerId: query-mirror
+    scriptPath: dist/queryMirror.bundle.js
     triggers:
       transaction:
         enabled: true

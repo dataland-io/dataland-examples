@@ -6,6 +6,7 @@ const config: Configuration = {
   target: "web",
   entry: {
     dbServerLoad: "./src/dbServerLoad.ts",
+    queryMirror: "./src/queryMirror.ts",
   },
   module: {
     rules: [

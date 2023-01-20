@@ -2,6 +2,7 @@ import {
   getDbClient,
   unpackRows,
   registerCronHandler,
+  ResultRow,
 } from "@dataland-io/dataland-sdk";
 
 const handler = async () => {
@@ -22,12 +23,15 @@ const handler = async () => {
     }
   });
 
+  let rows: ResultRow[] = [];
   // Todo: Need to be able to use the rows object outside of the onComplete callback
   table.onComplete(() => {
     console.log("arrowRecordBatches:", arrowRecordBatches);
-    const rows = unpackRows({ arrowRecordBatches: arrowRecordBatches });
+    rows = unpackRows({ arrowRecordBatches: arrowRecordBatches });
     console.log("rows inner:", rows);
   });
+
+  console.log("rows outer:", rows);
 };
 
 registerCronHandler(handler);
