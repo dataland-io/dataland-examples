@@ -14,7 +14,7 @@
     "fix:prettier": "prettier --write ."
   },
   "dependencies": {
-    "@apache-arrow/es2015-esm": "9.0.0",
+    "@apache-arrow/es2015-esm": "11.0.0",
     "@dataland-io/dataland-sdk": "0.17.0",
     "@dataland-workerlibs/mysql": "2.10.201",
     "common-tags": "1.8.2",
