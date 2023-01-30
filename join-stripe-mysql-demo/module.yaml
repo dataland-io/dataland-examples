@@ -77,7 +77,7 @@ tables:
           dataland.io/column-width: "180"
 
       # delivery_time
-      - columnName: "delivery_time"
+      - columnName: "delivery_time_mins"
         dataType: float64
         columnAnnotations:
           dataland.io/column-width: "120"
