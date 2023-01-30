@@ -1,4 +1,4 @@
-import { tableFromJSON, tableToIPC } from "@apache-arrow/es2015-esm";
+import { tableFromJSON, tableToIPC } from "apache-arrow";
 import {
   getEnv,
   registerCronHandler,

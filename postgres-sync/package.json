@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@apache-arrow/es2015-esm": "11.0.0",
-    "@dataland-io/dataland-sdk": "0.17.0",
+    "@dataland-io/dataland-sdk": "0.19.4",
     "@dataland-workerlibs/postgres": "0.16.101",
     "common-tags": "1.8.2",
     "lodash-es": "4.17.21",
