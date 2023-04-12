@@ -1,18 +1,44 @@
 import {
   getDbClient,
-  getHistoryClient,
   MutationsBuilder,
+  IDbServiceClient,
+  ResultRow,
   registerTransactionHandler,
   Transaction,
   unpackRows,
+  assertNever,
   isString,
 } from "@dataland-io/dataland-sdk";
+
+export const loadTable = async (
+  db: IDbServiceClient,
+  tableName: string
+): Promise<ResultRow[]> => {
+  const arrowRecordBatches: Uint8Array[] = [];
+  const arrowLoadTableResponse = db.arrowLoadTable({ tableName });
+  for await (const response0 of arrowLoadTableResponse.responses) {
+    const response = response0.kind;
+    if (response.oneofKind == null) {
+      continue;
+    }
+    if (response.oneofKind === "start") {
+      // handle start
+    } else if (response.oneofKind === "data") {
+      // handle data
+      arrowRecordBatches.push(...response.data.arrowRecordBatches);
+    } else if (response.oneofKind === "finish") {
+      // handle finish
+    } else {
+      assertNever(response);
+    }
+  }
+  return unpackRows({ arrowRecordBatches });
+};
 
 // This handler function runs after every database transaction
 const handler = async (transaction: Transaction) => {
   // Initialize Db and History clients
   const db = getDbClient();
-  const history = getHistoryClient();
 
   const affected_row_ids = [];
 
@@ -39,11 +65,7 @@ const handler = async (transaction: Transaction) => {
   // The following code fetches the rows where the button column was clicked.
   // TODO: Replace the tableName with your own, and replace the columns specified here with
   // the columns you'll need to use values from to make the API call
-  const response = await history.querySqlMirror({
-    sqlQuery: `select _row_id, location from "weather_table" where _row_id in (${affected_row_ids_key_list})`,
-  }).response;
-
-  const rows = unpackRows(response);
+  const rows = await loadTable(db, "weather_table");
 
   if (rows == null) {
     return;
