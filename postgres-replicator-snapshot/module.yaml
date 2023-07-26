@@ -2,7 +2,7 @@ moduleId: postgres-replicator-snapshot-example
 
 info:
   title: Postgres Replicator - Snapshot
-  description: Used to backup all Dataland tables into Wyndly GCP
+  description: Used to backup all Dataland tables into an external Postgres instance
 
 buildCommand: npm run build
 
@@ -21,8 +21,8 @@ workers:
       transaction:
         enabled: true
       cron:
-        # every day at midnight
-        cronExpression: "0 0 0 * * * *"
+        # runs every hour
+        cronExpression: "0 0 * * * * *"
     env:
       PGRS_HOST: pgrs-host
       PGRS_PORT: pgrs-port
