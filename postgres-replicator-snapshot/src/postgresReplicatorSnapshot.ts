@@ -136,9 +136,9 @@ export const rowsToSqlStatements = (
     for (const column of allColumnNames) {
       let value = row[column];
       if (typeof value == "string") {
-        if (value.includes("for")) {
-          console.log("WARNING: String contains for", { value });
-        }
+        // if (value.includes("for")) {
+        //   console.log("WARNING: String contains for", { value });
+        // }
         // Note that SQL needs us to escape single quotes by providing two of them.
         value = `'${value.replaceAll("'", "''")}'`;
       }

@@ -22,7 +22,7 @@ workers:
         enabled: true
       cron:
         # runs every hour
-        cronExpression: "0 0 * * * * *"
+        cronExpression: "0 */15 * * * * *"
     env:
       PGRS_HOST: pgrs-host
       PGRS_PORT: pgrs-port
