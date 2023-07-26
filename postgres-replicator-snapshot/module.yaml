@@ -21,7 +21,7 @@ workers:
       transaction:
         enabled: true
       cron:
-        # runs every hour
+        # runs every 15 minutes
         cronExpression: "0 */15 * * * * *"
     env:
       PGRS_HOST: pgrs-host
